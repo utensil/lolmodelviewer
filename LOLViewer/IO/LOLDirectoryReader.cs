@@ -316,11 +316,8 @@ namespace LOLViewer.IO
                 foreach (DirectoryInfo d in di.GetDirectories())
                 {
                     result = OpenGameClientVersion(d);
-                    // TODO: Figure this out.
-                    // I have this commented out because the RAFArchiver will
-                    // fail to open a few of the RAF files.  Don't know why.
-                    //if (result == false) 
-                        //break;
+                    if (result == false) 
+                        break;
                 }
             }
             catch
@@ -335,9 +332,9 @@ namespace LOLViewer.IO
         {
             bool result = true;
 
+            // Read in .raf files and look for model information in them.
             try
             {
-                // .RAFs are located in this directory.
                 foreach(FileInfo f in dir.GetFiles())
                 {
                     result = ReadRAF(f);
@@ -345,20 +342,39 @@ namespace LOLViewer.IO
                         break;
                 }
 
-
-                // Reads in character directories.
-                String dirName = dir.FullName + DEFAULT_MODEL_ROOT;
-                DirectoryInfo di = new DirectoryInfo(dirName);
-                foreach (DirectoryInfo d in di.GetDirectories())
-                {
-                    result = OpenModelDirectory(d);
-                    if (result == false)
-                        break;
-                }
             }
             catch
             {
                 result = false;
+            }
+
+            // Look for raw model information contain on the hard drive.
+            if( result == true )
+            {
+                try
+                {
+                    // Reads in character directories.
+                    String dirName = dir.FullName + DEFAULT_MODEL_ROOT;
+                    DirectoryInfo di = new DirectoryInfo(dirName);
+                    foreach (DirectoryInfo d in di.GetDirectories())
+                    {
+                        result = OpenModelDirectory(d);
+                        if (result == false)
+                            break;
+                    }
+                }
+                catch ( Exception e )
+                {
+                    // If the directory was not found, that's alright.
+                    // Sometimes there's no character data in a patch.
+
+                    // TODO: Find a better way to test this.  There has to be a way to check against types.
+                    // IE if(e.GetType() == System.IO.DirectoryNotFoundException)
+                    if (e.Message.Contains("Could not find a part of the path") == false)
+                    {
+                        result = false;
+                    }
+                }
             }
 
             return result;
@@ -467,25 +483,6 @@ namespace LOLViewer.IO
                             rafTextures.Add(name, e);
                     }
                 }
-
-                files = fileList.SearchFileEntries(".DDS");
-                foreach (RAFFileListEntry e in files)
-                {
-                    // Try to parse out unwanted textures.
-                    if (e.FileName.Contains("LoadScreen") == false &&
-                        e.FileName.Contains("Loadscreen") == false &&
-                        e.FileName.Contains("loadscreen") == false &&
-                        e.FileName.Contains("DATA") == true &&
-                        e.FileName.Contains("Characters") == true)
-                    {
-                        String name = e.FileName;
-                        int pos = name.LastIndexOf("/");
-                        name = name.Substring(pos + 1);
-
-                        if (rafTextures.ContainsKey(name) == false)
-                            rafTextures.Add(name, e);
-                    }
-                }   
 
                 // Get the .skn files
                 files = fileList.SearchFileEntries(".skn");
