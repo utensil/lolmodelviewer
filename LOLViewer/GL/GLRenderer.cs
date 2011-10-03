@@ -80,36 +80,39 @@ namespace LOLViewer
             if (result == true)
             {
                 // Unused atm.
-                result = CreateShader("transform2D_tex.vert", "content\\shaders\\", ShaderType.VertexShader);
+                result = CreateShaderFromMemory("transform2D_tex.vert", GLShaderDefinitions.TransformTexturedVertex, ShaderType.VertexShader);
             }
 
             if (result == true)
             {
-                result = CreateShader("phong.vert", "content\\shaders\\", ShaderType.VertexShader);
+                result = CreateShaderFromMemory("phong.vert", GLShaderDefinitions.PhongVertex, ShaderType.VertexShader);
             }
 
             // Create fragment shaders.
             if (result == true)
             {
                 // Unused atm.
-                result = CreateShader("texSampler.frag", "content\\shaders\\", ShaderType.FragmentShader);
+                result = CreateShaderFromMemory("texSampler.frag", 
+                    GLShaderDefinitions.TextureSamplerFragment, ShaderType.FragmentShader);
             }
 
             if (result == true)
             {
                 // Unused atm.
-                result = CreateShader("texSamplerGreyscale.frag", "content\\shaders\\", ShaderType.FragmentShader);
+                result = CreateShaderFromMemory("texSamplerGreyscale.frag", 
+                    GLShaderDefinitions.TextureSamplerGreyscaleFragment, ShaderType.FragmentShader);
             }
 
             if (result == true)
             {
-                result = CreateShader("phong.frag", "content\\shaders\\", ShaderType.FragmentShader);
+                result = CreateShaderFromMemory("phong.frag", GLShaderDefinitions.PhongFragment, ShaderType.FragmentShader);
             }
 
             if (result == true)
             {
                 // Unused atm.
-                result = CreateShader("phongTexOnly.frag", "content\\shaders\\", ShaderType.FragmentShader);
+                result = CreateShaderFromMemory("phongTexOnly.frag", 
+                    GLShaderDefinitions.PhongTexOnlyFragment, ShaderType.FragmentShader);
             }
 
             //
@@ -480,12 +483,37 @@ namespace LOLViewer
         // Helper Functions
         //
 
-        private bool CreateShader(String name, String path, ShaderType type) 
+        private bool CreateShaderFromFile(String name, String path, ShaderType type)
         {
             bool result = true;
 
             GLShader shader = new GLShader(type);
-            result = shader.Load(path + name);
+            result = shader.LoadFromFile(path + name);
+
+            if (result == true)
+            {
+                result = shader.Compile();
+            }
+
+            if (result == true)
+            {
+                shaders.Add(name, shader);
+            }
+            else
+            {
+                // We need to clean up this shader since it failed.
+                shader.Destroy();
+            }
+
+            return result;
+        }
+
+        private bool CreateShaderFromMemory(String name, String data, ShaderType type)
+        {
+            bool result = true;
+
+            GLShader shader = new GLShader(type);
+            result = shader.LoadFromMemory(data);
 
             if (result == true)
             {

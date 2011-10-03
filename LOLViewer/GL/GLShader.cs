@@ -57,7 +57,7 @@ namespace LOLViewer
         /// the CWD.
         /// </param>
         /// <returns></returns>
-        public bool Load(String fileName)
+        public bool LoadFromFile(String fileName)
         {
             bool result = true;
 
@@ -74,6 +74,20 @@ namespace LOLViewer
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Loads the shader from a string
+        /// </summary>
+        /// <param name="data">
+        /// The definition of the shader.
+        /// </param>
+        /// <returns></returns>
+        public bool LoadFromMemory(String data)
+        {
+            this.data = data;
+
+            return true;
         }
 
         public bool Compile()
