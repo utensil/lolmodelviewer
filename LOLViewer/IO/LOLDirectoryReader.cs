@@ -52,6 +52,9 @@ namespace LOLViewer.IO
         public const String DEFAULT_EXTRACTED_TEXTURES_ROOT = "content\\textures\\";
         public String root;
 
+        // Don't clear me. This is a bug work around.
+        public Dictionary<String, RAFArchive> rafArchives;
+
         public List<FileInfo> inibinFiles;
         public Dictionary<String, RAFFileListEntry> rafSkls;
         public Dictionary<String, RAFFileListEntry> rafSkns;
@@ -66,6 +69,8 @@ namespace LOLViewer.IO
         public LOLDirectoryReader()
         {
             root = DEFAULT_ROOT;
+
+            rafArchives = new Dictionary<String, RAFArchive>();
 
             inibinFiles = new List<FileInfo>();
             rafSkls = new Dictionary<String, RAFFileListEntry>();
@@ -456,7 +461,22 @@ namespace LOLViewer.IO
             try
             {
                 // Open the archive
-                RAFArchive archive = new RAFArchive(f.FullName);
+
+                // TODO: Bug. These archives don't release their file handle and
+                // there's no function to close them.
+                // So, for now, let's just hold onto them incase we need them later.
+
+                RAFArchive archive = null;
+                if( rafArchives.ContainsKey(f.FullName) == true )
+                {
+                    archive = rafArchives[f.FullName];
+                }
+                else
+                {
+                    archive = new RAFArchive(f.FullName);
+                    rafArchives.Add(f.FullName, archive);
+                }
+                 
 
                 // Get directory
                 RAFDirectoryFile directory = archive.GetDirectoryFile();
