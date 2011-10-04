@@ -173,20 +173,18 @@ namespace LOLViewer
 
         public void OnKeyUp(KeyEventArgs e)
         {
-            try
+            if( bindings.ContainsKey(e.KeyCode) == true )
             {
                 keyState[bindings[e.KeyCode]] = false;
             }
-            catch {} // Key isn't bound. Just ignore it.
         }
 
         public void OnKeyDown(KeyEventArgs e)
         {
-            try
+            if( bindings.ContainsKey(e.KeyCode) == true )
             {
                 keyState[bindings[e.KeyCode]] = true;
             }
-            catch {} // Key isn't bound. Just ignore it.
         }
 
         public void OnUpdate(float elapsedTime)

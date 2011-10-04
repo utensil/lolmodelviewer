@@ -52,6 +52,7 @@ namespace LOLViewer
         // Geometry Variables
         private Dictionary<String, GLBillboard> billboards;
         private Dictionary<String, GLStaticModel> sModels;
+        private Dictionary<String, GLRiggedModel> rModels;
 
         // Texture Variables
         private Dictionary<String, GLTexture> textures;
@@ -67,6 +68,7 @@ namespace LOLViewer
             shaders = new Dictionary<String, GLShader>();
             billboards = new Dictionary<String, GLBillboard>();
             sModels = new Dictionary<String, GLStaticModel>();
+            rModels = new Dictionary<String, GLRiggedModel>();
             textures = new Dictionary<String, GLTexture>();
 
             world = Matrix4.Scale(DEFAULT_MODEL_SCALE);
@@ -86,6 +88,12 @@ namespace LOLViewer
             if (result == true)
             {
                 result = CreateShaderFromMemory("phong.vert", GLShaderDefinitions.PhongVertex, ShaderType.VertexShader);
+            }
+
+            if (result == true)
+            {
+                result = CreateShaderFromMemory("phongRigged.vert", GLShaderDefinitions.PhongRiggedVertex, 
+                    ShaderType.VertexShader);
             }
 
             // Create fragment shaders.
@@ -191,6 +199,33 @@ namespace LOLViewer
                     attributes, uniforms);
             }
 
+            // Phong Lighting with Skeletal Animation
+            if (result == true)
+            {
+                List<String> attributes = new List<String>();
+                attributes.Add("in_Position");
+                attributes.Add("in_Normal");
+                attributes.Add("in_TexCoords");
+                attributes.Add("in_TexBoneID");
+                attributes.Add("in_Weights");
+
+                List<String> uniforms = new List<String>();
+                uniforms.Add("u_WorldView");
+                uniforms.Add("u_WorldViewProjection");
+                uniforms.Add("u_LightDirection");
+                //uniforms.Add("u_BoneScale");
+                uniforms.Add("u_BoneTransform");
+                uniforms.Add("u_LightDiffuse");
+                uniforms.Add("u_KA");
+                uniforms.Add("u_KD");
+                uniforms.Add("u_KS");
+                uniforms.Add("u_SExponent");
+                uniforms.Add("u_Texture");
+
+                result = CreateProgram("phongRigged", "phongRigged.vert", "phong.frag",
+                    attributes, uniforms);
+            }
+
             // Create Geometry
             // Old Debugging Code.
             // I kept it around incase it would be cool to draw a ground
@@ -273,6 +308,12 @@ namespace LOLViewer
             }
             sModels.Clear();
 
+            foreach (var r in rModels)
+            {
+                r.Value.Destory();
+            }
+            rModels.Clear();
+
             GL.BindTexture(TextureTarget.Texture2D, 0);
             foreach (var t in textures)
             {
@@ -285,81 +326,18 @@ namespace LOLViewer
             // Create model geometry
             //
 
-            SKNFile file = new SKNFile();
-            if (result == true)
+            // If the model definition does not contain .skl files,
+            // then it's a static model.
+            if (model.fileSkl == null &&
+                model.rafSkl == null &&
+                result == true)
             {
-                if (model.fileSkn != null)
-                {
-                    // Model is stored in a raw file on disc.
-                    result = SKNReader.Read(model.fileSkn,
-                        ref file);
-                }
-                else
-                {
-                    // Model is stored in a RAF.
-                    result = SKNReader.Read(model.rafSkn,
-                        ref file);
-                }
+                result = CreateStaticModel(model);
             }
-
-            GLStaticModel glModel = new GLStaticModel();
-            if (result == true)
+            // It's a rigged model
+            else
             {
-                result = file.ToGLStaticModel(ref glModel, true);
-            }
-
-            // Store it.
-            if (result == true)
-            {
-                if (model.fileSkn != null)
-                {
-                    sModels.Add(model.fileSkn.Name, glModel);
-                }
-                else
-                {
-                    String name = model.rafSkn.FileName;
-                    int pos = name.LastIndexOf("/");
-                    name = name.Substring(pos + 1);
-
-                    sModels.Add(name, glModel);
-                }
-            }
-
-            //
-            // Create Model Texture.
-            //
-
-            if (result == true)
-            {
-                if (model.fileTexture != null)
-                {
-                    // Texture stored directory on disk.
-                    result = CreateTexture(model.fileTexture, TextureTarget.Texture2D,
-                            GLTexture.SupportedImageEncodings.DDS);
-                }
-                else
-                {
-                    // Texture stored in RAF file.
-                    result = CreateTexture(model.rafTexture, TextureTarget.Texture2D,
-                            GLTexture.SupportedImageEncodings.DDS);
-                }
-
-                // Store it in our new model file.
-                if (result == true)
-                {
-                    if (model.fileTexture != null)
-                    {
-                        glModel.textureName = model.fileTexture.Name;
-                    }
-                    else
-                    {
-                        String name = model.rafTexture.FileName;
-                        int pos = name.LastIndexOf("/");
-                        name = name.Substring(pos + 1);
-
-                        glModel.textureName = name;
-                    }
-                }
+                result = CreateRiggedModel(model);
             }
 
             return result;
@@ -399,29 +377,34 @@ namespace LOLViewer
                 b.Value.Draw();
             }
             */
+
+            GLShaderProgram program = null;
             
-            // Load shaders
-            GLShaderProgram program = programs["phong"];
-            program.Load();
+            // Load shaders for phong lighting.
+            if (sModels.Count > 0)
+            {
+                program = programs["phong"];
+                program.Load();
 
-            //
-            // Update parameters for phong lighting.
-            //
+                //
+                // Update parameters for phong lighting.
+                //
 
-            // Vertex Shader Uniforms
-            program.UpdateUniform("u_WorldView",
-                world * camera.view);
-            program.UpdateUniform("u_WorldViewProjection",
-                world * camera.view * camera.projection);
+                // Vertex Shader Uniforms
+                program.UpdateUniform("u_WorldView",
+                    world * camera.view);
+                program.UpdateUniform("u_WorldViewProjection",
+                    world * camera.view * camera.projection);
 
-            // Fragment Shader Uniforms
-            program.UpdateUniform("u_LightDirection", new Vector3(0.0f, 0.0f,1.0f));
-            program.UpdateUniform("u_LightDiffuse",
-                new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-            program.UpdateUniform("u_KA", 0.8f);
-            program.UpdateUniform("u_KD", 0.1f);
-            program.UpdateUniform("u_KS", 0.1f);
-            program.UpdateUniform("u_SExponent", 8.0f);
+                // Fragment Shader Uniforms
+                program.UpdateUniform("u_LightDirection", new Vector3(0.0f, 0.0f, 1.0f));
+                program.UpdateUniform("u_LightDiffuse",
+                    new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+                program.UpdateUniform("u_KA", 0.8f);
+                program.UpdateUniform("u_KD", 0.1f);
+                program.UpdateUniform("u_KS", 0.1f);
+                program.UpdateUniform("u_SExponent", 8.0f);
+            }
 
             // Draw Model
             foreach (var s in sModels)
@@ -435,6 +418,59 @@ namespace LOLViewer
                 }
        
                 s.Value.Draw();
+            }
+
+            GL.UseProgram(0);
+
+            // Load shaders for rigged phong lighting.
+            if (rModels.Count > 0)
+            {
+                program = programs["phongRigged"];
+                program.Load();
+
+                //
+                // Update parameters for phong lighting.
+                //
+
+                // Vertex Shader Uniforms
+                program.UpdateUniform("u_WorldView",
+                    world * camera.view);
+                program.UpdateUniform("u_WorldViewProjection",
+                    world * camera.view * camera.projection);
+
+                // Fragment Shader Uniforms
+                program.UpdateUniform("u_LightDirection", new Vector3(0.0f, 0.0f, 1.0f));
+                program.UpdateUniform("u_LightDiffuse",
+                    new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+                program.UpdateUniform("u_KA", 0.8f);
+                program.UpdateUniform("u_KD", 0.1f);
+                program.UpdateUniform("u_KS", 0.1f);
+                program.UpdateUniform("u_SExponent", 8.0f);
+            }
+
+            // Draw Model
+            foreach (var r in rModels)
+            {
+                // Load the model's texture for the shader.
+                GL.ActiveTexture(TextureUnit.Texture0);
+                program.UpdateUniform("u_Texture", 0);
+                if (r.Value.textureName != String.Empty)
+                {
+                    textures[r.Value.textureName].Bind(); // not checking return value        
+                }
+
+                // Load the bone information for this model.
+                program.UpdateUniform("u_BoneTransform", r.Value.boneTransforms);
+                
+                // Debug Stuff
+                //Matrix4[] boneTrans = new Matrix4[GLRiggedModel.MAX_BONES];
+                //for (int i = 0; i < GLRiggedModel.MAX_BONES; ++i)
+                //{
+                //    boneTrans[i] = Matrix4.Identity;
+                //}
+                //program.UpdateUniform("u_BoneTransform", boneTrans);
+
+                r.Value.Draw();
             }
           
             // Unload shaders.
@@ -471,6 +507,12 @@ namespace LOLViewer
             }
             sModels.Clear();
 
+            foreach (var r in rModels)
+            {
+                r.Value.Destory();
+            }
+            rModels.Clear();
+
             GL.BindTexture(TextureTarget.Texture2D, 0);
             foreach (var t in textures)
             {
@@ -482,6 +524,9 @@ namespace LOLViewer
         //
         // Helper Functions
         //
+
+        // TODO: Alot of this code is a mess.
+        // It should be refactored into more meaningful classes.
 
         private bool CreateShaderFromFile(String name, String path, ShaderType type)
         {
@@ -632,6 +677,189 @@ namespace LOLViewer
             return result;
         }
 
+        private bool CreateStaticModel(LOLModel model)
+        {
+            bool result = true;
+
+            SKNFile file = new SKNFile();
+            if (result == true)
+            {
+                if (model.fileSkn != null)
+                {
+                    // Model is stored in a raw file on disc.
+                    result = SKNReader.Read(model.fileSkn,
+                        ref file);
+                }
+                else
+                {
+                    // Model is stored in a RAF.
+                    result = SKNReader.Read(model.rafSkn,
+                        ref file);
+                }
+            }
+
+            GLStaticModel glModel = new GLStaticModel();
+            if (result == true)
+            {
+                result = file.ToGLStaticModel(ref glModel, true);
+            }
+
+            // Store it.
+            if (result == true)
+            {
+                if (model.fileSkn != null)
+                {
+                    sModels.Add(model.fileSkn.Name, glModel);
+                }
+                else
+                {
+                    String name = model.rafSkn.FileName;
+                    int pos = name.LastIndexOf("/");
+                    name = name.Substring(pos + 1);
+
+                    sModels.Add(name, glModel);
+                }
+            }
+
+            //
+            // Create Model Texture.
+            //
+
+            if (result == true)
+            {
+                if (model.fileTexture != null)
+                {
+                    // Texture stored directory on disk.
+                    result = CreateTexture(model.fileTexture, TextureTarget.Texture2D,
+                            GLTexture.SupportedImageEncodings.DDS);
+                }
+                else
+                {
+                    // Texture stored in RAF file.
+                    result = CreateTexture(model.rafTexture, TextureTarget.Texture2D,
+                            GLTexture.SupportedImageEncodings.DDS);
+                }
+
+                // Store it in our new model file.
+                if (result == true)
+                {
+                    if (model.fileTexture != null)
+                    {
+                        glModel.textureName = model.fileTexture.Name;
+                    }
+                    else
+                    {
+                        String name = model.rafTexture.FileName;
+                        int pos = name.LastIndexOf("/");
+                        name = name.Substring(pos + 1);
+
+                        glModel.textureName = name;
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private bool CreateRiggedModel(LOLModel model)
+        {
+            bool result = true;
+
+            SKNFile sknFile = new SKNFile();
+            if (result == true)
+            {
+                if (model.fileSkn != null)
+                {
+                    // Model is stored in a raw file on disc.
+                    result = SKNReader.Read(model.fileSkn,
+                        ref sknFile);
+                }
+                else
+                {
+                    // Model is stored in a RAF.
+                    result = SKNReader.Read(model.rafSkn,
+                        ref sknFile);
+                }
+            }
+
+            SKLFile sklFile = new SKLFile();
+            if (result == true)
+            {
+                if (model.fileSkl != null)
+                {
+                    result = SKLReader.Read(model.fileSkl,
+                        ref sklFile);
+                }
+                else
+                {
+                    result = SKLReader.Read(model.rafSkl,
+                        ref sklFile);
+                }
+            }
+
+            GLRiggedModel glModel = new GLRiggedModel();
+            if (result == true)
+            {
+                result = sklFile.ToGLRiggedModel(ref glModel, sknFile, true);
+            }
+
+            // Store it.
+            if (result == true)
+            {
+                if (model.fileSkn != null)
+                {
+                    rModels.Add(model.fileSkn.Name, glModel);
+                }
+                else
+                {
+                    String name = model.rafSkn.FileName;
+                    int pos = name.LastIndexOf("/");
+                    name = name.Substring(pos + 1);
+
+                    rModels.Add(name, glModel);
+                }
+            }
+
+            //
+            // Create Model Texture.
+            //
+
+            if (result == true)
+            {
+                if (model.fileTexture != null)
+                {
+                    // Texture stored directory on disk.
+                    result = CreateTexture(model.fileTexture, TextureTarget.Texture2D,
+                            GLTexture.SupportedImageEncodings.DDS);
+                }
+                else
+                {
+                    // Texture stored in RAF file.
+                    result = CreateTexture(model.rafTexture, TextureTarget.Texture2D,
+                            GLTexture.SupportedImageEncodings.DDS);
+                }
+
+                // Store it in our new model file.
+                if (result == true)
+                {
+                    if (model.fileTexture != null)
+                    {
+                        glModel.textureName = model.fileTexture.Name;
+                    }
+                    else
+                    {
+                        String name = model.rafTexture.FileName;
+                        int pos = name.LastIndexOf("/");
+                        name = name.Substring(pos + 1);
+
+                        glModel.textureName = name;
+                    }
+                }
+            }
+
+            return result;
+        }
+        
         private bool CreateTexture(FileInfo f, TextureTarget target,
             GLTexture.SupportedImageEncodings encoding)
         {

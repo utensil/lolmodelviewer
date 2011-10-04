@@ -64,6 +64,7 @@
     <Compile Include="GL\GLCamera.cs" />
     <Compile Include="GL\GLModel.cs" />
     <Compile Include="GL\GLRenderer.cs" />
+    <Compile Include="GL\GLRiggedModel.cs" />
     <Compile Include="GL\GLShader.cs" />
     <Compile Include="GL\GLShaderDefinitions.cs" />
     <Compile Include="GL\GLShaderProgram.cs" />

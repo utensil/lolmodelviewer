@@ -225,6 +225,50 @@ namespace LOLViewer
             return result;
         }
 
+        public bool UpdateUniform(String name, OpenTK.Matrix4[] matArray)
+        {
+            bool result = true;
+
+            List<float> data = new List<float>();
+            foreach( OpenTK.Matrix4 mat in matArray )
+            {
+                // Row 1
+                data.Add( mat.M11 );
+                data.Add( mat.M12 );
+                data.Add( mat.M13 );
+                data.Add( mat.M14 );
+
+                // Row 2
+                data.Add( mat.M21 );
+                data.Add( mat.M22 );
+                data.Add( mat.M23 );
+                data.Add( mat.M24 );
+
+                // Row 3
+                data.Add( mat.M31 );
+                data.Add( mat.M32 );
+                data.Add( mat.M33 );
+                data.Add( mat.M34 );
+
+                // Row 4
+                data.Add( mat.M41 );
+                data.Add( mat.M42 );
+                data.Add( mat.M43 );
+                data.Add( mat.M44 );
+            }
+
+            GL.UniformMatrix4(uniforms[name], matArray.Length, false,
+                data.ToArray());
+
+            ErrorCode error = GL.GetError();
+            if( error != ErrorCode.NoError )
+            {
+                result = false;
+            }
+
+            return result;
+        }
+
         public bool UpdateUniform(String name, int i)
         {
             bool result = true;

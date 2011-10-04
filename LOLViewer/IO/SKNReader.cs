@@ -177,8 +177,11 @@ namespace LOLViewer
                     vertex.position.Y = file.ReadSingle();
                     vertex.position.Z = file.ReadSingle();
 
-                    vertex.boneIndex = new String(
-                        file.ReadChars(SKNVertex.BONE_INDEX_SIZE));
+                    for (int j = 0; j < SKNVertex.BONE_INDEX_SIZE; ++j)
+                    {
+                        int bone = (int) file.ReadByte();
+                        vertex.boneIndex[j] = bone;
+                    }
 
                     vertex.weights.X = file.ReadSingle();
                     vertex.weights.Y = file.ReadSingle();
