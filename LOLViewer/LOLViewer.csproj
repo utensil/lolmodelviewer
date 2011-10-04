@@ -70,6 +70,10 @@
     <Compile Include="GL\GLShaderProgram.cs" />
     <Compile Include="GL\GLStaticModel.cs" />
     <Compile Include="GL\GLTexture.cs" />
+    <Compile Include="IO\ANMBone.cs" />
+    <Compile Include="IO\ANMFile.cs" />
+    <Compile Include="IO\ANMFrame.cs" />
+    <Compile Include="IO\ANMReader.cs" />
     <Compile Include="IO\InibinFile.cs" />
     <Compile Include="IO\InibinHashIDs.cs" />
     <Compile Include="IO\InibinReader.cs" />
