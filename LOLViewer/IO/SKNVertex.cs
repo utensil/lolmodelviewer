@@ -43,7 +43,7 @@ namespace LOLViewer
     class SKNVertex
     {
         public Vector3      position;
-        public String       boneIndex;
+        public int[]        boneIndex;
         public Vector4      weights;
         public Vector3      normal;
         public Vector2      texCoords;
@@ -53,7 +53,7 @@ namespace LOLViewer
         public SKNVertex()
         {
             position = Vector3.Zero;
-            boneIndex = String.Empty;
+            boneIndex = new int[BONE_INDEX_SIZE];
             weights = Vector4.Zero;
             normal = Vector3.Zero;
             texCoords = Vector2.Zero;

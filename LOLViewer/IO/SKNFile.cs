@@ -112,7 +112,7 @@ namespace LOLViewer
             List<uint> iData = new List<uint>();
             for (int i = 0; i < numIndices; ++i)
             {
-                iData.Add( (uint)indices[i] );
+                iData.Add((uint)indices[i]);
             }
 
 

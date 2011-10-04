@@ -58,8 +58,8 @@ namespace LOLViewer
 
                 void main(void) 
                 {
-	                // Normal Transform
-    	                gl_Position = u_WorldViewProjection * vec4(in_Position, 1.0);
+	                // The normal graphic's pipeline transform.
+    	            gl_Position = u_WorldViewProjection * vec4(in_Position, 1.0);
 
 	                // Required for phong lighting
 	                vec3 viewLightDirection = ( u_WorldView * vec4(u_LightDirection, 0.0) ).xyz;
@@ -69,6 +69,64 @@ namespace LOLViewer
 
 	                // Only take to view space
 	                v_Normal = ( normalize( u_WorldView * vec4(in_Normal, 0.0) ) ).xyz;
+
+	                v_TexCoords = in_TexCoords;
+                }";
+
+        public const String PhongRiggedVertex
+            = @"#version 150
+
+                //
+                // Vertex Shader for Skeletal Animation and Phong Lighting.
+                // Supports 4 bones per vertex.
+                // - James Lammlein
+                //
+
+                uniform mat4  u_WorldView;		// we need vector from vertex to eye
+                uniform mat4  u_WorldViewProjection;	// normal transform for vertex
+                uniform vec3  u_LightDirection; 
+                uniform float u_BoneScale[128];
+                uniform mat4  u_BoneTransform[128];
+
+                in  vec3  in_Position;
+                in  vec3  in_Normal;
+                in  vec2  in_TexCoords;
+                in  int   in_BoneID[4];
+                in  vec4  in_Weights;
+
+                out vec3 v_ViewSpacePosition;
+                out vec3 v_VertexToLight;
+                out vec3 v_Normal;
+                out vec2 v_TexCoords;
+
+                void main(void) 
+                {
+                    // Initialize Variables
+                    gl_Position = vec4(in_Position, 1.0);
+                    v_Normal    = in_Normal;
+                    
+                    // Transform the vertex information based on bones.
+                    gl_Position =   ((u_BoneTransform[ in_BoneID[0] ] * in_Weights[0]) * gl_Position) +
+                                    ((u_BoneTransform[ in_BoneID[1] ] * in_Weights[1]) * gl_Position) +
+                                    ((u_BoneTransform[ in_BoneID[2] ] * in_Weights[2]) * gl_Position) +
+                                    ((u_BoneTransform[ in_BoneID[3] ] * in_Weights[3]) * gl_Position); 
+
+                    v_Normal   =    (((u_BoneTransform[ in_BoneID[0] ] * in_Weights[0]) * vec4(v_Normal, 0.0)).xyz) +
+                                    (((u_BoneTransform[ in_BoneID[1] ] * in_Weights[1]) * vec4(v_Normal, 0.0)).xyz) +
+                                    (((u_BoneTransform[ in_BoneID[2] ] * in_Weights[2]) * vec4(v_Normal, 0.0)).xyz) +
+                                    (((u_BoneTransform[ in_BoneID[3] ] * in_Weights[3]) * vec4(v_Normal, 0.0)).xyz);
+
+	                // The normal graphic's pipeline transform.
+    	            gl_Position = u_WorldViewProjection * gl_Position;
+
+	                // Required for phong lighting
+	                vec3 viewLightDirection = ( u_WorldView * vec4(u_LightDirection, 0.0) ).xyz;
+	                v_VertexToLight = normalize( viewLightDirection );
+	
+	                v_ViewSpacePosition = ( u_WorldView * vec4(in_Position, 1.0) ).xyz;
+
+	                // Only take to view space
+	                v_Normal = ( normalize( u_WorldView * vec4(v_Normal, 0.0) ) ).xyz;
 
 	                v_TexCoords = in_TexCoords;
                 }";

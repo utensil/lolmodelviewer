@@ -60,5 +60,82 @@ namespace LOLViewer
             numBoneIDs = 0;
             boneIDs = new List<uint>();
         }
+
+        /// <summary>
+        /// Loads data from SKN and SKL files into
+        /// an OpenGL rigged model.
+        /// </summary>
+        /// <param name="model">Where to store the data.</param>
+        /// <param name="skn">The .skn data.</param>
+        /// <param name="usingDDSTexture">The V coordinate in OpenGL
+        /// is different from directX.  If you're using textures on
+        /// this model which were intended to be used with directX, you 
+        /// need to invert the V coordinate.</param>
+        /// <returns></returns>
+        public bool ToGLRiggedModel(ref GLRiggedModel model, SKNFile skn, bool usingDDSTexture)
+        {
+            bool result = true;
+
+            List<float> vData = new List<float>();
+            List<float> nData = new List<float>();
+            List<float> tData = new List<float>();
+            List<int> bData = new List<int>();
+            List<float> wData = new List<float>();
+            List<OpenTK.Matrix4> btData = new List<OpenTK.Matrix4>();
+            for (int i = 0; i < skn.numVertices; ++i)
+            {
+                // Position Information
+                vData.Add(skn.vertices[i].position.X);
+                vData.Add(skn.vertices[i].position.Y);
+                vData.Add(skn.vertices[i].position.Z);
+
+                // Normal Information
+                nData.Add(skn.vertices[i].normal.X);
+                nData.Add(skn.vertices[i].normal.Y);
+                nData.Add(skn.vertices[i].normal.Z);
+
+                // Tex Coords Information
+                tData.Add(skn.vertices[i].texCoords.X);
+                if (usingDDSTexture == false)
+                {
+                    tData.Add(skn.vertices[i].texCoords.Y);
+                }
+                else
+                {
+                    // DDS Texture.
+                    tData.Add(1.0f - skn.vertices[i].texCoords.Y);
+                }
+
+                // Bone Index Information
+                for (int j = 0; j < SKNVertex.BONE_INDEX_SIZE; ++j)
+                {
+                    bData.Add(skn.vertices[i].boneIndex[j]);
+                }
+
+                // Bone Weight Information
+                wData.Add(skn.vertices[i].weights.X);
+                wData.Add(skn.vertices[i].weights.Y);
+                wData.Add(skn.vertices[i].weights.Z);
+                wData.Add(skn.vertices[i].weights.W);
+            }
+
+            // Bone Transform Information
+            for (int i = 0; i < numBones; ++i)
+            {
+                btData.Add(bones[i].transform);
+            }
+
+            // Index Information
+            List<uint> iData = new List<uint>();
+            for (int i = 0; i < skn.numIndices; ++i)
+            {
+                iData.Add((uint)skn.indices[i]);
+            }
+
+            result = model.Create(vData, nData, tData, 
+                bData, wData, iData, btData);
+
+            return result;
+        }
     }
 }

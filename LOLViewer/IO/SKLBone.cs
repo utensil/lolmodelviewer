@@ -40,11 +40,11 @@ namespace LOLViewer
     class SKLBone
     {
         public String       name;
-        public const int   BONE_NAME_SIZE = 32;
+        public const int    BONE_NAME_SIZE = 32;
         public int          parentID;
         public float        scale;
         public Matrix4      transform;
-        public const int   TRANSFORM_SIZE = 12;
+        public const int    TRANSFORM_SIZE = 12;
 
         public SKLBone()
         {
