@@ -91,7 +91,7 @@ namespace LOLViewer
                 in  vec3  in_Position;
                 in  vec3  in_Normal;
                 in  vec2  in_TexCoords;
-                in  int   in_BoneID[4];
+                in  vec4  in_BoneID;
                 in  vec4  in_Weights;
 
                 out vec3 v_ViewSpacePosition;
@@ -101,23 +101,19 @@ namespace LOLViewer
 
                 void main(void) 
                 {
-                    // Initialize Variables
-                    gl_Position = vec4(in_Position, 1.0);
-                    v_Normal    = in_Normal;
-                    
                     // Transform the vertex information based on bones.
-                    gl_Position =   ((u_BoneTransform[ in_BoneID[0] ] * in_Weights[0]) * gl_Position) +
-                                    ((u_BoneTransform[ in_BoneID[1] ] * in_Weights[1]) * gl_Position) +
-                                    ((u_BoneTransform[ in_BoneID[2] ] * in_Weights[2]) * gl_Position) +
-                                    ((u_BoneTransform[ in_BoneID[3] ] * in_Weights[3]) * gl_Position); 
+                    vec3 position = (in_Weights[0] * (u_BoneTransform[ int(in_BoneID[0]) ] * vec4(in_Position, 1.0)).xyz) +
+                                    (in_Weights[1] * (u_BoneTransform[ int(in_BoneID[1]) ] * vec4(in_Position, 1.0)).xyz) +
+                                    (in_Weights[2] * (u_BoneTransform[ int(in_BoneID[2]) ] * vec4(in_Position, 1.0)).xyz) +
+                                    (in_Weights[3] * (u_BoneTransform[ int(in_BoneID[3]) ] * vec4(in_Position, 1.0)).xyz); 
 
-                    v_Normal   =    (((u_BoneTransform[ in_BoneID[0] ] * in_Weights[0]) * vec4(v_Normal, 0.0)).xyz) +
-                                    (((u_BoneTransform[ in_BoneID[1] ] * in_Weights[1]) * vec4(v_Normal, 0.0)).xyz) +
-                                    (((u_BoneTransform[ in_BoneID[2] ] * in_Weights[2]) * vec4(v_Normal, 0.0)).xyz) +
-                                    (((u_BoneTransform[ in_BoneID[3] ] * in_Weights[3]) * vec4(v_Normal, 0.0)).xyz);
+                    vec3 normal =   (in_Weights[0] * (u_BoneTransform[ int(in_BoneID[0]) ] * vec4(in_Normal, 0.0)).xyz) +
+                                    (in_Weights[1] * (u_BoneTransform[ int(in_BoneID[1]) ] * vec4(in_Normal, 0.0)).xyz) +
+                                    (in_Weights[2] * (u_BoneTransform[ int(in_BoneID[2]) ] * vec4(in_Normal, 0.0)).xyz) +
+                                    (in_Weights[3] * (u_BoneTransform[ int(in_BoneID[3]) ] * vec4(in_Normal, 0.0)).xyz);
 
 	                // The normal graphic's pipeline transform.
-    	            gl_Position = u_WorldViewProjection * gl_Position;
+    	            gl_Position = u_WorldViewProjection * vec4( position, 1.0 );
 
 	                // Required for phong lighting
 	                vec3 viewLightDirection = ( u_WorldView * vec4(u_LightDirection, 0.0) ).xyz;
@@ -126,7 +122,7 @@ namespace LOLViewer
 	                v_ViewSpacePosition = ( u_WorldView * vec4(in_Position, 1.0) ).xyz;
 
 	                // Only take to view space
-	                v_Normal = ( normalize( u_WorldView * vec4(v_Normal, 0.0) ) ).xyz;
+	                v_Normal = ( normalize( u_WorldView * vec4(normal, 0.0) ) ).xyz;
 
 	                v_TexCoords = in_TexCoords;
                 }";

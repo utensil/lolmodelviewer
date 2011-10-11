@@ -151,25 +151,25 @@ namespace LOLViewer
                             matrix[j] = file.ReadSingle();
                         }
 
-                        bone.transform.M11 = matrix[0]; //
-                        bone.transform.M21 = matrix[1]; // Column 1
-                        bone.transform.M31 = matrix[2]; //
-                        bone.transform.M41 = matrix[3]; //
+                        Matrix4 orientationTransform = Matrix4.Identity;
 
-                        bone.transform.M12 = matrix[4]; //
-                        bone.transform.M22 = matrix[5]; // Column 2
-                        bone.transform.M32 = matrix[6]; //
-                        bone.transform.M42 = matrix[7]; //
+                        orientationTransform.M11 = matrix[0]; //
+                        orientationTransform.M21 = matrix[1]; // Column 1
+                        orientationTransform.M31 = matrix[2]; //
+                        
+                        orientationTransform.M12 = matrix[4]; //
+                        orientationTransform.M22 = matrix[5]; // Column 2
+                        orientationTransform.M32 = matrix[6]; //
+                        
+                        orientationTransform.M13 = matrix[8]; //
+                        orientationTransform.M23 = matrix[9]; // Column 3
+                        orientationTransform.M33 = matrix[10]; //
 
-                        bone.transform.M13 = matrix[8]; //
-                        bone.transform.M23 = matrix[9]; // Column 3
-                        bone.transform.M33 = matrix[10]; //
-                        bone.transform.M43 = matrix[11]; //
+                        bone.orientation = OpenTKExtras.Matrix4.CreateQuatFromMatrix(orientationTransform);
 
-                        bone.transform.M14 = 0.0f; //
-                        bone.transform.M24 = 0.0f; // Column 4
-                        bone.transform.M34 = 0.0f; //
-                        bone.transform.M44 = 1.0f; //
+                        // Position from matrix.
+                        Vector3 position = new Vector3(matrix[3], matrix[7], matrix[11]);
+                        bone.position = position;
 
                         data.bones.Add(bone);
                     }

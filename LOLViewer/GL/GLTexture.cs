@@ -296,9 +296,17 @@ namespace LOLViewer
             bool result = true;
 
             TextureTarget dimension;
-            uint handle;
-            TextureLoaders.ImageDDS.LoadFromMemory(f.GetContent(), out handle,
-                out dimension);
+            uint handle = 0;
+            try
+            {
+                TextureLoaders.ImageDDS.LoadFromMemory(f.GetContent(), out handle,
+                    out dimension);
+            }
+            catch
+            {
+                // The DDS loader can't read all types of DDS files.
+                result = false;
+            }
 
             if (handle > 0)
             {

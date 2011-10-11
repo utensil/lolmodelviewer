@@ -62,6 +62,7 @@ namespace LOLViewer.IO
                     FileAccess.Read);
 
                 result = ReadCharacterInibin(fStream, out file);
+                file.directory = f.Directory;
             }
             catch
             {
@@ -119,14 +120,18 @@ namespace LOLViewer.IO
 #if VERBOSE
                 DebugOut("U32 properties start position", stream.Position);
 #endif
-                foreach (long key in ReadSegmentKeys( ref stream )) 
+                long[] keys = ReadSegmentKeys( ref stream );
+                if (keys != null)
                 {
-                    long val = (long) ReadInt32(ref stream);
+                    foreach (long key in keys)
+                    {
+                        long val = (long)ReadInt32(ref stream);
 #if VERBOSE
-                    DebugOut("U32 prop(" + key + ")", val);
+                        DebugOut("U32 prop(" + key + ")", val);
 #endif
 
-                    file.AddProperty(key, val);
+                        file.AddProperty(key, val);
+                    }
                 }
             }
 
@@ -142,14 +147,18 @@ namespace LOLViewer.IO
 #if VERBOSE
                 DebugOut("Float properties start position", stream.Position);
 #endif
-                foreach (long key in ReadSegmentKeys(ref stream))
+                long[] keys = ReadSegmentKeys( ref stream );
+                if (keys != null)
                 {
-                    float val = ReadFloat(ref stream);
+                    foreach (long key in keys)
+                    {
+                        float val = ReadFloat(ref stream);
 #if VERBOSE
-                    DebugOut("float prop(" + key + ")", val);
+                        DebugOut("float prop(" + key + ")", val);
 #endif
 
-                    file.AddProperty(key, val);
+                        file.AddProperty(key, val);
+                    }
                 }
             }
 
@@ -165,14 +174,18 @@ namespace LOLViewer.IO
 #if VERBOSE
                 DebugOut("U8/10 properties start position", stream.Position);
 #endif
-                foreach (long key in ReadSegmentKeys(ref stream))
+                long[] keys = ReadSegmentKeys( ref stream );
+                if (keys != null)
                 {
-                    float val = stream.ReadByte() * 0.1F;
+                    foreach (long key in keys)
+                    {
+                        float val = stream.ReadByte() * 0.1F;
 #if VERBOSE
-                    DebugOut("U8/10 prop(" + key + ")", val);
+                        DebugOut("U8/10 prop(" + key + ")", val);
 #endif
 
-                    file.AddProperty(key, val);
+                        file.AddProperty(key, val);
+                    }
                 }
             }
 
@@ -188,14 +201,18 @@ namespace LOLViewer.IO
 #if VERBOSE
                 DebugOut("U16 properties start position", stream.Position);
 #endif
-                foreach (long key in ReadSegmentKeys(ref stream))
+                long[] keys = ReadSegmentKeys( ref stream );
+                if (keys != null)
                 {
-                    int val = (int) ReadShort(ref stream);
+                    foreach (long key in keys)
+                    {
+                        int val = (int)ReadShort(ref stream);
 #if VERBOSE
-                    DebugOut("U16 prop(" + key + ")", val);
+                        DebugOut("U16 prop(" + key + ")", val);
 #endif
 
-                    file.AddProperty(key, val);
+                        file.AddProperty(key, val);
+                    }
                 }
             }
 
@@ -211,14 +228,18 @@ namespace LOLViewer.IO
 #if VERBOSE
                 DebugOut("U8 properties start position", stream.Position);
 #endif
-                foreach (long key in ReadSegmentKeys(ref stream))
+                long[] keys = ReadSegmentKeys( ref stream );
+                if (keys != null)
                 {
-                    int val = 0xff & stream.ReadByte();
+                    foreach (long key in keys)
+                    {
+                        int val = 0xff & stream.ReadByte();
 #if VERBOSE
-                    DebugOut("U8 prop(" + key + ")", val);
+                        DebugOut("U8 prop(" + key + ")", val);
 #endif
 
-                    file.AddProperty(key, val);
+                        file.AddProperty(key, val);
+                    }
                 }
             }
 
@@ -235,27 +256,30 @@ namespace LOLViewer.IO
                 DebugOut("Boolean flags start position", stream.Position);
 #endif
                 long[] booleanKeys = ReadSegmentKeys(ref stream);
-#if VERBOSE
-                DebugOut("Boolean keys found", booleanKeys.Length);
-#endif
-                int index = 0;
-                for (int i = 0; i < 1 + ((booleanKeys.Length - 1) / 8); ++i)
+                if (booleanKeys != null)
                 {
-                    int bits = stream.ReadByte();
-                    for (int b = 0; b < 8; ++b)
+#if VERBOSE
+                    DebugOut("Boolean keys found", booleanKeys.Length);
+#endif
+                    int index = 0;
+                    for (int i = 0; i < 1 + ((booleanKeys.Length - 1) / 8); ++i)
                     {
-                        long key = booleanKeys[index];
-                        int val = 0x1 & bits;
+                        int bits = stream.ReadByte();
+                        for (int b = 0; b < 8; ++b)
+                        {
+                            long key = booleanKeys[index];
+                            int val = 0x1 & bits;
 #if VERBOSE
                         DebugOut("Boolean prop(" + key + ")", val);
 #endif
 
-                        file.AddProperty(key, val);
-                        
-                        bits = bits >> 1;
-                        if (++index == booleanKeys.Length)
-                        {
-                            break;
+                            file.AddProperty(key, val);
+
+                            bits = bits >> 1;
+                            if (++index == booleanKeys.Length)
+                            {
+                                break;
+                            }
                         }
                     }
                 }
@@ -272,14 +296,18 @@ namespace LOLViewer.IO
 #if VERBOSE
                     DebugOut("Color? properties start position", stream.Position);
 #endif
-                    foreach (long key in ReadSegmentKeys(ref stream))
+                    long[] keys = ReadSegmentKeys( ref stream );
+                    if (keys != null)
                     {
-                        long val = (long) ReadInt32(ref stream);
+                        foreach (long key in keys)
+                        {
+                            long val = (long)ReadInt32(ref stream);
 #if VERBOSE
-                        DebugOut("U32 color prop(" + key + ")", val);
+                            DebugOut("U32 color prop(" + key + ")", val);
 #endif
 
-                        file.AddProperty(key, val);
+                            file.AddProperty(key, val);
+                        }
                     }
                 }
 
@@ -296,21 +324,25 @@ namespace LOLViewer.IO
                     DebugOut("Old style data position", stream.Position);
 #endif
                     int lastOffset = -1;
-                    foreach (long key in ReadSegmentKeys(ref stream))
+                    long[] keys = ReadSegmentKeys( ref stream );
+                    if (keys != null)
                     {
-                        int offset = (int) ReadShort(ref stream);
+                        foreach (long key in keys)
+                        {
+                            int offset = (int)ReadShort(ref stream);
 #if VERBOSE
-                        DebugOut("String offset(" + key + ")", offset);
+                            DebugOut("String offset(" + key + ")", offset);
 #endif
-                        String val = ReadNulTerminatedString(ref stream, 
-                            oldStyleOffset + offset);
+                            String val = ReadNulTerminatedString(ref stream,
+                                oldStyleOffset + offset);
 #if VERBOSE
-                        DebugOut("String prop(" + key + ")", val);
+                            DebugOut("String prop(" + key + ")", val);
 #endif
 
-                        file.AddProperty(key, val);
-                        
-                        lastOffset = offset;
+                            file.AddProperty(key, val);
+
+                            lastOffset = offset;
+                        }
                     }
                 }
 
@@ -375,6 +407,11 @@ namespace LOLViewer.IO
 #if VERBOSE
             DebugOut("segment key count", count);
 #endif
+            // Sometimes this happens.
+            if (count == -1)
+            {
+                return null;
+            }
 
             long[] result = new long[count];
             for (int i = 0; i < count; ++i)

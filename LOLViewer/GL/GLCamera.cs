@@ -291,7 +291,7 @@ namespace LOLViewer
 
             // Update arc ball
             Matrix4 rotation = Matrix4.LookAt(eye, target, new Vector3(0.0f, 1.0f, 0.0f));
-            Quaternion quat = CreateQuatFromMatrix( rotation );
+            Quaternion quat = OpenTKExtras.Matrix4.CreateQuatFromMatrix( rotation );
             viewArcBall.SetNowQuat(quat);
 
             // Update radius
@@ -323,63 +323,7 @@ namespace LOLViewer
             viewArcBall.SetWindow(width, height);
         }
 
-        //
-        // Helper Function. 
-        // I couldn't find this in the actual OpenTK library.
-        // However, it was on their website as a patch.
-        //
-        private Quaternion CreateQuatFromMatrix(Matrix4 m)
-        {
-            float trace = 1 + m.M11 + m.M22 + m.M33;
-			float S = 0;
-			float X = 0;
-			float Y = 0;
-			float Z = 0;
-			float W = 0;
-			
-			if (trace > 0.0000001) 
-			{
-				S = (float)Math.Sqrt(trace) * 2;
-				X = (m.M23 - m.M32) / S;
-				Y = (m.M31 - m.M13) / S;
-				Z = (m.M12 - m.M21) / S;
-				W = 0.25f * S;
-			} 
-			else 
-			{
-				if (m.M11 > m.M22 && m.M11 > m.M33) 
-				{
-					// Column 0: 
-					S = (float)Math.Sqrt(1.0 + m.M11 - m.M22 - m.M33) * 2;
-					X = 0.25f * S;
-					Y = (m.M12 + m.M21) / S;
-					Z = (m.M31 + m.M13) / S;
-					W = (m.M23 - m.M32) / S;
-				} 
-				else if (m.M22 > m.M33) 
-				{
-					// Column 1: 
-					S = (float)Math.Sqrt(1.0 + m.M22 - m.M11 - m.M33) * 2;
-					X = (m.M12 + m.M21) / S;
-					Y = 0.25f * S;
-					Z = (m.M23 + m.M32) / S;
-					W = (m.M31 - m.M13) / S;
-				} 
-				else 
-				{
-					// Column 2:
-					S = (float)Math.Sqrt(1.0 + m.M33 - m.M11 - m.M22) * 2;
-					X = (m.M31 + m.M13) / S;
-					Y = (m.M23 + m.M32) / S;
-					Z = 0.25f * S;
-					W = (m.M12 - m.M21) / S;
-				}
-			}
-
-            return new Quaternion(X, Y, Z, W);
-        }
-
-        private void Reset()
+        public void Reset()
         {
             eye = defaultEye;
             target = defaultTarget;

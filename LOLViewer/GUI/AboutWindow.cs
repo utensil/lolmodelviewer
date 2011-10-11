@@ -22,38 +22,40 @@ along with LOLViewer.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-
 //
-// Stores the contents of a bone from an .skl file.
+// About form.
 //
 
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
 using System.Linq;
 using System.Text;
-
-using OpenTK;
+using System.Windows.Forms;
 
 namespace LOLViewer
 {
-    class SKLBone
+    public partial class AboutWindow : Form
     {
-        public String       name;
-        public const int    BONE_NAME_SIZE = 32;
-        public int          parentID;
-        public float        scale;
-        public Vector3      position;
-        public Quaternion   orientation;
-        public const int    TRANSFORM_SIZE = 12;
-
-        public SKLBone()
+        public AboutWindow()
         {
-            name = String.Empty;
-            parentID = 0;
-            scale = 0.0f;
-            position = Vector3.Zero;
-            orientation = Quaternion.Identity;
+            InitializeComponent();
+
+            okButton.Click += new EventHandler(OnOKButtonClick);
+            this.Shown += new EventHandler(OnAboutWindowShown);
+        }
+
+        void OnAboutWindowShown(object sender, EventArgs e)
+        {
+            descriptionTextBox.DeselectAll();
+        }
+
+        private void OnOKButtonClick(object sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 }
