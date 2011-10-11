@@ -43,7 +43,7 @@ namespace LOLViewer
     class GLRenderer
     {
         // Renderer Variables
-        private OpenTK.Graphics.Color4 clearColor;
+        public OpenTK.Graphics.Color4 clearColor;
 
         // Shader Variables
         private Dictionary<String, GLShaderProgram> programs;
@@ -58,7 +58,12 @@ namespace LOLViewer
         private Dictionary<String, GLTexture> textures;
 
         public Matrix4 world;
-        public const float DEFAULT_MODEL_SCALE = 0.25f;
+        public const float DEFAULT_MODEL_SCALE = 0.11f;
+        public const int DEFAULT_MODEL_YOFFSET = -50;
+
+        // Skinning Identities. Used when animation mode is disabled.
+        public bool isSkinning;
+        private Matrix4[] identityTM = new Matrix4[GLRig.MAX_BONES];
 
         public GLRenderer()
         {
@@ -71,7 +76,14 @@ namespace LOLViewer
             rModels = new Dictionary<String, GLRiggedModel>();
             textures = new Dictionary<String, GLTexture>();
 
+            isSkinning = false;
             world = Matrix4.Scale(DEFAULT_MODEL_SCALE);
+            world.M42 = DEFAULT_MODEL_YOFFSET;
+
+            for (int i = 0; i < GLRig.MAX_BONES; ++i)
+            {
+                identityTM[i] = Matrix4.Identity;
+            }
         }
 
         public bool OnLoad()
@@ -188,7 +200,6 @@ namespace LOLViewer
             {
                 List<String> attributes = new List<String>();
                 attributes.Add("in_Position");
-                attributes.Add("in_Normal");
                 attributes.Add("in_TexCoords");
 
                 List<String> uniforms = new List<String>();
@@ -206,7 +217,7 @@ namespace LOLViewer
                 attributes.Add("in_Position");
                 attributes.Add("in_Normal");
                 attributes.Add("in_TexCoords");
-                attributes.Add("in_TexBoneID");
+                attributes.Add("in_BoneID");
                 attributes.Add("in_Weights");
 
                 List<String> uniforms = new List<String>();
@@ -230,28 +241,28 @@ namespace LOLViewer
             // Old Debugging Code.
             // I kept it around incase it would be cool to draw a ground
             // plane or something.
-            /*
+            
             if (result == true)
             {
                 List<float> verts = new List<float>();
                 // Bottom Left
-                verts.Add( -0.5f );
-                verts.Add( -0.5f );
+                verts.Add( -5.0f );
+                verts.Add( -5.0f );
                 verts.Add( 0.0f );
 
                 // Top Left
-                verts.Add( -0.5f );
-                verts.Add( 0.5f );
+                verts.Add( -5.0f );
+                verts.Add( 5.0f );
                 verts.Add( 0.0f );
 
                 // Top Right
-                verts.Add( 0.5f );
-                verts.Add( 0.5f );
+                verts.Add( 5.0f );
+                verts.Add( 5.0f );
                 verts.Add( 0.0f );
 
                 // Bottom Right
-                verts.Add( 0.5f );
-                verts.Add( -0.5f );
+                verts.Add( 5.0f );
+                verts.Add( -5.0f );
                 verts.Add( 0.0f );
 
                 List<float> texs = new List<float>();
@@ -282,19 +293,30 @@ namespace LOLViewer
                 inds.Add( 2 );
                 inds.Add( 3 );
 
-                result = CreateBillboard("default", verts, texs, inds); 
-            }
-            */
+                result = CreateBillboard("default", verts, texs, inds);
+            }         
 
             // Misc. OpenGL Parameters.
             if (result == true)
             {
                 GL.CullFace(CullFaceMode.Back);
                 GL.Enable(EnableCap.CullFace);
-                GL.ClearColor(clearColor);
+                SetClearColor(clearColor);
             }
 
             return result;
+        }
+
+        public void SetClearColor(OpenTK.Graphics.Color4 color)
+        {
+            clearColor = color;
+            GL.ClearColor(clearColor);
+        }
+
+        public void SetClearColor(System.Drawing.Color color)
+        {
+            clearColor = color;
+            GL.ClearColor(clearColor);
         }
 
         public bool LoadModel( LOLModel model)
@@ -358,29 +380,12 @@ namespace LOLViewer
             GL.Disable(EnableCap.StencilTest);
             GL.DepthFunc(DepthFunction.Less);
 
-            // Old code to test billboarding shaders.
-            // Possibly role it into a ground model later.
-            /*
-            // Load shaders.
-            GLShaderProgram program = programs["default"];
-            program.Load();
-            program.UpdateUniform("u_WorldViewProjection", Matrix4.Identity);
-
-            // Load the texture for the shader.
-            GL.ActiveTexture(TextureUnit.Texture0);
-            program.UpdateUniform("u_Texture", 0);
-            textures["missfortune_waterloo_TX_CM.dds"].Bind(); // not checking return value
-            
-            // Draw Geometry
-            foreach (var b in billboards)
-            {
-                b.Value.Draw();
-            }
-            */
-
             GLShaderProgram program = null;
             
-            // Load shaders for phong lighting.
+            //
+            // Load shaders for Phong lit static models.
+            //
+
             if (sModels.Count > 0)
             {
                 program = programs["phong"];
@@ -422,8 +427,11 @@ namespace LOLViewer
 
             GL.UseProgram(0);
 
-            // Load shaders for rigged phong lighting.
-            if (rModels.Count > 0)
+            //
+            // Load shaders for Phong lit rigged models.
+            //
+
+            if (rModels.Count > 0 || true)
             {
                 program = programs["phongRigged"];
                 program.Load();
@@ -431,12 +439,6 @@ namespace LOLViewer
                 //
                 // Update parameters for phong lighting.
                 //
-
-                // Vertex Shader Uniforms
-                program.UpdateUniform("u_WorldView",
-                    world * camera.view);
-                program.UpdateUniform("u_WorldViewProjection",
-                    world * camera.view * camera.projection);
 
                 // Fragment Shader Uniforms
                 program.UpdateUniform("u_LightDirection", new Vector3(0.0f, 0.0f, 1.0f));
@@ -451,7 +453,12 @@ namespace LOLViewer
             // Draw Model
             foreach (var r in rModels)
             {
-                // Load the model's texture for the shader.
+                //
+                // Update the uniforms which vary per model.
+                //
+
+
+                // Textures vary.
                 GL.ActiveTexture(TextureUnit.Texture0);
                 program.UpdateUniform("u_Texture", 0);
                 if (r.Value.textureName != String.Empty)
@@ -459,22 +466,138 @@ namespace LOLViewer
                     textures[r.Value.textureName].Bind(); // not checking return value        
                 }
 
-                // Load the bone information for this model.
-                program.UpdateUniform("u_BoneTransform", r.Value.boneTransforms);
+                //
+                // Bone Transforms
+                //
+
                 
-                // Debug Stuff
-                //Matrix4[] boneTrans = new Matrix4[GLRiggedModel.MAX_BONES];
-                //for (int i = 0; i < GLRiggedModel.MAX_BONES; ++i)
-                //{
-                //    boneTrans[i] = Matrix4.Identity;
-                //}
-                //program.UpdateUniform("u_BoneTransform", boneTrans);
+                if (isSkinning == true)
+                {
+                    Matrix4[] transforms = r.Value.GetBoneTransformations();
+                    // Sanity for when the currentAnimation is invalid.
+                    if (transforms != null)
+                    {
+                        //
+                        // Normal case when skinning is valid.
+                        //
+
+                        program.UpdateUniform("u_BoneTransform", r.Value.GetBoneTransformations());
+                    }
+                    else
+                    {
+                        //
+                        // Odd case when the currentAnimation does not exist.
+                        //
+
+                        // Perserve world space transforms between skinning and non skinning.
+                        transforms = new Matrix4[GLRig.MAX_BONES];
+                        for ( int i = 0; i < GLRig.MAX_BONES; ++i )
+                        {
+                            transforms[i] = Matrix4.Scale(1.0f / 
+                                rModels.First().Value.rig.bindingJoints[0].scale); //hacky
+                        }
+
+                        program.UpdateUniform("u_BoneTransform", transforms);
+                    }
+                }
+                else
+                {
+                    //
+                    // Case when the user does not wish to use animation data and just
+                    // wants to render the model.
+                    //
+
+                    program.UpdateUniform("u_BoneTransform", identityTM);
+                }
+
+                //
+                // World Transform.  We need to offset it when not using the skinning
+                // pipeline.
+                //
+
+                Matrix4 worldView = Matrix4.Identity;
+                if (isSkinning == true)
+                {
+                    worldView = world * camera.view;
+                }
+                else
+                {
+                    // Account for the skinning scale if we're not skinning.
+                    Matrix4 scale = Matrix4.Scale( 1.0f / rModels.First().Value.rig.bindingJoints[0].scale); //hacky
+                    worldView = scale * world * camera.view;
+                }
+
+                // Vertex Shader Uniforms
+                program.UpdateUniform("u_WorldView",
+                    worldView);
+                program.UpdateUniform("u_WorldViewProjection",
+                    worldView * camera.projection);
 
                 r.Value.Draw();
+
+                // Old code to test billboarding shaders.
+                // Possibly role it into a ground model later.
+                // I was using this to debug bone and joint transformations.
+
+                //// Load shaders.
+                //program = programs["default"];
+                //program.Load();
+
+                //// Load the texture for the shader.
+                //GL.ActiveTexture(TextureUnit.Texture0);
+                //program.UpdateUniform("u_Texture", 0);
+                //if (r.Value.textureName != String.Empty)
+                //{
+                //    textures[r.Value.textureName].Bind(); // not checking return value        
+                //}
+
+                //// Draw Geometry
+                //Matrix4[] transforms = r.Value.GetBoneTransformations();
+                //foreach (Matrix4 transform in transforms)
+                //{
+                //    program.UpdateUniform("u_WorldViewProjection",
+                //        transform * camera.view * camera.projection);
+                //    billboards["default"].Draw();
+                //}
             }
           
             // Unload shaders.
             GL.UseProgram( 0 );
+        }
+
+        public void IncrementAnimations()
+        {
+            foreach (var m in rModels)
+            {
+                m.Value.IncrementCurrentAnimation();
+            }
+        }
+
+        public void DecrementAnimations()
+        {
+            foreach (var m in rModels)
+            {
+                m.Value.DecrementCurrentAnimation();
+            }
+        }
+
+        // Unlike decrement and increment, this function doesn't directly
+        // translate to multiple models.  Need to pass a model ID or something.
+        // But for now, who cares.  Only one model should be available at a time anyways.
+        public void SetAnimations(String animation)
+        {
+            foreach (var m in rModels)
+            {
+                m.Value.SetCurrentAnimation(animation);
+            }
+        }
+
+        public void OnUpdate(float elapsedTime)
+        {
+            foreach (var m in rModels)
+            {
+                m.Value.Update(elapsedTime);
+            }
         }
 
         public void ShutDown()
@@ -526,7 +649,7 @@ namespace LOLViewer
         //
 
         // TODO: Alot of this code is a mess.
-        // It should be refactored into more meaningful classes.
+        // It should be refactored into more meaningful sub classes.
 
         private bool CreateShaderFromFile(String name, String path, ShaderType type)
         {
@@ -618,14 +741,26 @@ namespace LOLViewer
                 else
                 {
                     program.Destroy();
+                    break;
                 }
 
                 count++;
             }
 
+            // Link the program.
             if (result == true)
             {
                 result = program.Link();
+            }
+            else
+            {
+                program.Destroy();
+            }
+
+            // Make sure the attributes were bound correctly.
+            if (result == true)
+            {
+                result = program.VerifyAttributes(attributes);
             }
             else
             {
@@ -641,9 +776,11 @@ namespace LOLViewer
                 else
                 {
                     program.Destroy();
+                    break;
                 }
             }
 
+            // Store the shader.
             if (result == true)
             {
                 programs.Add(progName, program);
@@ -855,6 +992,50 @@ namespace LOLViewer
                         glModel.textureName = name;
                     }
                 }
+            }
+
+            //
+            // Load up the model animations
+            //
+            if (result == true)
+            {
+                //
+                // This code used to be in LOLDirectoryReader.
+                // However, it takes awhile to parse all the animation files
+                // for all the models.  So, I decided not to preload all of this
+                // data and only load it when a model needs to be displayed.
+                //
+
+                Dictionary<String, ANMFile> animationFiles =
+                    new Dictionary<String, ANMFile>();
+
+                // Read in the animation files.
+                foreach (var a in model.animations)
+                {
+                    ANMFile anmFile = new ANMFile();
+                    bool anmResult = ANMReader.Read(a.Value, ref anmFile);
+                    if (anmResult == true)
+                    {
+                        animationFiles.Add(a.Key, anmFile);
+                    }
+                }
+
+                bool currentSet = false;
+                foreach (var a in animationFiles)
+                {
+                    GLAnimation newAnimation = new GLAnimation();
+                    a.Value.ToGLAnimation(ref newAnimation);
+                    glModel.AddAnimation(a.Key, newAnimation);
+
+                    // Set a default animation.
+                    if (currentSet == false)
+                    {
+                        glModel.SetCurrentAnimation(a.Key);
+                        currentSet = true;
+                    }
+                }
+
+                glModel.currentFrame = 0;
             }
 
             return result;

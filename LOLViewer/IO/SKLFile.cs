@@ -76,12 +76,20 @@ namespace LOLViewer
         {
             bool result = true;
 
+            // Vertex Data
             List<float> vData = new List<float>();
             List<float> nData = new List<float>();
             List<float> tData = new List<float>();
-            List<int> bData = new List<int>();
+            List<float> bData = new List<float>();
             List<float> wData = new List<float>();
-            List<OpenTK.Matrix4> btData = new List<OpenTK.Matrix4>();
+
+            // Other data.
+            List<OpenTK.Quaternion> boData = new List<OpenTK.Quaternion>();
+            List<OpenTK.Vector3> bpData = new List<OpenTK.Vector3>();
+            List<String> bnData = new List<String>();
+            List<float> bsData = new List<float>();
+            List<int> bParentData = new List<int>();
+
             for (int i = 0; i < skn.numVertices; ++i)
             {
                 // Position Information
@@ -119,10 +127,14 @@ namespace LOLViewer
                 wData.Add(skn.vertices[i].weights.W);
             }
 
-            // Bone Transform Information
+            // Other data
             for (int i = 0; i < numBones; ++i)
             {
-                btData.Add(bones[i].transform);
+                boData.Add(bones[i].orientation);
+                bpData.Add(bones[i].position);
+                bnData.Add(bones[i].name);
+                bsData.Add(bones[i].scale);
+                bParentData.Add(bones[i].parentID);
             }
 
             // Index Information
@@ -132,8 +144,9 @@ namespace LOLViewer
                 iData.Add((uint)skn.indices[i]);
             }
 
-            result = model.Create(vData, nData, tData, 
-                bData, wData, iData, btData);
+            result = model.Create(vData, nData, tData,
+                bData, wData, iData, boData, bpData, 
+                bsData, bnData, bParentData);
 
             return result;
         }

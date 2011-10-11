@@ -1,4 +1,5 @@
 ﻿
+
 /*
 LOLViewer
 Copyright 2011 James Lammlein 
@@ -24,36 +25,32 @@ along with LOLViewer.  If not, see <http://www.gnu.org/licenses/>.
 
 
 //
-// Stores the contents of a bone from an .skl file.
+// Stores information required for skeletal animation in OpenGL.
 //
-
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using OpenTK;
-
 namespace LOLViewer
 {
-    class SKLBone
+    class GLAnimation
     {
-        public String       name;
-        public const int    BONE_NAME_SIZE = 32;
-        public int          parentID;
-        public float        scale;
-        public Vector3      position;
-        public Quaternion   orientation;
-        public const int    TRANSFORM_SIZE = 12;
+        public uint     playbackFPS;
+        public float    timePerFrame; 
 
-        public SKLBone()
+        public uint numberOfBones;
+        public uint numberOfFrames;
+
+        public List<ANMBone> bones;
+
+        public GLAnimation()
         {
-            name = String.Empty;
-            parentID = 0;
-            scale = 0.0f;
-            position = Vector3.Zero;
-            orientation = Quaternion.Identity;
+            playbackFPS = 0;
+            numberOfBones = 0;
+            numberOfFrames = 0;
+            bones = new List<ANMBone>();
         }
     }
 }

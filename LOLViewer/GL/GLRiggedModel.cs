@@ -43,34 +43,55 @@ namespace LOLViewer
         public String textureName;
         public int bBuffer, wBuffer;
 
-        public const int MAX_BONES = 128;
-        public Matrix4[] boneTransforms;
+        public GLRig rig;
+
+        // Not 100% if we need this.
+        // Bones might map in order from the .anm files.
+        public Dictionary<String, int> boneNameToIndex;
+
+        public String   currentAnimation;
+        public float    currentFrameTime;
+        public int      currentFrame;
+        public Dictionary<String, GLAnimation> animations;
 
         public GLRiggedModel()
         {
             textureName = String.Empty;
             bBuffer = wBuffer = 0;
 
-            boneTransforms = new Matrix4[128];
-            for( int i = 0; i < MAX_BONES; ++i )
-            {
-                boneTransforms[i] = Matrix4.Identity;
-            }
+            rig = new GLRig();
+
+            boneNameToIndex = new Dictionary<String, int>();
+
+            currentAnimation = String.Empty;
+            currentFrameTime = 0.0f;
+            currentFrame = 0;
+            animations = new Dictionary<String, GLAnimation>();
         }
 
-        public bool Create( List<float> vertexData, List<float> normalData,
-            List<float> texData, List<int> boneData,
+        public bool Create(List<float> vertexData, List<float> normalData,
+            List<float> texData, List<float> boneData,
             List<float> weightData, List<uint> indexData,
-            List<Matrix4> btData )
+            List<Quaternion> bOrientation, List<Vector3> bPosition,
+            List<float> bScale, 
+            List<String> bName,
+            List<int> bParent)
         {
             bool result = true;
 
             numIndices = indexData.Count;
 
+            // Create the initial binding joints.
+            rig.Create(bOrientation, bPosition, bScale, bParent);
+
             // Store the bone transforms.
-            for( int i = 0; i < btData.Count; ++i )
+            for (int i = 0; i < bOrientation.Count; ++i)
             {
-                boneTransforms[i] = btData[i];
+                // Sanity
+                if( boneNameToIndex.ContainsKey( bName[i] ) == false )
+                {
+                    boneNameToIndex.Add(bName[i], i);
+                }
             }
 
             // Create Vertex Array Object
@@ -111,9 +132,9 @@ namespace LOLViewer
                 vBuffer = buffers[0];
                 nBuffer = buffers[1];
                 tBuffer = buffers[2];
-                iBuffer = buffers[3];
-                bBuffer = buffers[4];
-                wBuffer = buffers[5];
+                bBuffer = buffers[3];
+                wBuffer = buffers[4];
+                iBuffer = buffers[5];
 
                 GL.BindBuffer(BufferTarget.ArrayBuffer, vBuffer);
             }
@@ -254,7 +275,7 @@ namespace LOLViewer
             // Set bone index data
             if (result == true)
             {
-                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(boneData.Count * sizeof(int)),
+                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(boneData.Count * sizeof(float)),
                     boneData.ToArray(), BufferUsageHint.StaticDraw);
             }
 
@@ -267,7 +288,7 @@ namespace LOLViewer
             // Put bone indexes into attribute slot 3.
             if (result == true)
             {
-                GL.VertexAttribPointer(3, 4, VertexAttribPointerType.Int,
+                GL.VertexAttribPointer(3, 4, VertexAttribPointerType.Float,
                     false, 0, 0);
             }
 
@@ -282,7 +303,6 @@ namespace LOLViewer
             {
                 GL.EnableVertexAttribArray(3);
             }
-
 
             //
             //
@@ -326,8 +346,6 @@ namespace LOLViewer
                 GL.EnableVertexAttribArray(4);
             }
 
-
-
             //
             // Bind index buffer.
             //
@@ -362,6 +380,78 @@ namespace LOLViewer
         public void SetTexture(String name)
         {
             textureName = name;
+        }
+
+        public void AddAnimation(String name, GLAnimation animation)
+        {
+            if (animations.ContainsKey(name) == false)
+            {
+                animations.Add(name, animation);
+            }
+        }
+
+        public void SetCurrentAnimation(String name)
+        {
+            currentAnimation = name;
+            currentFrameTime = 0.0f;
+            currentFrame = 0;
+        }
+
+        public void Update(float elapsedTime)
+        {
+            // Sanity
+            if (animations.ContainsKey(currentAnimation) == false)
+                return;
+
+            currentFrameTime += elapsedTime;
+
+            // See if we need to switch to next frame.
+            while (currentFrameTime >= animations[currentAnimation].timePerFrame)
+            {
+                currentFrame = (currentFrame + 1) % (int)animations[currentAnimation].numberOfFrames;
+                currentFrameTime -= animations[currentAnimation].timePerFrame;
+            }
+        }
+
+        public Matrix4[] GetBoneTransformations()
+        {
+            // Sanity.
+            if (animations.ContainsKey(currentAnimation) == false)
+            {
+                return null;
+            }
+
+            foreach (ANMBone bone in animations[currentAnimation].bones)
+            {
+                if (boneNameToIndex.ContainsKey(bone.name))
+                {
+                    int index = boneNameToIndex[bone.name];
+                    ANMFrame frame = bone.frames[currentFrame];
+
+                    rig.CalculateWorldSpacePose(index, frame.orientation,
+                        frame.position);
+                }
+                // Not sure what to do if it doesn't contain the bone.
+                // This does happen more frequently that I'd like to ignore.
+            }
+
+            return rig.GetBoneTransformations();
+        }
+
+        public void IncrementCurrentAnimation()
+        {
+            currentFrame = (currentFrame + 1) % (int)animations[currentAnimation].numberOfFrames;
+            currentFrameTime = 0; ;
+        }
+
+        public void DecrementCurrentAnimation()
+        {
+            currentFrame--;
+            if (currentFrame < 0)
+            {
+                currentFrame = (int)animations[currentAnimation].numberOfFrames - 1;
+            }
+            currentFrameTime = 0; ;
         }
 
         public void Destroy()

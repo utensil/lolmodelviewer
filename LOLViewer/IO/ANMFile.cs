@@ -67,5 +67,15 @@ namespace LOLViewer
 
             bones = new List<ANMBone>();
         }
+
+        public void ToGLAnimation( ref GLAnimation animation )
+        {
+            animation.playbackFPS = magicFour;
+            animation.numberOfBones = numberOfBones;
+            animation.numberOfFrames = numberOfFrames;
+            animation.bones = bones;
+
+            animation.timePerFrame = 1.0f / (float)animation.playbackFPS;
+        }
     }
 }

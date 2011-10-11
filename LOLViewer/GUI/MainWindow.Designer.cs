@@ -57,23 +57,36 @@ namespace LOLViewer
             this.mainWindowMenuStrip = new System.Windows.Forms.MenuStrip();
             this.fileMainWindowMenuStrip = new System.Windows.Forms.ToolStripMenuItem();
             this.readToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.readDefaultDirectoryToolStrip = new System.Windows.Forms.ToolStripMenuItem();
+            this.fileToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.optionsMainWindowMenuStrip = new System.Windows.Forms.ToolStripMenuItem();
             this.setDirectoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutMainWindowMenuStrip = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mainWindowStatusStrip = new System.Windows.Forms.StatusStrip();
+            this.mainWindowStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.glControlTabControlSplitContainer = new System.Windows.Forms.SplitContainer();
             this.optionsTabControl = new System.Windows.Forms.TabControl();
             this.renderOptionsTab = new System.Windows.Forms.TabPage();
+            this.backgroundColorButton = new System.Windows.Forms.Button();
+            this.backgroundLabel = new System.Windows.Forms.Label();
+            this.cameraLabel = new System.Windows.Forms.Label();
+            this.resetCameraButton = new System.Windows.Forms.Button();
+            this.modelScaleLabel = new System.Windows.Forms.Label();
+            this.modelScaleTrackbar = new System.Windows.Forms.TrackBar();
+            this.yOffsetTrackbar = new System.Windows.Forms.TrackBar();
+            this.VerticalOffsetLabel = new System.Windows.Forms.Label();
             this.animationOptionsTab = new System.Windows.Forms.TabPage();
+            this.playAnimationButton = new System.Windows.Forms.Button();
+            this.nextKeyFrameButton = new System.Windows.Forms.Button();
+            this.previousKeyFrameButton = new System.Windows.Forms.Button();
+            this.keyFrameControlLabel = new System.Windows.Forms.Label();
+            this.currentAnimationComboBox = new System.Windows.Forms.ComboBox();
+            this.currentAnimationLabel = new System.Windows.Forms.Label();
+            this.enableAnimationCheckBox = new System.Windows.Forms.CheckBox();
             this.modelListBox = new System.Windows.Forms.ListBox();
             this.glTabModelListBoxSplitContainer = new System.Windows.Forms.SplitContainer();
-            this.mainWindowStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.VerticalOffsetLabel = new System.Windows.Forms.Label();
-            this.yOffsetTrackbar = new System.Windows.Forms.TrackBar();
-            this.modelScaleTrackbar = new System.Windows.Forms.TrackBar();
-            this.modelScaleLabel = new System.Windows.Forms.Label();
             this.mainWindowMenuStrip.SuspendLayout();
             this.mainWindowStatusStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.glControlTabControlSplitContainer)).BeginInit();
@@ -82,12 +95,13 @@ namespace LOLViewer
             this.glControlTabControlSplitContainer.SuspendLayout();
             this.optionsTabControl.SuspendLayout();
             this.renderOptionsTab.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.modelScaleTrackbar)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.yOffsetTrackbar)).BeginInit();
+            this.animationOptionsTab.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.glTabModelListBoxSplitContainer)).BeginInit();
             this.glTabModelListBoxSplitContainer.Panel1.SuspendLayout();
             this.glTabModelListBoxSplitContainer.Panel2.SuspendLayout();
             this.glTabModelListBoxSplitContainer.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.yOffsetTrackbar)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.modelScaleTrackbar)).BeginInit();
             this.SuspendLayout();
             // 
             // glControlMain
@@ -116,6 +130,7 @@ namespace LOLViewer
             // 
             this.fileMainWindowMenuStrip.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.readToolStripMenuItem,
+            this.fileToolStripSeparator,
             this.closeToolStripMenuItem});
             this.fileMainWindowMenuStrip.Name = "fileMainWindowMenuStrip";
             this.fileMainWindowMenuStrip.Size = new System.Drawing.Size(37, 20);
@@ -123,14 +138,27 @@ namespace LOLViewer
             // 
             // readToolStripMenuItem
             // 
+            this.readToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.readDefaultDirectoryToolStrip});
             this.readToolStripMenuItem.Name = "readToolStripMenuItem";
-            this.readToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
-            this.readToolStripMenuItem.Text = "Read";
+            this.readToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
+            this.readToolStripMenuItem.Text = "Read...";
+            // 
+            // readDefaultDirectoryToolStrip
+            // 
+            this.readDefaultDirectoryToolStrip.Name = "readDefaultDirectoryToolStrip";
+            this.readDefaultDirectoryToolStrip.Size = new System.Drawing.Size(163, 22);
+            this.readDefaultDirectoryToolStrip.Text = "Default Directory";
+            // 
+            // fileToolStripSeparator
+            // 
+            this.fileToolStripSeparator.Name = "fileToolStripSeparator";
+            this.fileToolStripSeparator.Size = new System.Drawing.Size(106, 6);
             // 
             // closeToolStripMenuItem
             // 
             this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
-            this.closeToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
+            this.closeToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
             this.closeToolStripMenuItem.Text = "Close";
             // 
             // optionsMainWindowMenuStrip
@@ -144,8 +172,8 @@ namespace LOLViewer
             // setDirectoryToolStripMenuItem
             // 
             this.setDirectoryToolStripMenuItem.Name = "setDirectoryToolStripMenuItem";
-            this.setDirectoryToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
-            this.setDirectoryToolStripMenuItem.Text = "Set Default Directory";
+            this.setDirectoryToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.setDirectoryToolStripMenuItem.Text = "Set Default Directory...";
             // 
             // aboutMainWindowMenuStrip
             // 
@@ -158,8 +186,8 @@ namespace LOLViewer
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
-            this.aboutToolStripMenuItem.Text = "About LOLViewer";
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(175, 22);
+            this.aboutToolStripMenuItem.Text = "About LOLViewer...";
             // 
             // mainWindowStatusStrip
             // 
@@ -170,6 +198,12 @@ namespace LOLViewer
             this.mainWindowStatusStrip.Size = new System.Drawing.Size(604, 22);
             this.mainWindowStatusStrip.TabIndex = 8;
             this.mainWindowStatusStrip.Text = "statusStrip1";
+            // 
+            // mainWindowStatusLabel
+            // 
+            this.mainWindowStatusLabel.Name = "mainWindowStatusLabel";
+            this.mainWindowStatusLabel.Size = new System.Drawing.Size(72, 17);
+            this.mainWindowStatusLabel.Text = "Stop Feedin!";
             // 
             // glControlTabControlSplitContainer
             // 
@@ -205,6 +239,10 @@ namespace LOLViewer
             // renderOptionsTab
             // 
             this.renderOptionsTab.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.renderOptionsTab.Controls.Add(this.backgroundColorButton);
+            this.renderOptionsTab.Controls.Add(this.backgroundLabel);
+            this.renderOptionsTab.Controls.Add(this.cameraLabel);
+            this.renderOptionsTab.Controls.Add(this.resetCameraButton);
             this.renderOptionsTab.Controls.Add(this.modelScaleLabel);
             this.renderOptionsTab.Controls.Add(this.modelScaleTrackbar);
             this.renderOptionsTab.Controls.Add(this.yOffsetTrackbar);
@@ -216,15 +254,161 @@ namespace LOLViewer
             this.renderOptionsTab.TabIndex = 0;
             this.renderOptionsTab.Text = "Rendering Options";
             // 
+            // backgroundColorButton
+            // 
+            this.backgroundColorButton.Location = new System.Drawing.Point(143, 79);
+            this.backgroundColorButton.Name = "backgroundColorButton";
+            this.backgroundColorButton.Size = new System.Drawing.Size(75, 23);
+            this.backgroundColorButton.TabIndex = 7;
+            this.backgroundColorButton.Text = "Color";
+            this.backgroundColorButton.UseVisualStyleBackColor = true;
+            // 
+            // backgroundLabel
+            // 
+            this.backgroundLabel.AutoSize = true;
+            this.backgroundLabel.Location = new System.Drawing.Point(148, 60);
+            this.backgroundLabel.Name = "backgroundLabel";
+            this.backgroundLabel.Size = new System.Drawing.Size(65, 13);
+            this.backgroundLabel.TabIndex = 6;
+            this.backgroundLabel.Text = "Background";
+            // 
+            // cameraLabel
+            // 
+            this.cameraLabel.AutoSize = true;
+            this.cameraLabel.Location = new System.Drawing.Point(159, 3);
+            this.cameraLabel.Name = "cameraLabel";
+            this.cameraLabel.Size = new System.Drawing.Size(43, 13);
+            this.cameraLabel.TabIndex = 5;
+            this.cameraLabel.Text = "Camera";
+            // 
+            // resetCameraButton
+            // 
+            this.resetCameraButton.Location = new System.Drawing.Point(143, 19);
+            this.resetCameraButton.Name = "resetCameraButton";
+            this.resetCameraButton.Size = new System.Drawing.Size(75, 23);
+            this.resetCameraButton.TabIndex = 4;
+            this.resetCameraButton.Text = "(R)eset";
+            this.resetCameraButton.UseVisualStyleBackColor = true;
+            // 
+            // modelScaleLabel
+            // 
+            this.modelScaleLabel.AutoSize = true;
+            this.modelScaleLabel.Location = new System.Drawing.Point(30, 60);
+            this.modelScaleLabel.Name = "modelScaleLabel";
+            this.modelScaleLabel.Size = new System.Drawing.Size(66, 13);
+            this.modelScaleLabel.TabIndex = 3;
+            this.modelScaleLabel.Text = "Model Scale";
+            // 
+            // modelScaleTrackbar
+            // 
+            this.modelScaleTrackbar.LargeChange = 50;
+            this.modelScaleTrackbar.Location = new System.Drawing.Point(6, 79);
+            this.modelScaleTrackbar.Maximum = 210;
+            this.modelScaleTrackbar.Minimum = 10;
+            this.modelScaleTrackbar.Name = "modelScaleTrackbar";
+            this.modelScaleTrackbar.Size = new System.Drawing.Size(131, 45);
+            this.modelScaleTrackbar.TabIndex = 2;
+            this.modelScaleTrackbar.TickFrequency = 50;
+            this.modelScaleTrackbar.Value = 110;
+            // 
+            // yOffsetTrackbar
+            // 
+            this.yOffsetTrackbar.LargeChange = 25;
+            this.yOffsetTrackbar.Location = new System.Drawing.Point(6, 19);
+            this.yOffsetTrackbar.Maximum = 100;
+            this.yOffsetTrackbar.Name = "yOffsetTrackbar";
+            this.yOffsetTrackbar.Size = new System.Drawing.Size(131, 45);
+            this.yOffsetTrackbar.TabIndex = 1;
+            this.yOffsetTrackbar.TickFrequency = 25;
+            // 
+            // VerticalOffsetLabel
+            // 
+            this.VerticalOffsetLabel.AutoSize = true;
+            this.VerticalOffsetLabel.Location = new System.Drawing.Point(26, 3);
+            this.VerticalOffsetLabel.Name = "VerticalOffsetLabel";
+            this.VerticalOffsetLabel.Size = new System.Drawing.Size(77, 13);
+            this.VerticalOffsetLabel.TabIndex = 0;
+            this.VerticalOffsetLabel.Text = "Model Y Offset";
+            // 
             // animationOptionsTab
             // 
             this.animationOptionsTab.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.animationOptionsTab.Controls.Add(this.playAnimationButton);
+            this.animationOptionsTab.Controls.Add(this.nextKeyFrameButton);
+            this.animationOptionsTab.Controls.Add(this.previousKeyFrameButton);
+            this.animationOptionsTab.Controls.Add(this.keyFrameControlLabel);
+            this.animationOptionsTab.Controls.Add(this.currentAnimationComboBox);
+            this.animationOptionsTab.Controls.Add(this.currentAnimationLabel);
+            this.animationOptionsTab.Controls.Add(this.enableAnimationCheckBox);
             this.animationOptionsTab.Location = new System.Drawing.Point(4, 22);
             this.animationOptionsTab.Name = "animationOptionsTab";
             this.animationOptionsTab.Padding = new System.Windows.Forms.Padding(3);
             this.animationOptionsTab.Size = new System.Drawing.Size(442, 130);
             this.animationOptionsTab.TabIndex = 1;
             this.animationOptionsTab.Text = "Animation Options";
+            // 
+            // playAnimationButton
+            // 
+            this.playAnimationButton.Location = new System.Drawing.Point(27, 84);
+            this.playAnimationButton.Name = "playAnimationButton";
+            this.playAnimationButton.Size = new System.Drawing.Size(75, 23);
+            this.playAnimationButton.TabIndex = 6;
+            this.playAnimationButton.Text = "Play";
+            this.playAnimationButton.UseVisualStyleBackColor = true;
+            // 
+            // nextKeyFrameButton
+            // 
+            this.nextKeyFrameButton.Location = new System.Drawing.Point(238, 25);
+            this.nextKeyFrameButton.Name = "nextKeyFrameButton";
+            this.nextKeyFrameButton.Size = new System.Drawing.Size(75, 23);
+            this.nextKeyFrameButton.TabIndex = 5;
+            this.nextKeyFrameButton.Text = "Next";
+            this.nextKeyFrameButton.UseVisualStyleBackColor = true;
+            // 
+            // previousKeyFrameButton
+            // 
+            this.previousKeyFrameButton.Location = new System.Drawing.Point(157, 25);
+            this.previousKeyFrameButton.Name = "previousKeyFrameButton";
+            this.previousKeyFrameButton.Size = new System.Drawing.Size(75, 23);
+            this.previousKeyFrameButton.TabIndex = 4;
+            this.previousKeyFrameButton.Text = "Previous";
+            this.previousKeyFrameButton.UseVisualStyleBackColor = true;
+            // 
+            // keyFrameControlLabel
+            // 
+            this.keyFrameControlLabel.AutoSize = true;
+            this.keyFrameControlLabel.Location = new System.Drawing.Point(189, 7);
+            this.keyFrameControlLabel.Name = "keyFrameControlLabel";
+            this.keyFrameControlLabel.Size = new System.Drawing.Size(98, 13);
+            this.keyFrameControlLabel.TabIndex = 3;
+            this.keyFrameControlLabel.Text = "Key Frame Controls";
+            // 
+            // currentAnimationComboBox
+            // 
+            this.currentAnimationComboBox.FormattingEnabled = true;
+            this.currentAnimationComboBox.Location = new System.Drawing.Point(6, 57);
+            this.currentAnimationComboBox.Name = "currentAnimationComboBox";
+            this.currentAnimationComboBox.Size = new System.Drawing.Size(121, 21);
+            this.currentAnimationComboBox.TabIndex = 2;
+            // 
+            // currentAnimationLabel
+            // 
+            this.currentAnimationLabel.AutoSize = true;
+            this.currentAnimationLabel.Location = new System.Drawing.Point(20, 41);
+            this.currentAnimationLabel.Name = "currentAnimationLabel";
+            this.currentAnimationLabel.Size = new System.Drawing.Size(90, 13);
+            this.currentAnimationLabel.TabIndex = 1;
+            this.currentAnimationLabel.Text = "Current Animation";
+            // 
+            // enableAnimationCheckBox
+            // 
+            this.enableAnimationCheckBox.AutoSize = true;
+            this.enableAnimationCheckBox.Location = new System.Drawing.Point(7, 6);
+            this.enableAnimationCheckBox.Name = "enableAnimationCheckBox";
+            this.enableAnimationCheckBox.Size = new System.Drawing.Size(108, 17);
+            this.enableAnimationCheckBox.TabIndex = 0;
+            this.enableAnimationCheckBox.Text = "Enable Animation";
+            this.enableAnimationCheckBox.UseVisualStyleBackColor = true;
             // 
             // modelListBox
             // 
@@ -244,7 +428,7 @@ namespace LOLViewer
             // glTabModelListBoxSplitContainer.Panel1
             // 
             this.glTabModelListBoxSplitContainer.Panel1.Controls.Add(this.glControlTabControlSplitContainer);
-            this.glTabModelListBoxSplitContainer.Panel1MinSize = 200;
+            this.glTabModelListBoxSplitContainer.Panel1MinSize = 400;
             // 
             // glTabModelListBoxSplitContainer.Panel2
             // 
@@ -253,52 +437,6 @@ namespace LOLViewer
             this.glTabModelListBoxSplitContainer.Size = new System.Drawing.Size(604, 378);
             this.glTabModelListBoxSplitContainer.SplitterDistance = 450;
             this.glTabModelListBoxSplitContainer.TabIndex = 11;
-            // 
-            // mainWindowStatusLabel
-            // 
-            this.mainWindowStatusLabel.Name = "mainWindowStatusLabel";
-            this.mainWindowStatusLabel.Size = new System.Drawing.Size(72, 17);
-            this.mainWindowStatusLabel.Text = "Stop Feedin!";
-            // 
-            // VerticalOffsetLabel
-            // 
-            this.VerticalOffsetLabel.AutoSize = true;
-            this.VerticalOffsetLabel.Location = new System.Drawing.Point(26, 3);
-            this.VerticalOffsetLabel.Name = "VerticalOffsetLabel";
-            this.VerticalOffsetLabel.Size = new System.Drawing.Size(77, 13);
-            this.VerticalOffsetLabel.TabIndex = 0;
-            this.VerticalOffsetLabel.Text = "Model Y Offset";
-            // 
-            // yOffsetTrackbar
-            // 
-            this.yOffsetTrackbar.LargeChange = 30;
-            this.yOffsetTrackbar.Location = new System.Drawing.Point(6, 19);
-            this.yOffsetTrackbar.Maximum = 150;
-            this.yOffsetTrackbar.Name = "yOffsetTrackbar";
-            this.yOffsetTrackbar.Size = new System.Drawing.Size(131, 45);
-            this.yOffsetTrackbar.TabIndex = 1;
-            this.yOffsetTrackbar.TickFrequency = 30;
-            // 
-            // modelScaleTrackbar
-            // 
-            this.modelScaleTrackbar.LargeChange = 50;
-            this.modelScaleTrackbar.Location = new System.Drawing.Point(6, 79);
-            this.modelScaleTrackbar.Maximum = 375;
-            this.modelScaleTrackbar.Minimum = 125;
-            this.modelScaleTrackbar.Name = "modelScaleTrackbar";
-            this.modelScaleTrackbar.Size = new System.Drawing.Size(131, 45);
-            this.modelScaleTrackbar.TabIndex = 2;
-            this.modelScaleTrackbar.TickFrequency = 50;
-            this.modelScaleTrackbar.Value = 125;
-            // 
-            // modelScaleLabel
-            // 
-            this.modelScaleLabel.AutoSize = true;
-            this.modelScaleLabel.Location = new System.Drawing.Point(30, 60);
-            this.modelScaleLabel.Name = "modelScaleLabel";
-            this.modelScaleLabel.Size = new System.Drawing.Size(66, 13);
-            this.modelScaleLabel.TabIndex = 3;
-            this.modelScaleLabel.Text = "Model Scale";
             // 
             // MainWindow
             // 
@@ -324,12 +462,14 @@ namespace LOLViewer
             this.optionsTabControl.ResumeLayout(false);
             this.renderOptionsTab.ResumeLayout(false);
             this.renderOptionsTab.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.modelScaleTrackbar)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.yOffsetTrackbar)).EndInit();
+            this.animationOptionsTab.ResumeLayout(false);
+            this.animationOptionsTab.PerformLayout();
             this.glTabModelListBoxSplitContainer.Panel1.ResumeLayout(false);
             this.glTabModelListBoxSplitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.glTabModelListBoxSplitContainer)).EndInit();
             this.glTabModelListBoxSplitContainer.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.yOffsetTrackbar)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.modelScaleTrackbar)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -358,7 +498,19 @@ namespace LOLViewer
         private System.Windows.Forms.Label VerticalOffsetLabel;
         private System.Windows.Forms.TrackBar modelScaleTrackbar;
         private System.Windows.Forms.Label modelScaleLabel;
-
+        private System.Windows.Forms.CheckBox enableAnimationCheckBox;
+        private System.Windows.Forms.Label currentAnimationLabel;
+        private System.Windows.Forms.ComboBox currentAnimationComboBox;
+        private System.Windows.Forms.Button previousKeyFrameButton;
+        private System.Windows.Forms.Label keyFrameControlLabel;
+        private System.Windows.Forms.Button nextKeyFrameButton;
+        private System.Windows.Forms.Button playAnimationButton;
+        private System.Windows.Forms.Label cameraLabel;
+        private System.Windows.Forms.Button resetCameraButton;
+        private System.Windows.Forms.ToolStripMenuItem readDefaultDirectoryToolStrip;
+        private System.Windows.Forms.ToolStripSeparator fileToolStripSeparator;
+        private System.Windows.Forms.Button backgroundColorButton;
+        private System.Windows.Forms.Label backgroundLabel;
     }
 }
 

@@ -56,6 +56,8 @@ namespace LOLViewer.IO
         public Dictionary<String, RAFArchive> rafArchives;
 
         public List<FileInfo> inibinFiles;
+        public Dictionary<String, FileInfo> anmListFiles;
+        public Dictionary<String, FileInfo> animationFiles;
         public Dictionary<String, RAFFileListEntry> rafSkls;
         public Dictionary<String, RAFFileListEntry> rafSkns;
         public Dictionary<String, RAFFileListEntry> rafTextures;
@@ -73,6 +75,8 @@ namespace LOLViewer.IO
             rafArchives = new Dictionary<String, RAFArchive>();
 
             inibinFiles = new List<FileInfo>();
+            anmListFiles = new Dictionary<String, FileInfo>();
+            animationFiles = new Dictionary<String, FileInfo>();
             rafSkls = new Dictionary<String, RAFFileListEntry>();
             rafSkns = new Dictionary<String, RAFFileListEntry>();
             rafTextures = new Dictionary<String, RAFFileListEntry>();
@@ -130,25 +134,28 @@ namespace LOLViewer.IO
                 if (readResult == true)
                 {
                     // Add the models from this .inibin file
-                    List<String> modelStrings = iniFile.GetModelStrings();
-                    for (int i = 0; i < modelStrings.Count; i += 3)
+                    List<ModelDefinition> modelDefs = iniFile.GetModelStrings();
+                    for (int i = 0; i < modelDefs.Count; ++i)
                     {
                         try
                         {
                             LOLModel model; 
                                 
-                            bool storeResult = StoreModel(modelStrings[i],
-                                modelStrings[i+1], modelStrings[i+2],
-                                out model);
+                            bool storeResult = StoreModel(modelDefs[i], out model);
+                            if (storeResult == true)
+                            {
+                                // Try to store animations for model as well
+                                storeResult = StoreAnimations(ref model);
+                            }
 
                             if (storeResult == true)
                             {
                                 // Name the model the name of the texture -
                                 // its extension.
-                                String name = modelStrings[i + 2];
+                                String name = modelDefs[i].tex;
                                 name = name.Substring(0, name.Length - 4);
 
-                                if( models.ContainsKey(name) == false )
+                                if (models.ContainsKey(name) == false)
                                     models.Add(name, model);
                             }
                         }
@@ -160,53 +167,78 @@ namespace LOLViewer.IO
             return result;
         }
 
-        private bool StoreModel(String skn, String skl, 
-            String texture, out LOLModel model)
+        private bool StoreModel(ModelDefinition def, out LOLModel model)
         {
-            bool result = true;
-
             model = new LOLModel();
+            model.skinNumber = def.skin;
+            model.anmList = def.anmListKey;
 
             // Find the skn.
-            if (skns.ContainsKey(skn))
+            if (skns.ContainsKey(def.skn))
             {
-                model.fileSkn = skns[skn];
+                model.fileSkn = skns[def.skn];
             }
-            else if (rafSkns.ContainsKey(skn))
+            else if (rafSkns.ContainsKey(def.skn))
             {
-                model.rafSkn = rafSkns[skn];
+                model.rafSkn = rafSkns[def.skn];
             }
             else
             {
-                result = false;
+               return false;
             }
 
             // Find the skl.
-            if (skls.ContainsKey(skl))
+            if (skls.ContainsKey(def.skl))
             {
-                model.fileSkl = skls[skl];
+                model.fileSkl = skls[def.skl];
             }
-            else if (rafSkls.ContainsKey(skl))
+            else if (rafSkls.ContainsKey(def.skl))
             {
-                model.rafSkl = rafSkls[skl];
+                model.rafSkl = rafSkls[def.skl];
             }
             else
             {
-                result = false;
+                return false;
             }
 
             // Find the texture.
-            if (textures.ContainsKey(texture))
+            if (textures.ContainsKey(def.tex))
             {
-                model.fileTexture = textures[texture];
+                model.fileTexture = textures[def.tex];
             }
-            else if (rafTextures.ContainsKey(texture))
+            else if (rafTextures.ContainsKey(def.tex))
             {
-                model.rafTexture = rafTextures[texture];
+                model.rafTexture = rafTextures[def.tex];
             }
             else
             {
-                result = false;
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool StoreAnimations(ref LOLModel model)
+        {
+            bool result = true;
+
+            Dictionary<String, String> animations =
+                new Dictionary<String, String>();
+
+            result = ANMListReader.ReadAnimationList(model.skinNumber,
+               anmListFiles[ model.anmList ], ref animations);
+
+            if (result == true)
+            {
+                // Store the animations in the model.
+                foreach (var a in animations)
+                {
+                    if( animationFiles.ContainsKey(a.Value) == true &&
+                        model.animations.ContainsKey(a.Key) == false )
+                    {
+                        model.animations.Add(a.Key, animationFiles[a.Value]);
+                    }
+                }
             }
 
             return result;
@@ -361,6 +393,11 @@ namespace LOLViewer.IO
                     // Reads in character directories.
                     String dirName = dir.FullName + DEFAULT_MODEL_ROOT;
                     DirectoryInfo di = new DirectoryInfo(dirName);
+
+                    // Sanity
+                    if (di.Exists == false)
+                        return true;
+
                     foreach (DirectoryInfo d in di.GetDirectories())
                     {
                         result = OpenModelDirectory(d);
@@ -391,10 +428,23 @@ namespace LOLViewer.IO
 
             try
             {
+                // Read all files in the directory.
                 DirectoryInfo di = new DirectoryInfo(dir.FullName);
                 foreach (FileInfo f in di.GetFiles())
                 {
                     ReadFile(f);
+                }
+
+                // Read in animations from the "Animations" subdirectory.
+                foreach (DirectoryInfo d in di.GetDirectories())
+                {
+                    if (d.Name == "Animations" || d.Name == "animations")
+                    {
+                        foreach (FileInfo f in d.GetFiles())
+                        {
+                            ReadFile(f);
+                        }
+                    }
                 }
             }
             catch
@@ -440,6 +490,28 @@ namespace LOLViewer.IO
                 case ".inibin":
                     {
                         inibinFiles.Add(f);
+                        break;
+                    }
+                case ".list":
+                    {
+                        // Sanity. TODO: What do we do on error? Just ignore?
+                        if (anmListFiles.ContainsKey(f.Directory.Name) == false)
+                        {
+                            anmListFiles.Add(f.Directory.Name, f);
+                        }
+                        break;
+                    }
+                case ".anm":
+                    {
+                        // Remove the file extension for the key.
+                        // This way it matches the values in Animations.list.
+                        String key = f.Name;
+                        key = key.Remove(key.Length - 4);
+
+                        if (animationFiles.ContainsKey(key) == false)
+                        {
+                            animationFiles.Add(key, f);
+                        }
                         break;
                     }
                 default:

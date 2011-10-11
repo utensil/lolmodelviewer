@@ -89,7 +89,7 @@ namespace LOLViewer
             bool result = true;
 
             GL.BindAttribLocation(program, location, value);
-            
+
             ErrorCode error = GL.GetError();
             if (error != ErrorCode.NoError)
             {
@@ -178,8 +178,33 @@ namespace LOLViewer
             }
         }
 
+        public bool VerifyAttributes(List<String> attributes)
+        {
+            bool result = true;
+
+            int location = 0;
+            foreach (String s in attributes)
+            {
+                int position = GL.GetAttribLocation(program, s);
+                if (position != location)
+                {
+                    result = false;
+                    break;
+                }
+
+                location++;
+            }
+
+            return result;
+        }
+
+        //
+        //
         // Overloaded Funtions to update uniforms.
         // Added as needed.
+        //
+        //
+
         public bool UpdateUniform(String name, OpenTK.Vector3 vec)
         {
             bool result = true;
@@ -228,7 +253,7 @@ namespace LOLViewer
         public bool UpdateUniform(String name, OpenTK.Matrix4[] matArray)
         {
             bool result = true;
-
+            
             List<float> data = new List<float>();
             foreach( OpenTK.Matrix4 mat in matArray )
             {
@@ -257,7 +282,7 @@ namespace LOLViewer
                 data.Add( mat.M44 );
             }
 
-            GL.UniformMatrix4(uniforms[name], matArray.Length, false,
+            GL.UniformMatrix4(uniforms[name], matArray.Count(), false,
                 data.ToArray());
 
             ErrorCode error = GL.GetError();

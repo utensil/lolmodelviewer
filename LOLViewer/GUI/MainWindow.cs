@@ -22,6 +22,10 @@ along with LOLViewer.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
+//
+// Main GUI for the program.
+//
+
 
 using System;
 using System.Diagnostics;
@@ -60,6 +64,9 @@ namespace LOLViewer
         // converts from World Transform scale to trackbar units.
         private const float DEFAULT_SCALE_TRACKBAR = 1000.0f;
 
+        // Animation Control Handle
+        private AnimationController animationController;
+       
         public MainWindow()
         {
             isGLLoaded = false;
@@ -73,6 +80,7 @@ namespace LOLViewer
 
             InitializeComponent();
             modelScaleTrackbar.Value = (int) (GLRenderer.DEFAULT_MODEL_SCALE * DEFAULT_SCALE_TRACKBAR);
+            yOffsetTrackbar.Value = -GLRenderer.DEFAULT_MODEL_YOFFSET;
 
             // GLControl Callbacks
             glControlMain.Load += new EventHandler(GLControlMainOnLoad);
@@ -94,7 +102,7 @@ namespace LOLViewer
             closeToolStripMenuItem.Click += new EventHandler(OnClose);
             setDirectoryToolStripMenuItem.Click += new EventHandler(OnSetDirectory);
             aboutToolStripMenuItem.Click += new EventHandler(OnAbout);
-            readToolStripMenuItem.Click += new EventHandler(OnReadModels);
+            readDefaultDirectoryToolStrip.Click += new EventHandler(OnReadModels);
 
             // Model View Callbacks
             modelListBox.DoubleClick += new EventHandler(OnModelListDoubleClick);
@@ -103,6 +111,32 @@ namespace LOLViewer
             // Trackbars
             yOffsetTrackbar.Scroll += new EventHandler(YOffsetTrackbarOnScroll);
             modelScaleTrackbar.Scroll += new EventHandler(ModelScaleTrackbarOnScroll);
+
+            // Buttons
+            resetCameraButton.Click += new EventHandler(OnResetCameraButtonClick);
+            backgroundColorButton.Click += new EventHandler(OnBackgroundColorButtonClick);
+
+            // Animation Controller
+            animationController = new AnimationController();
+
+            // Set references
+            animationController.enableAnimationCheckBox = enableAnimationCheckBox;
+            animationController.currentAnimationComboBox = currentAnimationComboBox;
+            animationController.nextKeyFrameButton = nextKeyFrameButton;
+            animationController.playAnimationButton = playAnimationButton;
+            animationController.previousKeyFrameButton = previousKeyFrameButton;
+            animationController.glControlMain = glControlMain;
+
+            animationController.renderer = renderer;
+
+            // Set callbacks.
+            enableAnimationCheckBox.Click += new EventHandler(animationController.OnEnableCheckBoxClick);
+            previousKeyFrameButton.Click += new EventHandler(animationController.OnPreviousKeyFrameButtonClick);
+            nextKeyFrameButton.Click += new EventHandler(animationController.OnNextKeyFrameButtonClick);
+            playAnimationButton.Click += new EventHandler(animationController.OnPlayAnimationButtonClick);
+            currentAnimationComboBox.SelectedIndexChanged += new EventHandler(animationController.OnCurrentAnimationComboBoxSelectedIndexChanged);
+
+            animationController.DisableAnimation();
         }
 
         public void GLControlMainOnPaint(object sender, PaintEventArgs e)
@@ -220,10 +254,8 @@ namespace LOLViewer
 
         void OnAbout(object sender, EventArgs e)
         {
-            // TODO Make a small about form to display.
-            // This will do for now.
-            MessageBox.Show("LOLViewer 1.0", "About",
-                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            AboutWindow aboutDlg = new AboutWindow();
+            aboutDlg.ShowDialog();
         }
 
         void OnSetDirectory(object sender, EventArgs e)
@@ -304,6 +336,17 @@ namespace LOLViewer
             if (model != null)
             {
                 bool result = renderer.LoadModel(model);
+
+                currentAnimationComboBox.Items.Clear();
+                foreach (var a in model.animations)
+                {
+                    currentAnimationComboBox.Items.Add(a.Key);
+                }
+
+                if (currentAnimationComboBox.Items.Count > 0)
+                {
+                    currentAnimationComboBox.SelectedIndex = 0;
+                }
             }
 
             GLControlMainOnUpdateFrame(sender, e);
@@ -324,8 +367,8 @@ namespace LOLViewer
         //
         void YOffsetTrackbarOnScroll(object sender, EventArgs e)
         {
-            Matrix4 world = Matrix4.CreateTranslation(0.0f, (float)-yOffsetTrackbar.Value, 0.0f);
-            world *= Matrix4.Scale(modelScaleTrackbar.Value / DEFAULT_SCALE_TRACKBAR);
+            Matrix4 world = Matrix4.Scale(modelScaleTrackbar.Value / DEFAULT_SCALE_TRACKBAR);
+            world.M42 = (float)-yOffsetTrackbar.Value;
             renderer.world = world;
 
             // Redraw.
@@ -334,12 +377,38 @@ namespace LOLViewer
 
         void ModelScaleTrackbarOnScroll(object sender, EventArgs e)
         {
-            Matrix4 world = Matrix4.CreateTranslation(0.0f, (float)-yOffsetTrackbar.Value, 0.0f);
-            world *= Matrix4.Scale(modelScaleTrackbar.Value / DEFAULT_SCALE_TRACKBAR);
+            Matrix4 world = Matrix4.Scale(modelScaleTrackbar.Value / DEFAULT_SCALE_TRACKBAR);
+            world.M42 = (float)-yOffsetTrackbar.Value;
             renderer.world = world;
 
             // Redraw.
             GLControlMainOnPaint(sender, null);
+        }
+
+        // Button Handlers
+        void OnResetCameraButtonClick(object sender, EventArgs e)
+        {
+            camera.Reset();
+
+            glControlMain.Invalidate();
+        }
+
+        void OnBackgroundColorButtonClick(object sender, EventArgs e)
+        {
+            ColorDialog colorDlg = new ColorDialog();
+
+            Color iniColor = Color.FromArgb( (int) (renderer.clearColor.A * 255),
+                (int) (renderer.clearColor.R * 255), (int) (renderer.clearColor.G * 255),
+                (int) (renderer.clearColor.B * 255) );
+
+            colorDlg.Color = iniColor;
+
+            if (colorDlg.ShowDialog() == DialogResult.OK)
+            {
+                renderer.SetClearColor(colorDlg.Color);
+
+                glControlMain.Invalidate();
+            }
         }
         
         //

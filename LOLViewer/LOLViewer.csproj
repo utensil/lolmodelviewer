@@ -59,20 +59,32 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GL\GLAnimation.cs" />
     <Compile Include="GL\GLArcBall.cs" />
     <Compile Include="GL\GLBillboard.cs" />
+    <Compile Include="GL\GLBone.cs" />
     <Compile Include="GL\GLCamera.cs" />
+    <Compile Include="GL\GLJoint.cs" />
     <Compile Include="GL\GLModel.cs" />
     <Compile Include="GL\GLRenderer.cs" />
+    <Compile Include="GL\GLRig.cs" />
     <Compile Include="GL\GLRiggedModel.cs" />
     <Compile Include="GL\GLShader.cs" />
     <Compile Include="GL\GLShaderDefinitions.cs" />
     <Compile Include="GL\GLShaderProgram.cs" />
     <Compile Include="GL\GLStaticModel.cs" />
     <Compile Include="GL\GLTexture.cs" />
+    <Compile Include="GUI\AboutWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GUI\AboutWindow.Designer.cs">
+      <DependentUpon>AboutWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GUI\AnimationController.cs" />
     <Compile Include="IO\ANMBone.cs" />
     <Compile Include="IO\ANMFile.cs" />
     <Compile Include="IO\ANMFrame.cs" />
+    <Compile Include="IO\ANMListReader.cs" />
     <Compile Include="IO\ANMReader.cs" />
     <Compile Include="IO\InibinFile.cs" />
     <Compile Include="IO\InibinHashIDs.cs" />
@@ -96,6 +108,10 @@
     <Compile Include="IO\SKNMaterial.cs" />
     <Compile Include="IO\SKNReader.cs" />
     <Compile Include="IO\SKNVertex.cs" />
+    <Compile Include="GL\OpenTKExtras.cs" />
+    <EmbeddedResource Include="GUI\AboutWindow.resx">
+      <DependentUpon>AboutWindow.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="GUI\MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </EmbeddedResource>

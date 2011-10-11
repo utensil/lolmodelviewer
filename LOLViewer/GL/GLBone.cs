@@ -22,9 +22,8 @@ along with LOLViewer.  If not, see <http://www.gnu.org/licenses/>.
 
 */
 
-
 //
-// Stores the contents of a bone from an .skl file.
+// Represents a bone from a specific key frame in an animation.
 //
 
 
@@ -37,23 +36,18 @@ using OpenTK;
 
 namespace LOLViewer
 {
-    class SKLBone
+    class GLBone
     {
-        public String       name;
-        public const int    BONE_NAME_SIZE = 32;
-        public int          parentID;
-        public float        scale;
-        public Vector3      position;
-        public Quaternion   orientation;
-        public const int    TRANSFORM_SIZE = 12;
+        public int parent;
+        public float scale;
+        public Matrix4 worldTransform;
 
-        public SKLBone()
+        public GLBone()
         {
-            name = String.Empty;
-            parentID = 0;
+            // -1 reserved for root
+            parent = -2;
             scale = 0.0f;
-            position = Vector3.Zero;
-            orientation = Quaternion.Identity;
+            worldTransform = Matrix4.Identity;
         }
     }
 }

@@ -39,13 +39,33 @@ using System.Diagnostics;
 
 namespace LOLViewer.IO
 {
+    class ModelDefinition
+    {
+        public int skin;
+        public String anmListKey; // for finding animation files.
+        public String skn;
+        public String skl;
+        public String tex;
+
+        public ModelDefinition()
+        {
+            skin = -1;
+            anmListKey = String.Empty;
+            skn = String.Empty;
+            skl = String.Empty;
+            tex = String.Empty;
+        }
+    };
+
     class InibinFile
     {
+        public DirectoryInfo directory;
         public Dictionary<long, Object> properties;
 
         public InibinFile()
         {
             properties =   new Dictionary<long, Object>();
+            directory = null;
         }
 
         public void AddProperty(long key, Object val)
@@ -56,34 +76,75 @@ namespace LOLViewer.IO
             }
         }
 
-        public List<String> GetModelStrings()
+        public List<ModelDefinition> GetModelStrings()
         {
-            List<String> result = new List<String>();
+            List<ModelDefinition> result = new List<ModelDefinition>();
 
             // Read in model 1
-            result.AddRange(GetModelStrings((long)InibinHashID.SKIN_ONE_SKN,
+            ModelDefinition def = new ModelDefinition();
+            def.anmListKey = directory.Name;
+
+            bool flag = GetModelStrings((long)InibinHashID.SKIN_ONE_SKN,
                 (long)InibinHashID.SKIN_ONE_SKL,
-                (long)InibinHashID.SKIN_ONE_TEXTURE));
+                (long)InibinHashID.SKIN_ONE_TEXTURE, ref def);
+
+            if (flag == true)
+            {
+                def.skin = 1;
+                result.Add(def);
+            }
 
             // Read in model 2
-            result.AddRange(GetModelStrings((long)InibinHashID.SKIN_TWO_SKN,
+            def = new ModelDefinition();
+            def.anmListKey = directory.Name;
+            flag = GetModelStrings((long)InibinHashID.SKIN_TWO_SKN,
                 (long)InibinHashID.SKIN_TWO_SKL,
-                (long)InibinHashID.SKIN_TWO_TEXTURE));
+                (long)InibinHashID.SKIN_TWO_TEXTURE, ref def);
+
+            if (flag == true)
+            {
+                def.skin = 2;
+                result.Add(def);
+            }
 
             // Read in model 3
-            result.AddRange(GetModelStrings((long)InibinHashID.SKIN_THREE_SKN,
+            def = new ModelDefinition();
+            def.anmListKey = directory.Name;
+            flag = GetModelStrings((long)InibinHashID.SKIN_THREE_SKN,
                 (long)InibinHashID.SKIN_THREE_SKL,
-                (long)InibinHashID.SKIN_THREE_TEXTURE));
+                (long)InibinHashID.SKIN_THREE_TEXTURE, ref def);
+
+            if (flag == true)
+            {
+                def.skin = 3;
+                result.Add(def);
+            }
 
             // Read in model 4
-            result.AddRange(GetModelStrings((long)InibinHashID.SKIN_FOUR_SKN,
+            def = new ModelDefinition();
+            def.anmListKey = directory.Name;
+            flag = GetModelStrings((long)InibinHashID.SKIN_FOUR_SKN,
                 (long)InibinHashID.SKIN_FOUR_SKL,
-                (long)InibinHashID.SKIN_FOUR_TEXTURE));
+                (long)InibinHashID.SKIN_FOUR_TEXTURE, ref def);
+
+            if (flag == true)
+            {
+                def.skin = 4;
+                result.Add(def);
+            }
 
             // Read in model 5 
-            result.AddRange(GetModelStrings((long)InibinHashID.SKIN_FIVE_SKN,
+            def = new ModelDefinition();
+            def.anmListKey = directory.Name;
+            flag = GetModelStrings((long)InibinHashID.SKIN_FIVE_SKN,
                 (long)InibinHashID.SKIN_FIVE_SKL,
-                (long)InibinHashID.SKIN_FIVE_TEXTURE));
+                (long)InibinHashID.SKIN_FIVE_TEXTURE, ref def);
+
+            if (flag == true)
+            {
+                def.skin = 5;
+                result.Add(def);
+            }
 
             return result;
         }
@@ -92,17 +153,19 @@ namespace LOLViewer.IO
         //
         // Helper Function
         //
-        private List<String> GetModelStrings(long sknID, long sklID, long textureID)
+        private bool GetModelStrings(long sknID, long sklID, long textureID, ref ModelDefinition m)
         {
-            List<String> result = new List<String>();
+            bool result = false;
 
             if( properties.ContainsKey(sknID) &&
                 properties.ContainsKey(sklID) &&
                 properties.ContainsKey(textureID) )
             {
-                result.Add( (String)properties[sknID] );
-                result.Add( (String)properties[sklID] );
-                result.Add( (String)properties[textureID] );
+                m.skn = (String)properties[sknID];
+                m.skl = (String)properties[sklID];
+                m.tex = (String)properties[textureID];
+
+                result = true;
             }
 
             return result;
