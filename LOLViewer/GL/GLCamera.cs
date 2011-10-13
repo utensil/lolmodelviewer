@@ -336,6 +336,9 @@ namespace LOLViewer
 
             lastRotation = Matrix4.Identity;
             updateLastRotation = false;
+
+            // Force camera to update it's view params.
+            OnUpdate(0.1f);
         }
     }
 }

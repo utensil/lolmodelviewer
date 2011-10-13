@@ -507,6 +507,7 @@ namespace LOLViewer.IO
                         // This way it matches the values in Animations.list.
                         String key = f.Name;
                         key = key.Remove(key.Length - 4);
+                        key = key.ToLower();
 
                         if (animationFiles.ContainsKey(key) == false)
                         {

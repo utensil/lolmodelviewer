@@ -343,6 +343,8 @@ namespace LOLViewer
                     currentAnimationComboBox.Items.Add(a.Key);
                 }
 
+                currentAnimationComboBox.Text = "";
+
                 if (currentAnimationComboBox.Items.Count > 0)
                 {
                     currentAnimationComboBox.SelectedIndex = 0;
@@ -390,6 +392,7 @@ namespace LOLViewer
         {
             camera.Reset();
 
+            // Redraw.
             glControlMain.Invalidate();
         }
 

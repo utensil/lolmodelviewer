@@ -162,6 +162,10 @@ namespace LOLViewer.IO
         public static void ParseAnimation(bool replace, String animation, String file,
             ref Dictionary<String, String> animations)
         {
+            // Letter case does not correlate between animation.list files and the .anm file.
+            // So, generate the file key in all lower case.
+            file = file.ToLower();
+
             if (replace == true)
             {
                 if (animations.ContainsKey(animation) == true)
