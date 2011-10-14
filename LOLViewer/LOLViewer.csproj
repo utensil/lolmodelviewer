@@ -65,7 +65,6 @@
     <Compile Include="GL\GLBone.cs" />
     <Compile Include="GL\GLCamera.cs" />
     <Compile Include="GL\GLJoint.cs" />
-    <Compile Include="GL\GLModel.cs" />
     <Compile Include="GL\GLRenderer.cs" />
     <Compile Include="GL\GLRig.cs" />
     <Compile Include="GL\GLRiggedModel.cs" />

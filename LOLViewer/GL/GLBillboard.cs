@@ -37,9 +37,15 @@ using OpenTK.Graphics.OpenGL;
 
 namespace LOLViewer
 {
-    class GLBillboard : GLModel
+    class GLBillboard
     {
-        public GLBillboard() {}
+        public int numIndices;
+        public int vao, vBuffer, iBuffer, tBuffer, nBuffer;
+
+        public GLBillboard() 
+        {
+            vao = vBuffer = iBuffer = tBuffer = nBuffer = numIndices = 0;
+        }
 
         public bool Create(List<float> vertexData, List<float> texData,
                 List<uint> indexData)
@@ -187,6 +193,49 @@ namespace LOLViewer
             }
 
             return true;
+        }
+
+        public void Draw()
+        {
+            GL.BindVertexArray(vao);
+
+            GL.DrawElements(BeginMode.Triangles, numIndices,
+                DrawElementsType.UnsignedInt, 0);
+        }
+
+        public void Destory()
+        {
+            if (vao != 0)
+            {
+                GL.DeleteVertexArrays(1, ref vao);
+                vao = 0;
+            }
+
+            if (vBuffer != 0)
+            {
+                GL.DeleteBuffers(1, ref vBuffer);
+                vBuffer = 0;
+            }
+
+            if (tBuffer != 0)
+            {
+                GL.DeleteBuffers(1, ref tBuffer);
+                tBuffer = 0;
+            }
+
+            if (nBuffer != 0)
+            {
+                GL.DeleteBuffers(1, ref nBuffer);
+                nBuffer = 0;
+            }
+
+            if (iBuffer != 0)
+            {
+                GL.DeleteBuffers(1, ref iBuffer);
+                iBuffer = 0;
+            }
+
+            numIndices = 0;
         }
     }
 }

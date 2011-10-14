@@ -21,41 +21,6 @@ namespace OpenTKExtras
     // I got them from their website.
     //
 
-    public class Quaternion
-    {
-        public static OpenTK.Matrix4 CreateRotationMatrix(ref OpenTK.Quaternion q)
-        {
-            OpenTK.Matrix4 result = OpenTK.Matrix4.Identity;
-
-            float X = q.X;
-            float Y = q.Y;
-            float Z = q.Z;
-            float W = q.W;
-
-            float xx = X * X;
-            float xy = X * Y;
-            float xz = X * Z;
-            float xw = X * W;
-            float yy = Y * Y;
-            float yz = Y * Z;
-            float yw = Y * W;
-            float zz = Z * Z;
-            float zw = Z * W;
-
-            result.M11 = 1 - 2 * (yy + zz);
-            result.M21 = 2 * (xy - zw);
-            result.M31 = 2 * (xz + yw);
-            result.M12 = 2 * (xy + zw);
-            result.M22 = 1 - 2 * (xx + zz);
-            result.M32 = 2 * (yz - xw);
-            result.M13 = 2 * (xz - yw);
-            result.M23 = 2 * (yz + xw);
-            result.M33 = 1 - 2 * (xx + yy);
-            return result;
-        }
-
-    }
-
     public class Matrix4
     {
         public static OpenTK.Quaternion CreateQuatFromMatrix(OpenTK.Matrix4 m)
