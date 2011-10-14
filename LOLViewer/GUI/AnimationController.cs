@@ -88,9 +88,8 @@ namespace LOLViewer
         {
             if (isFirstTime == true)
             {
-                MessageBox.Show("Animation is still an 'in progress' feature.  Currently, the skinning shader only certain models.  " +
-                    "Most working models tend to be very old.  " +
-                "For example, Annie works while Akali does not.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Animation is still an 'in progress' feature.  Currently, most models should animate properly.  " +
+                "However, a few do not.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 isFirstTime = false;
             }
 

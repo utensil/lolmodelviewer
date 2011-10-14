@@ -144,9 +144,19 @@ namespace LOLViewer
                 iData.Add((uint)skn.indices[i]);
             }
 
-            result = model.Create(vData, nData, tData,
-                bData, wData, iData, boData, bpData, 
-                bsData, bnData, bParentData);
+            // Create
+            if (version == 1)
+            {
+                result = model.Create((int)version, vData, nData, tData,
+                    bData, wData, iData, boData, bpData,
+                    bsData, bnData, bParentData);
+            }
+            else
+            {
+                result = model.Create((int)version, vData, nData, tData,
+                    bData, wData, iData, boData, bpData,
+                    bsData, bnData, bParentData, boneIDs);
+            }
 
             return result;
         }

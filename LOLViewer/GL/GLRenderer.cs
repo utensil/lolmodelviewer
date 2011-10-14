@@ -224,7 +224,6 @@ namespace LOLViewer
                 uniforms.Add("u_WorldView");
                 uniforms.Add("u_WorldViewProjection");
                 uniforms.Add("u_LightDirection");
-                //uniforms.Add("u_BoneScale");
                 uniforms.Add("u_BoneTransform");
                 uniforms.Add("u_LightDiffuse");
                 uniforms.Add("u_KA");
@@ -332,7 +331,7 @@ namespace LOLViewer
 
             foreach (var r in rModels)
             {
-                r.Value.Destory();
+                r.Value.Destroy();
             }
             rModels.Clear();
 
@@ -372,6 +371,13 @@ namespace LOLViewer
 
         public void OnRender(GLCamera camera)
         {
+            //
+            // TODO: Refactor/clean up this render loop.
+            // It supports multiple static and dynamic models at the moment.
+            // However, none of that is ever used.  Only one dynamic is ever loaded at the moment.
+            // There's just alot of clutter in this function which is really not needed.
+            //
+
             // Clear back buffers.
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
             
@@ -535,6 +541,7 @@ namespace LOLViewer
 
                 r.Value.Draw();
 
+
                 // Old code to test billboarding shaders.
                 // Possibly role it into a ground model later.
                 // I was using this to debug bone and joint transformations.
@@ -552,8 +559,8 @@ namespace LOLViewer
                 //}
 
                 //// Draw Geometry
-                //Matrix4[] transforms = r.Value.GetBoneTransformations();
-                //foreach (Matrix4 transform in transforms)
+                //Matrix4[] debuggingTransforms = r.Value.GetBoneTransformations();
+                //foreach (Matrix4 transform in debuggingTransforms)
                 //{
                 //    program.UpdateUniform("u_WorldViewProjection",
                 //        transform * camera.view * camera.projection);
@@ -632,7 +639,7 @@ namespace LOLViewer
 
             foreach (var r in rModels)
             {
-                r.Value.Destory();
+                r.Value.Destroy();
             }
             rModels.Clear();
 

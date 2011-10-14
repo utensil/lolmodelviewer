@@ -50,7 +50,7 @@ namespace LOLViewer
         {
             // -1 reserved for root
             parent = -2;
-            scale = 0.0f;
+            scale = 1.0f;
             worldOrientation = Quaternion.Identity;
             worldTransform = Matrix4.Identity;
         }

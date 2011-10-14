@@ -38,8 +38,13 @@ using OpenTK.Graphics.OpenGL;
 
 namespace LOLViewer
 {
-    class GLRiggedModel : GLModel
+    class GLRiggedModel
     {
+        public int version;
+
+        public int numIndices;
+        public int vao, vBuffer, iBuffer, tBuffer, nBuffer;
+
         public String textureName;
         public int bBuffer, wBuffer;
 
@@ -56,6 +61,10 @@ namespace LOLViewer
 
         public GLRiggedModel()
         {
+            version = 0;
+
+            vao = vBuffer = iBuffer = tBuffer = nBuffer = numIndices = 0;
+
             textureName = String.Empty;
             bBuffer = wBuffer = 0;
 
@@ -69,17 +78,37 @@ namespace LOLViewer
             animations = new Dictionary<String, GLAnimation>();
         }
 
-        public bool Create(List<float> vertexData, List<float> normalData,
-            List<float> texData, List<float> boneData,
-            List<float> weightData, List<uint> indexData,
-            List<Quaternion> bOrientation, List<Vector3> bPosition,
-            List<float> bScale, 
-            List<String> bName,
-            List<int> bParent)
+        // Version 2 Create
+        public bool Create(int version, List<float> vertexData, List<float> normalData,
+            List<float> texData, List<float> boneData, List<float> weightData, List<uint> indexData,
+            List<Quaternion> bOrientation, List<Vector3> bPosition, List<float> bScale,
+            List<String> bName, List<int> bParent , List<uint> boneIDs)
+        {
+            // Depending on the version of the model, the look ups change.
+            if (version == 2)
+            {
+                for (int i = 0; i < boneData.Count; ++i)
+                {
+                    // I don't know why things need remapped, but they do.
+                    boneData[i] = boneIDs[(int)boneData[i]];
+                }
+            }
+
+            // Call the version 1 create with the remapped bone data.
+            return Create(version, vertexData, normalData, texData, boneData, weightData, indexData,
+                bOrientation, bPosition, bScale, bName, bParent);
+        }
+
+        // Version 1 Create
+        public bool Create(int version, List<float> vertexData, List<float> normalData,
+            List<float> texData, List<float> boneData, List<float> weightData, 
+            List<uint> indexData, List<Quaternion> bOrientation, List<Vector3> bPosition,
+            List<float> bScale, List<String> bName, List<int> bParent)
         {
             bool result = true;
 
-            numIndices = indexData.Count;
+            this.version = version;
+            this.numIndices = indexData.Count;
 
             // Create the initial binding joints.
             rig.Create(bOrientation, bPosition, bScale, bParent);
@@ -377,6 +406,14 @@ namespace LOLViewer
             return result;
         }
 
+        public void Draw()
+        {
+            GL.BindVertexArray(vao);
+
+            GL.DrawElements(BeginMode.Triangles, numIndices,
+                DrawElementsType.UnsignedInt, 0);
+        }
+        
         public void SetTexture(String name)
         {
             textureName = name;
@@ -426,16 +463,25 @@ namespace LOLViewer
                 if (boneNameToIndex.ContainsKey(bone.name))
                 {
                     int index = boneNameToIndex[bone.name];
-                    ANMFrame frame = bone.frames[currentFrame];
 
-                    rig.CalculateWorldSpacePose(index, frame.orientation,
+                    // For current frame.
+                    ANMFrame frame = bone.frames[currentFrame];
+                    rig.CalculateWorldSpacePose(0, index, frame.orientation,
+                        frame.position);
+
+                    // For next frame.
+                    frame = bone.frames[(currentFrame + 1) % bone.frames.Count];
+                    rig.CalculateWorldSpacePose(1, index, frame.orientation,
                         frame.position);
                 }
+                //else
+
                 // Not sure what to do if it doesn't contain the bone.
-                // This does happen more frequently that I'd like to ignore.
+                // Last time I checked, this does happen more frequently that I'd like to ignore.
+                // It's probably why certain models don't animate properly.
             }
 
-            return rig.GetBoneTransformations();
+            return rig.GetBoneTransformations( currentFrameTime / animations[currentAnimation].timePerFrame );
         }
 
         public void IncrementCurrentAnimation()
@@ -456,7 +502,35 @@ namespace LOLViewer
 
         public void Destroy()
         {
-            base.Destory();
+            if (vao != 0)
+            {
+                GL.DeleteVertexArrays(1, ref vao);
+                vao = 0;
+            }
+
+            if (vBuffer != 0)
+            {
+                GL.DeleteBuffers(1, ref vBuffer);
+                vBuffer = 0;
+            }
+
+            if (tBuffer != 0)
+            {
+                GL.DeleteBuffers(1, ref tBuffer);
+                tBuffer = 0;
+            }
+
+            if (nBuffer != 0)
+            {
+                GL.DeleteBuffers(1, ref nBuffer);
+                nBuffer = 0;
+            }
+
+            if (iBuffer != 0)
+            {
+                GL.DeleteBuffers(1, ref iBuffer);
+                iBuffer = 0;
+            }
 
             if (bBuffer != 0)
             {
@@ -469,6 +543,8 @@ namespace LOLViewer
                 GL.DeleteBuffers(1, ref wBuffer);
                 wBuffer = 0;
             }
+
+            numIndices = 0;
         }
     }
 }
