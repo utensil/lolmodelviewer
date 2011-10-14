@@ -130,14 +130,14 @@ namespace LOLViewer
             glControlMain.Invalidate();
         }
 
-        private void OnApplicationIdle(object sender, EventArgs e)
+        public void OnApplicationIdle(object sender, EventArgs e)
         {
             if (isAnimating == true)
             {
                 TimeSpan time = timer.Elapsed;
                 float elapsedTime = (float)time.Seconds + ((float)time.Milliseconds / 1000.0f);
                 renderer.OnUpdate(elapsedTime);
-                
+
                 timer.Restart();
 
                 glControlMain.Invalidate();

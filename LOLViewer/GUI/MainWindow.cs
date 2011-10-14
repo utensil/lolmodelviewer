@@ -188,9 +188,16 @@ namespace LOLViewer
         public void GLControlMainOnUpdateFrame(object sender, EventArgs e)
         {
             double elapsedTime = ComputeElapsedTime();
-            camera.OnUpdate((float) elapsedTime);
 
-            glControlMain.Invalidate();
+            // Update camera and animation controller.
+            camera.OnUpdate((float) elapsedTime);
+            animationController.OnApplicationIdle(sender, e);
+
+            // Hacky, prevents double invalidation.
+            if (animationController.isAnimating == false)
+            {
+                glControlMain.Invalidate();
+            }
         }
 
         void GLControlMainOnDispose(object sender, EventArgs e)

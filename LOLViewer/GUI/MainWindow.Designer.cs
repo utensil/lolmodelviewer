@@ -112,7 +112,7 @@ namespace LOLViewer
             this.glControlMain.Name = "glControlMain";
             this.glControlMain.Size = new System.Drawing.Size(450, 218);
             this.glControlMain.TabIndex = 6;
-            this.glControlMain.VSync = false;
+            this.glControlMain.VSync = true;
             // 
             // mainWindowMenuStrip
             // 
