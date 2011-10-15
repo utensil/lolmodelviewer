@@ -297,6 +297,21 @@ namespace LOLViewer
 
             TextureTarget dimension;
             uint handle = 0;
+
+            // This happens when the file does not actually exist in the RAF archive.
+            if (f.IsMemoryEntry == true)
+            {
+                String directoryName = f.RAFArchive.RAFFilePath;
+                directoryName = directoryName.Replace("\\", "/");
+                int pos = directoryName.LastIndexOf("/");
+                directoryName = directoryName.Remove(pos);
+
+                String fileName = directoryName + f.FileName;
+
+                // Read it from the disk.
+                return CreateDDSTexture(new FileInfo(fileName), target);
+            }
+
             try
             {
                 TextureLoaders.ImageDDS.LoadFromMemory(f.GetContent(), out handle,

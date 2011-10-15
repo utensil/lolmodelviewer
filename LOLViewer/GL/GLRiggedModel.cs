@@ -90,7 +90,16 @@ namespace LOLViewer
                 for (int i = 0; i < boneData.Count; ++i)
                 {
                     // I don't know why things need remapped, but they do.
-                    boneData[i] = boneIDs[(int)boneData[i]];
+
+                    // Sanity
+                    if (boneData[i] < boneIDs.Count)
+                    {
+                        boneData[i] = boneIDs[(int)boneData[i]];
+                    }
+                    else
+                    {
+                        boneData[i] = 0;
+                    }
                 }
             }
 

@@ -44,29 +44,25 @@ namespace LOLViewer.IO
 {
     class LOLDirectoryReader
     {
-        public const String DEFAULT_ROOT = "C:\\Riot Games";
-        public const String DEFAULT_MODEL_ROOT = "\\DATA\\Characters";
+        public const String DEFAULT_ROOT = "C:/Riot Games";
+        public const String DEFAULT_MODEL_ROOT = "/DATA/Characters";
         public const String DEFAULT_RAF_DIRECTORY_ONE = "DATA";
         public const String DEFAULT_RAF_DIRECTORY_TWO = "Characters";
 
-        public const String DEFAULT_EXTRACTED_TEXTURES_ROOT = "content\\textures\\";
+        public const String DEFAULT_EXTRACTED_TEXTURES_ROOT = "content/textures/";
         public String root;
 
         // Don't clear me. This is a bug work around.
         public Dictionary<String, RAFArchive> rafArchives;
 
-        public List<FileInfo> inibinFiles;
-        public List<RAFFileListEntry> rafInibins;
-        public Dictionary<String, FileInfo> anmListFiles;
-        public Dictionary<String, RAFFileListEntry> anmListrafs;
-        public Dictionary<String, FileInfo> animationFiles;
-        public Dictionary<String, RAFFileListEntry> rafSkls;
-        public Dictionary<String, RAFFileListEntry> rafSkns;
-        public Dictionary<String, RAFFileListEntry> rafTextures;
+        public Dictionary<String, RAFFileListEntry> skls;
+        public Dictionary<String, RAFFileListEntry> skns;
+        public Dictionary<String, RAFFileListEntry> textures;
 
-        private Dictionary<String, FileInfo> skls;
-        private Dictionary<String, FileInfo> skns;
-        private Dictionary<String, FileInfo> textures;
+        public List<RAFFileListEntry> inibins;
+        public Dictionary<String, RAFFileListEntry> animationLists;
+        public Dictionary<String, RAFFileListEntry> animations;
+
 
         public Dictionary<String, LOLModel> models;
 
@@ -75,19 +71,13 @@ namespace LOLViewer.IO
             root = DEFAULT_ROOT;
 
             rafArchives = new Dictionary<String, RAFArchive>();
-            rafInibins = new List<RAFFileListEntry>();
+            inibins = new List<RAFFileListEntry>();
 
-            inibinFiles = new List<FileInfo>();
-            anmListFiles = new Dictionary<String, FileInfo>();
-            anmListrafs = new Dictionary<String, RAFFileListEntry>();
-            animationFiles = new Dictionary<String, FileInfo>();
-            rafSkls = new Dictionary<String, RAFFileListEntry>();
-            rafSkns = new Dictionary<String, RAFFileListEntry>();
-            rafTextures = new Dictionary<String, RAFFileListEntry>();
-
-            skls = new Dictionary<String, FileInfo>();
-            skns = new Dictionary<String, FileInfo>();
-            textures = new Dictionary<String, FileInfo>();
+            animationLists = new Dictionary<String, RAFFileListEntry>();
+            animations = new Dictionary<String, RAFFileListEntry>();
+            skls = new Dictionary<String, RAFFileListEntry>();
+            skns = new Dictionary<String, RAFFileListEntry>();
+            textures = new Dictionary<String, RAFFileListEntry>();
 
             models = new Dictionary<String,LOLModel>();
         }
@@ -105,19 +95,17 @@ namespace LOLViewer.IO
         {
             bool result = true;
 
-            skls.Clear();
-            skns.Clear(); 
-            textures.Clear();
-            inibinFiles.Clear();
-            rafInibins.Clear();
-            rafSkls.Clear();
-            rafSkns.Clear();
-            rafTextures.Clear();
+            // Clear old data.
+
             models.Clear();
-            animationFiles.Clear();
-            anmListFiles.Clear();
-            anmListrafs.Clear();
-            
+
+            skls.Clear();
+            skns.Clear();
+            textures.Clear();
+
+            inibins.Clear();
+            animationLists.Clear();
+            animations.Clear();           
 
             // Start from the root and try to read
             // model files and textures.
@@ -135,46 +123,7 @@ namespace LOLViewer.IO
             }
 
             // Generate model difinitions from the *.inibin files.
-            //foreach (RAFFileListEntry f in rafInibins)
-            //{
-            //    InibinFile iniFile = new InibinFile();
-            //    bool readResult = InibinReader.ReadCharacterInibin(f, ref iniFile);
-
-            //    if (readResult == true)
-            //    {
-            //        // Add the models from this .inibin file
-            //        List<ModelDefinition> modelDefs = iniFile.GetModelStrings();
-            //        for (int i = 0; i < modelDefs.Count; ++i)
-            //        {
-            //            try
-            //            {
-            //                LOLModel model;
-
-            //                bool storeResult = StoreModel(modelDefs[i], out model);
-            //                if (storeResult == true)
-            //                {
-            //                    // Try to store animations for model as well
-            //                    //storeResult = StoreAnimations(ref model);
-            //                }
-
-            //                if (storeResult == true)
-            //                {
-            //                    // Name the model the name of the texture -
-            //                    // its extension.
-            //                    String name = modelDefs[i].tex;
-            //                    name = name.Substring(0, name.Length - 4);
-
-            //                    if (models.ContainsKey(name) == false)
-            //                        models.Add(name, model);
-            //                }
-            //            }
-            //            catch { }
-            //        }
-            //    }
-            //}
-
-            // Generate model difinitions from the *.inibin files.
-            foreach (FileInfo f in inibinFiles)
+            foreach (RAFFileListEntry f in inibins)
             {
                 InibinFile iniFile = new InibinFile();
                 bool readResult = InibinReader.ReadCharacterInibin(f, ref iniFile);
@@ -187,8 +136,8 @@ namespace LOLViewer.IO
                     {
                         try
                         {
-                            LOLModel model; 
-                                
+                            LOLModel model;
+
                             bool storeResult = StoreModel(modelDefs[i], out model);
                             if (storeResult == true)
                             {
@@ -207,7 +156,7 @@ namespace LOLViewer.IO
                                     models.Add(name, model);
                             }
                         }
-                        catch {}
+                        catch { }
                     }
                 }
             }
@@ -219,16 +168,12 @@ namespace LOLViewer.IO
         {
             model = new LOLModel();
             model.skinNumber = def.skin;
-            model.anmList = def.anmListKey;
+            model.animationList = def.anmListKey.ToLower();
 
             // Find the skn.
             if (skns.ContainsKey(def.skn))
             {
-                model.fileSkn = skns[def.skn];
-            }
-            else if (rafSkns.ContainsKey(def.skn))
-            {
-                model.rafSkn = rafSkns[def.skn];
+                model.skn = skns[def.skn];
             }
             else
             {
@@ -238,11 +183,7 @@ namespace LOLViewer.IO
             // Find the skl.
             if (skls.ContainsKey(def.skl))
             {
-                model.fileSkl = skls[def.skl];
-            }
-            else if (rafSkls.ContainsKey(def.skl))
-            {
-                model.rafSkl = rafSkls[def.skl];
+                model.skl = skls[def.skl];
             }
             else
             {
@@ -252,11 +193,7 @@ namespace LOLViewer.IO
             // Find the texture.
             if (textures.ContainsKey(def.tex))
             {
-                model.fileTexture = textures[def.tex];
-            }
-            else if (rafTextures.ContainsKey(def.tex))
-            {
-                model.rafTexture = rafTextures[def.tex];
+                model.texture = textures[def.tex];
             }
             else
             {
@@ -270,21 +207,25 @@ namespace LOLViewer.IO
         {
             bool result = true;
 
-            Dictionary<String, String> animations =
+            Dictionary<String, String> animationStrings =
                 new Dictionary<String, String>();
 
-            result = ANMListReader.ReadAnimationList(model.skinNumber,
-               anmListFiles[ model.anmList ], ref animations);
+            // Sanity
+            if (animationLists.ContainsKey(model.animationList) == true)
+            {
+                result = ANMListReader.ReadAnimationList(model.skinNumber,
+                    animationLists[model.animationList], ref animationStrings);
+            }
 
             if (result == true)
             {
                 // Store the animations in the model.
-                foreach (var a in animations)
+                foreach (var a in animationStrings)
                 {
-                    if( animationFiles.ContainsKey(a.Value) == true &&
-                        model.animations.ContainsKey(a.Key) == false )
+                    if (animations.ContainsKey(a.Value) == true &&
+                        model.animations.ContainsKey(a.Key) == false)
                     {
-                        model.animations.Add(a.Key, animationFiles[a.Value]);
+                        model.animations.Add(a.Key, animations[a.Value]);
                     }
                 }
             }
@@ -418,20 +359,31 @@ namespace LOLViewer.IO
             bool result = true;
 
             // Read in .raf files and look for model information in them.
+            RAFArchive archive = null;
             try
             {
                 foreach(FileInfo f in dir.GetFiles())
                 {
-                    result = ReadRAF(f);
+                    // Ignore non RAF files.
+                    if (f.Extension != ".raf")
+                        continue;
+                    
+                    result = ReadRAF(f, ref archive);
                     if (result == false)
+                    {
                         break;
+                    }
                 }
-
             }
             catch
             {
                 result = false;
             }
+
+            // Note: archive will always equal the last RAFArchive in the directory.
+            // So, we alawys apend files to the last one if there's more than one in a directory.
+            // However, it really shouldn't matter which one they are appended to as long as their
+            // in memory.
 
             // Look for raw model information contain on the hard drive.
             if( result == true )
@@ -448,7 +400,7 @@ namespace LOLViewer.IO
 
                     foreach (DirectoryInfo d in di.GetDirectories())
                     {
-                        result = OpenModelDirectory(d);
+                        result = OpenModelDirectory(d, ref archive, DEFAULT_MODEL_ROOT);
                         if (result == false)
                             break;
                     }
@@ -470,126 +422,9 @@ namespace LOLViewer.IO
             return result;
         }
 
-        private bool OpenModelDirectory(DirectoryInfo dir)
+        private bool ReadRAF(FileInfo f, ref RAFArchive archive)
         {
             bool result = true;
-
-            try
-            {
-                // Read all files in the directory.
-                DirectoryInfo di = new DirectoryInfo(dir.FullName);
-                foreach (FileInfo f in di.GetFiles())
-                {
-                    ReadFile(f);
-                }
-
-                // Read in animations from the "Animations" subdirectory.
-                foreach (DirectoryInfo d in di.GetDirectories())
-                {
-                    if (d.Name == "Animations" || d.Name == "animations")
-                    {
-                        foreach (FileInfo f in d.GetFiles())
-                        {
-                            ReadFile(f);
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                result = false;
-            }
-
-            return result;
-        }
-
-        private void ReadFile(FileInfo f)
-        {
-            // Look for supported extentions.
-            switch (f.Extension)
-            {
-                case ".skl":
-                    {
-                        String name = f.Name;
-                        name = name.ToLower();
-                        if (skls.ContainsKey(name) == false)
-                        {
-                            skls.Add(name, f);
-                        }
-                        break;
-                    }
-                case ".skn":
-                    {
-                        String name = f.Name;
-                        name = name.ToLower();
-                        if (skns.ContainsKey(name) == false)
-                        {
-                            skns.Add(name, f);
-                        }
-                        break;
-                    }
-                case ".DDS":
-                case ".dds":
-                    {
-                        // This is a more complicated case because there are a lot
-                        // of textures not used on the models. (For the loading screens, store, etc.)
-                        // So, we have to try and reduce the irrelevant ones we load in.
-                        if ( f.Name.Contains("LoadScreen") == false &&
-                             f.Name.Contains("Loadscreen") == false && 
-                             f.Name.Contains("loadscreen") == false )
-                        {
-                            String name = f.Name;
-                            name = name.ToLower();
-                            if (textures.ContainsKey(name) == false)
-                            {
-                                textures.Add(name, f);
-                            }
-                        }
-                        break;
-                    }
-                case ".inibin":
-                    {
-                        inibinFiles.Add(f);
-                        break;
-                    }
-                case ".list":
-                    {
-                        // Sanity. TODO: What do we do on error? Just ignore?
-                        if (anmListFiles.ContainsKey(f.Directory.Name) == false)
-                        {
-                            anmListFiles.Add(f.Directory.Name, f);
-                        }
-                        break;
-                    }
-                case ".anm":
-                    {
-                        // Remove the file extension for the key.
-                        // This way it matches the values in Animations.list.
-                        String key = f.Name;
-                        key = key.Remove(key.Length - 4);
-                        key = key.ToLower();
-
-                        if (animationFiles.ContainsKey(key) == false)
-                        {
-                            animationFiles.Add(key, f);
-                        }
-                        break;
-                    }
-                default:
-                    {
-                        //Debug.WriteLine("Excluding File: " + f.Name);
-                        break;
-                    }
-            };
-        }
-
-        private bool ReadRAF(FileInfo f)
-        {
-            bool result = true;
-
-            // Ignore non RAF files.
-            if (f.Extension != ".raf")
-                return result;
 
             try
             {
@@ -599,8 +434,7 @@ namespace LOLViewer.IO
                 // there's no function to close them.
                 // So, for now, let's just hold onto them incase we need them later.
 
-                RAFArchive archive = null;
-                if( rafArchives.ContainsKey(f.FullName) == true )
+                if (rafArchives.ContainsKey(f.FullName) == true)
                 {
                     archive = rafArchives[f.FullName];
                 }
@@ -609,7 +443,6 @@ namespace LOLViewer.IO
                     archive = new RAFArchive(f.FullName);
                     rafArchives.Add(f.FullName, archive);
                 }
-                 
 
                 // Get directory
                 RAFDirectoryFile directory = archive.GetDirectoryFile();
@@ -625,6 +458,8 @@ namespace LOLViewer.IO
                     if (e.FileName.Contains("LoadScreen") == false &&
                         e.FileName.Contains("Loadscreen") == false &&
                         e.FileName.Contains("loadscreen") == false &&
+                        e.FileName.Contains("circle") == false &&
+                        e.FileName.Contains("square") == false &&
                         e.FileName.Contains("DATA") == true &&
                         e.FileName.Contains("Characters") == true)
                     {
@@ -633,8 +468,8 @@ namespace LOLViewer.IO
                         name = name.Substring(pos + 1);
                         name = name.ToLower();
 
-                        if( rafTextures.ContainsKey(name) == false )
-                            rafTextures.Add(name, e);
+                        if (textures.ContainsKey(name) == false)
+                            textures.Add(name, e);
                     }
                 }
 
@@ -647,8 +482,8 @@ namespace LOLViewer.IO
                     name = name.Substring(pos + 1);
                     name = name.ToLower();
 
-                    if (rafSkns.ContainsKey(name) == false)
-                        rafSkns.Add(name, e);
+                    if (skns.ContainsKey(name) == false)
+                        skns.Add(name, e);
                 }
 
                 // Get the .skl files.
@@ -660,8 +495,8 @@ namespace LOLViewer.IO
                     name = name.Substring(pos + 1);
                     name = name.ToLower();
 
-                    if (rafSkls.ContainsKey(name) == false)
-                        rafSkls.Add(name, e);
+                    if (skls.ContainsKey(name) == false)
+                        skls.Add(name, e);
                 }
 
                 // There's .inibin files in here too.
@@ -669,27 +504,46 @@ namespace LOLViewer.IO
                 foreach (RAFFileListEntry e in files)
                 {
                     String name = e.FileName;
-                    if (name.Contains("Characters") == true && // try to only read required files
-                        name.Contains("Scripts") == false && 
-                        name.Contains("RecItems") == false )
+                    if (name.Contains("Characters") == true) // try to only read required files
                     {
-                        rafInibins.Add(e);
+                        inibins.Add(e);
                     }
 
                 }
 
+                // Read in animation lists
                 files = fileList.SearchFileEntries("Animations.list");
+                foreach (RAFFileListEntry e in files)
+                {
+                    String name = e.FileName;
+
+                    // Remove the file name.
+                    int pos = name.LastIndexOf("/");
+                    name = name.Remove(pos);
+
+                    // Remove proceeding directories.
+                    pos = name.LastIndexOf("/");
+                    name = name.Substring(pos + 1);
+                    name = name.ToLower();
+
+                    // Name is the parent directory.
+                    if (animationLists.ContainsKey(name) == false)
+                        animationLists.Add(name, e);
+                }
+
+                // Read in animations
+                files = fileList.SearchFileEntries(".anm");
                 foreach (RAFFileListEntry e in files)
                 {
                     String name = e.FileName;
                     int pos = name.LastIndexOf("/");
                     name = name.Substring(pos + 1);
+                    name = name.Remove(name.Length - 4);
                     name = name.ToLower();
 
-                    if( anmListrafs.ContainsKey(name) == false )
-                        anmListrafs.Add(name, e);
+                    if (animations.ContainsKey(name) == false)
+                        animations.Add(name, e);
                 }
-
             }
             catch
             {
@@ -698,5 +552,176 @@ namespace LOLViewer.IO
 
             return result;
         }
+
+        private bool OpenModelDirectory(DirectoryInfo dir, ref RAFArchive archive, String directoryOffset)
+        {
+            bool result = true;
+
+            try
+            {
+                // Read all files in the directory.
+                DirectoryInfo di = new DirectoryInfo(dir.FullName);
+                foreach (FileInfo f in di.GetFiles())
+                {
+                    ReadFile(f, ref archive, directoryOffset + "/" + di.Name);
+                }
+
+                // Read in animations from the "Animations" subdirectory.
+                foreach (DirectoryInfo d in di.GetDirectories())
+                {
+                    if (d.Name == "Animations" || d.Name == "animations")
+                    {
+                        foreach (FileInfo f in d.GetFiles())
+                        {
+                            ReadFile(f, ref archive, directoryOffset + "/" + di.Name + "/" + d.Name);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                result = false;
+            }
+
+            return result;
+        }
+
+        private void ReadFile(FileInfo f, ref RAFArchive archive, String directoryOffset)
+        {
+            String filePath = directoryOffset + "/" + f.Name;
+
+            // Look for supported extentions.
+            switch (f.Extension)
+            {
+                case ".skl":
+                    {
+                        bool result = archive.InsertFile(filePath, File.ReadAllBytes(f.FullName), null);
+                        if (result == true)
+                        {
+                            RAFDirectoryFile dir = archive.GetDirectoryFile();
+                            RAFFileList list = dir.GetFileList();
+                            RAFFileListEntry fileEntry = list.GetFileEntry(filePath);
+
+                            String name = f.Name;
+                            name = name.ToLower();
+
+                            if( skls.ContainsKey( name ) == false )
+                                skls.Add(name, fileEntry);
+                        }
+                        break;
+                    }
+                case ".skn":
+                    {
+                        bool result = archive.InsertFile(filePath, File.ReadAllBytes(f.FullName), null);
+                        if (result == true)
+                        {
+                            RAFDirectoryFile dir = archive.GetDirectoryFile();
+                            RAFFileList list = dir.GetFileList();
+                            RAFFileListEntry fileEntry = list.GetFileEntry(filePath);
+
+                            String name = f.Name;
+                            name = name.ToLower();
+
+                            if (skns.ContainsKey(name) == false)
+                                skns.Add(name, fileEntry);
+                        }
+                        break;
+                    }
+                case ".DDS":
+                case ".dds":
+                    {
+                        // This is a more complicated case because there are a lot
+                        // of textures not used on the models. (For the loading screens, store, etc.)
+                        // So, we have to try and reduce the irrelevant ones we load in.
+                        if ( f.Name.Contains("LoadScreen") == false &&
+                             f.Name.Contains("Loadscreen") == false && 
+                             f.Name.Contains("loadscreen") == false && 
+                             f.Name.Contains("circle") == false &&
+                             f.Name.Contains("square") == false )
+                        {
+                            bool result = archive.InsertFile(filePath, File.ReadAllBytes(f.FullName), null);
+                            if (result == true)
+                            {
+                                RAFDirectoryFile dir = archive.GetDirectoryFile();
+                                RAFFileList list = dir.GetFileList();
+                                RAFFileListEntry fileEntry = list.GetFileEntry(filePath);
+
+                                String name = f.Name;
+                                name = name.ToLower();
+
+                                if (textures.ContainsKey(name) == false)
+                                    textures.Add(name, fileEntry);
+                            }
+                        }
+                        break;
+                    }
+                case ".inibin":
+                    {
+                        bool result = archive.InsertFile(filePath, File.ReadAllBytes(f.FullName), null);
+                        if (result == true)
+                        {
+                            RAFDirectoryFile dir = archive.GetDirectoryFile();
+                            RAFFileList list = dir.GetFileList();
+                            RAFFileListEntry fileEntry = list.GetFileEntry(filePath);
+
+                            inibins.Add(fileEntry);
+                        }
+                        break;
+                    }
+                case ".list":
+                    {
+                        bool result = archive.InsertFile(filePath, File.ReadAllBytes(f.FullName), null);
+                        if (result == true)
+                        {
+                            RAFDirectoryFile dir = archive.GetDirectoryFile();
+                            RAFFileList list = dir.GetFileList();
+                            RAFFileListEntry fileEntry = list.GetFileEntry(filePath);
+
+                            String name = fileEntry.FileName;
+
+                            // Remove the file name.
+                            int pos = name.LastIndexOf("/");
+                            name = name.Remove(pos);
+
+                            // Remove proceeding directories.
+                            pos = name.LastIndexOf("/");
+                            name = name.Substring(pos + 1);
+                            name = name.ToLower();
+
+                            if (animationLists.ContainsKey(name) == false)
+                                animationLists.Add(name, fileEntry);
+                        }
+                        break;
+                    }
+                case ".anm":
+                    {
+                        bool result = archive.InsertFile(filePath, File.ReadAllBytes(f.FullName), null);
+                        if (result == true)
+                        {
+                            RAFDirectoryFile dir = archive.GetDirectoryFile();
+                            RAFFileList list = dir.GetFileList();
+                            RAFFileListEntry fileEntry = list.GetFileEntry(filePath);
+
+                            String name = f.Name;
+                            name = name.ToLower();
+
+                            // Remove the file extension for the key.
+                            // This way it matches the values in Animations.list.
+                            name = name.Remove(name.Length - 4);
+
+                            if (animations.ContainsKey(name) == false)
+                                animations.Add(name, fileEntry);
+                        }
+                        break;
+                    }
+                default:
+                    {
+                        //Debug.WriteLine("Excluding File: " + f.Name);
+                        break;
+                    }
+            };
+        }
     }
 }
+
+

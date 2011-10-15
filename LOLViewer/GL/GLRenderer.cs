@@ -349,8 +349,7 @@ namespace LOLViewer
 
             // If the model definition does not contain .skl files,
             // then it's a static model.
-            if (model.fileSkl == null &&
-                model.rafSkl == null &&
+            if (model.skl == null &&
                 result == true)
             {
                 result = CreateStaticModel(model);
@@ -828,18 +827,10 @@ namespace LOLViewer
             SKNFile file = new SKNFile();
             if (result == true)
             {
-                if (model.fileSkn != null)
-                {
-                    // Model is stored in a raw file on disc.
-                    result = SKNReader.Read(model.fileSkn,
-                        ref file);
-                }
-                else
-                {
-                    // Model is stored in a RAF.
-                    result = SKNReader.Read(model.rafSkn,
-                        ref file);
-                }
+                // Model is stored in a RAF.
+                result = SKNReader.Read(model.skn,
+                    ref file);
+                
             }
 
             GLStaticModel glModel = new GLStaticModel();
@@ -851,18 +842,11 @@ namespace LOLViewer
             // Store it.
             if (result == true)
             {
-                if (model.fileSkn != null)
-                {
-                    sModels.Add(model.fileSkn.Name, glModel);
-                }
-                else
-                {
-                    String name = model.rafSkn.FileName;
-                    int pos = name.LastIndexOf("/");
-                    name = name.Substring(pos + 1);
+                String name = model.skn.FileName;
+                int pos = name.LastIndexOf("/");
+                name = name.Substring(pos + 1);
 
-                    sModels.Add(name, glModel);
-                }
+                sModels.Add(name, glModel);
             }
 
             //
@@ -871,34 +855,18 @@ namespace LOLViewer
 
             if (result == true)
             {
-                if (model.fileTexture != null)
-                {
-                    // Texture stored directory on disk.
-                    result = CreateTexture(model.fileTexture, TextureTarget.Texture2D,
-                            GLTexture.SupportedImageEncodings.DDS);
-                }
-                else
-                {
-                    // Texture stored in RAF file.
-                    result = CreateTexture(model.rafTexture, TextureTarget.Texture2D,
-                            GLTexture.SupportedImageEncodings.DDS);
-                }
+                // Texture stored in RAF file.
+                result = CreateTexture(model.texture, TextureTarget.Texture2D,
+                        GLTexture.SupportedImageEncodings.DDS);
 
                 // Store it in our new model file.
                 if (result == true)
                 {
-                    if (model.fileTexture != null)
-                    {
-                        glModel.textureName = model.fileTexture.Name;
-                    }
-                    else
-                    {
-                        String name = model.rafTexture.FileName;
-                        int pos = name.LastIndexOf("/");
-                        name = name.Substring(pos + 1);
+                    String name = model.texture.FileName;
+                    int pos = name.LastIndexOf("/");
+                    name = name.Substring(pos + 1);
 
-                        glModel.textureName = name;
-                    }
+                    glModel.textureName = name;
                 }
             }
 
@@ -912,33 +880,16 @@ namespace LOLViewer
             SKNFile sknFile = new SKNFile();
             if (result == true)
             {
-                if (model.fileSkn != null)
-                {
-                    // Model is stored in a raw file on disc.
-                    result = SKNReader.Read(model.fileSkn,
-                        ref sknFile);
-                }
-                else
-                {
-                    // Model is stored in a RAF.
-                    result = SKNReader.Read(model.rafSkn,
-                        ref sknFile);
-                }
+                // Model is stored in a RAF.
+                result = SKNReader.Read(model.skn,
+                    ref sknFile);
             }
 
             SKLFile sklFile = new SKLFile();
             if (result == true)
             {
-                if (model.fileSkl != null)
-                {
-                    result = SKLReader.Read(model.fileSkl,
-                        ref sklFile);
-                }
-                else
-                {
-                    result = SKLReader.Read(model.rafSkl,
-                        ref sklFile);
-                }
+                result = SKLReader.Read(model.skl,
+                    ref sklFile);
             }
 
             GLRiggedModel glModel = new GLRiggedModel();
@@ -950,54 +901,30 @@ namespace LOLViewer
             // Store it.
             if (result == true)
             {
-                if (model.fileSkn != null)
-                {
-                    rModels.Add(model.fileSkn.Name, glModel);
-                }
-                else
-                {
-                    String name = model.rafSkn.FileName;
-                    int pos = name.LastIndexOf("/");
-                    name = name.Substring(pos + 1);
+                String name = model.skn.FileName;
+                int pos = name.LastIndexOf("/");
+                name = name.Substring(pos + 1);
 
-                    rModels.Add(name, glModel);
-                }
+                rModels.Add(name, glModel);
             }
 
             //
             // Create Model Texture.
             //
-
             if (result == true)
             {
-                if (model.fileTexture != null)
-                {
-                    // Texture stored directory on disk.
-                    result = CreateTexture(model.fileTexture, TextureTarget.Texture2D,
-                            GLTexture.SupportedImageEncodings.DDS);
-                }
-                else
-                {
-                    // Texture stored in RAF file.
-                    result = CreateTexture(model.rafTexture, TextureTarget.Texture2D,
-                            GLTexture.SupportedImageEncodings.DDS);
-                }
-
+                // Texture stored in RAF file.
+                result = CreateTexture(model.texture, TextureTarget.Texture2D,
+                        GLTexture.SupportedImageEncodings.DDS);
+                
                 // Store it in our new model file.
                 if (result == true)
                 {
-                    if (model.fileTexture != null)
-                    {
-                        glModel.textureName = model.fileTexture.Name;
-                    }
-                    else
-                    {
-                        String name = model.rafTexture.FileName;
-                        int pos = name.LastIndexOf("/");
-                        name = name.Substring(pos + 1);
+                    String name = model.texture.FileName;
+                    int pos = name.LastIndexOf("/");
+                    name = name.Substring(pos + 1);
 
-                        glModel.textureName = name;
-                    }
+                    glModel.textureName = name;
                 }
             }
 

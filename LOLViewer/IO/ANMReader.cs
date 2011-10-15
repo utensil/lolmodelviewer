@@ -77,6 +77,20 @@ namespace LOLViewer.IO
         {
             bool result = true;
 
+            // This happens when the file does not actually exist in the RAF archive.
+            if (file.IsMemoryEntry == true)
+            {
+                String directoryName = file.RAFArchive.RAFFilePath;
+                directoryName = directoryName.Replace("\\", "/");
+                int pos = directoryName.LastIndexOf("/");
+                directoryName = directoryName.Remove(pos);
+
+                String fileName = directoryName + file.FileName;
+
+                // Read it from the disk.
+                return Read(new FileInfo(fileName), ref data);
+            }
+
             try
             {
                 MemoryStream myInput = new MemoryStream(file.GetContent());
