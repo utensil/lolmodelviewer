@@ -40,7 +40,7 @@ using RAFLib;
 
 namespace LOLViewer.IO
 {
-    class LOLModel
+    public class LOLModel
     {
         public RAFFileListEntry skn;
         public RAFFileListEntry skl;

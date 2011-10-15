@@ -108,7 +108,6 @@ namespace LOLViewer
             this.Name = "AboutWindow";
             this.ShowInTaskbar = false;
             this.Text = "About";
-            this.TopMost = true;
             this.ResumeLayout(false);
             this.PerformLayout();
 
