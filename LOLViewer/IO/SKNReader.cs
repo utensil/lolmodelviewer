@@ -28,6 +28,10 @@ along with LOLViewer.  If not, see <http://www.gnu.org/licenses/>.
 // Abrstraction to read .skn files.
 //
 
+//
+// TODO: Some of the newer SKLs can not be read properly.  IE Frost Fire Brand
+//
+
 using System;
 using System.Collections.Generic;
 using System.Linq;

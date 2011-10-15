@@ -56,7 +56,9 @@ namespace LOLViewer.IO
         public Dictionary<String, RAFArchive> rafArchives;
 
         public List<FileInfo> inibinFiles;
+        public List<RAFFileListEntry> rafInibins;
         public Dictionary<String, FileInfo> anmListFiles;
+        public Dictionary<String, RAFFileListEntry> anmListrafs;
         public Dictionary<String, FileInfo> animationFiles;
         public Dictionary<String, RAFFileListEntry> rafSkls;
         public Dictionary<String, RAFFileListEntry> rafSkns;
@@ -73,9 +75,11 @@ namespace LOLViewer.IO
             root = DEFAULT_ROOT;
 
             rafArchives = new Dictionary<String, RAFArchive>();
+            rafInibins = new List<RAFFileListEntry>();
 
             inibinFiles = new List<FileInfo>();
             anmListFiles = new Dictionary<String, FileInfo>();
+            anmListrafs = new Dictionary<String, RAFFileListEntry>();
             animationFiles = new Dictionary<String, FileInfo>();
             rafSkls = new Dictionary<String, RAFFileListEntry>();
             rafSkns = new Dictionary<String, RAFFileListEntry>();
@@ -105,10 +109,15 @@ namespace LOLViewer.IO
             skns.Clear(); 
             textures.Clear();
             inibinFiles.Clear();
+            rafInibins.Clear();
             rafSkls.Clear();
             rafSkns.Clear();
             rafTextures.Clear();
             models.Clear();
+            animationFiles.Clear();
+            anmListFiles.Clear();
+            anmListrafs.Clear();
+            
 
             // Start from the root and try to read
             // model files and textures.
@@ -126,10 +135,49 @@ namespace LOLViewer.IO
             }
 
             // Generate model difinitions from the *.inibin files.
+            //foreach (RAFFileListEntry f in rafInibins)
+            //{
+            //    InibinFile iniFile = new InibinFile();
+            //    bool readResult = InibinReader.ReadCharacterInibin(f, ref iniFile);
+
+            //    if (readResult == true)
+            //    {
+            //        // Add the models from this .inibin file
+            //        List<ModelDefinition> modelDefs = iniFile.GetModelStrings();
+            //        for (int i = 0; i < modelDefs.Count; ++i)
+            //        {
+            //            try
+            //            {
+            //                LOLModel model;
+
+            //                bool storeResult = StoreModel(modelDefs[i], out model);
+            //                if (storeResult == true)
+            //                {
+            //                    // Try to store animations for model as well
+            //                    //storeResult = StoreAnimations(ref model);
+            //                }
+
+            //                if (storeResult == true)
+            //                {
+            //                    // Name the model the name of the texture -
+            //                    // its extension.
+            //                    String name = modelDefs[i].tex;
+            //                    name = name.Substring(0, name.Length - 4);
+
+            //                    if (models.ContainsKey(name) == false)
+            //                        models.Add(name, model);
+            //                }
+            //            }
+            //            catch { }
+            //        }
+            //    }
+            //}
+
+            // Generate model difinitions from the *.inibin files.
             foreach (FileInfo f in inibinFiles)
             {
-                InibinFile iniFile;
-                bool readResult = InibinReader.ReadCharacterInibin(f, out iniFile);
+                InibinFile iniFile = new InibinFile();
+                bool readResult = InibinReader.ReadCharacterInibin(f, ref iniFile);
 
                 if (readResult == true)
                 {
@@ -462,14 +510,22 @@ namespace LOLViewer.IO
             {
                 case ".skl":
                     {
-                        if (skls.ContainsKey(f.Name) == false)
-                            skls.Add(f.Name, f);
+                        String name = f.Name;
+                        name = name.ToLower();
+                        if (skls.ContainsKey(name) == false)
+                        {
+                            skls.Add(name, f);
+                        }
                         break;
                     }
                 case ".skn":
                     {
-                        if (skns.ContainsKey(f.Name) == false)
-                            skns.Add(f.Name, f);
+                        String name = f.Name;
+                        name = name.ToLower();
+                        if (skns.ContainsKey(name) == false)
+                        {
+                            skns.Add(name, f);
+                        }
                         break;
                     }
                 case ".DDS":
@@ -482,8 +538,12 @@ namespace LOLViewer.IO
                              f.Name.Contains("Loadscreen") == false && 
                              f.Name.Contains("loadscreen") == false )
                         {
-                            if( textures.ContainsKey(f.Name) == false)
-                                textures.Add(f.Name, f);
+                            String name = f.Name;
+                            name = name.ToLower();
+                            if (textures.ContainsKey(name) == false)
+                            {
+                                textures.Add(name, f);
+                            }
                         }
                         break;
                     }
@@ -571,6 +631,7 @@ namespace LOLViewer.IO
                         String name = e.FileName;
                         int pos = name.LastIndexOf("/");
                         name = name.Substring(pos + 1);
+                        name = name.ToLower();
 
                         if( rafTextures.ContainsKey(name) == false )
                             rafTextures.Add(name, e);
@@ -584,6 +645,7 @@ namespace LOLViewer.IO
                     String name = e.FileName;
                     int pos = name.LastIndexOf("/");
                     name = name.Substring(pos + 1);
+                    name = name.ToLower();
 
                     if (rafSkns.ContainsKey(name) == false)
                         rafSkns.Add(name, e);
@@ -596,10 +658,38 @@ namespace LOLViewer.IO
                     String name = e.FileName;
                     int pos = name.LastIndexOf("/");
                     name = name.Substring(pos + 1);
+                    name = name.ToLower();
 
-                    if (rafSkns.ContainsKey(name) == false)
-                        rafSkns.Add(name, e);
+                    if (rafSkls.ContainsKey(name) == false)
+                        rafSkls.Add(name, e);
                 }
+
+                // There's .inibin files in here too.
+                files = fileList.SearchFileEntries(".inibin");
+                foreach (RAFFileListEntry e in files)
+                {
+                    String name = e.FileName;
+                    if (name.Contains("Characters") == true && // try to only read required files
+                        name.Contains("Scripts") == false && 
+                        name.Contains("RecItems") == false )
+                    {
+                        rafInibins.Add(e);
+                    }
+
+                }
+
+                files = fileList.SearchFileEntries("Animations.list");
+                foreach (RAFFileListEntry e in files)
+                {
+                    String name = e.FileName;
+                    int pos = name.LastIndexOf("/");
+                    name = name.Substring(pos + 1);
+                    name = name.ToLower();
+
+                    if( anmListrafs.ContainsKey(name) == false )
+                        anmListrafs.Add(name, e);
+                }
+
             }
             catch
             {
