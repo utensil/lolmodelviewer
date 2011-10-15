@@ -47,11 +47,13 @@ using System.Text;
 using System.IO;
 using System.Diagnostics;
 
+using RAFLib;
+
 namespace LOLViewer.IO
 {
     class InibinReader
     {
-        public static bool ReadCharacterInibin(FileInfo f, out InibinFile file)
+        public static bool ReadCharacterInibin(FileInfo f, ref InibinFile file)
         {
             bool result = true;
 
@@ -61,7 +63,7 @@ namespace LOLViewer.IO
                 FileStream fStream = new FileStream(f.FullName, FileMode.Open, 
                     FileAccess.Read);
 
-                result = ReadCharacterInibin(fStream, out file);
+                result = ReadBinary(fStream, ref file);
                 file.directory = f.Directory;
             }
             catch
@@ -73,7 +75,55 @@ namespace LOLViewer.IO
             return result;
         }
 
-        public static bool ReadCharacterInibin(FileStream stream, out InibinFile file)
+        public static bool ReadCharacterInibin(RAFFileListEntry file, ref InibinFile data)
+        {
+            bool result = true;
+
+            try
+            {
+                MemoryStream myInput = new MemoryStream(file.GetContent());
+                result = ReadCharacterInibin(myInput, ref data);
+                
+                int end = file.FileName.LastIndexOf("/");
+                String directory = file.FileName.Substring(0, end);
+                String archive = file.RAFArchive.RAFFilePath;
+                archive = archive.Replace("\\", "/");
+                end = archive.LastIndexOf("/");
+                archive = archive.Substring(0, end);
+
+                data.directory = new DirectoryInfo( archive + "/" + directory );
+                myInput.Close();
+            }
+            catch
+            {
+                result = false;
+            }
+
+            return result;
+        }
+
+
+        private static bool ReadBinary(FileStream input, ref InibinFile data)
+        {
+            bool result = true;
+
+            try
+            {
+                byte[] byteData = new byte[(int)input.Length];
+                input.Read(byteData, 0, (int)input.Length);
+                MemoryStream myFile = new MemoryStream(byteData);
+                result = ReadCharacterInibin(myFile, ref data);
+                myFile.Close();
+            }
+            catch
+            {
+                result = false;
+            }
+
+            return result;
+        }
+
+        public static bool ReadCharacterInibin(MemoryStream stream, ref InibinFile file)
         {
  	        bool result = true;
 
@@ -83,6 +133,7 @@ namespace LOLViewer.IO
 
             // Header Info
             int version = stream.ReadByte();
+
 #if VERBOSE
             DebugOut("version", version);
 #endif
@@ -325,6 +376,16 @@ namespace LOLViewer.IO
 #endif
                     int lastOffset = -1;
                     long[] keys = ReadSegmentKeys( ref stream );
+
+                    //
+                    // New method to read the newer .inibins.
+                    // Why compute offset by reading in data from the file
+                    // when we can just compute it?  This seems to fix the problem
+                    // with newer .inibins.  I'm not sure what the actual value is used for
+                    // in the file header though.
+                    //
+                    oldStyleOffset = (int)stream.Position + keys.Length * 2;
+
                     if (keys != null)
                     {
                         foreach (long key in keys)
@@ -377,14 +438,14 @@ namespace LOLViewer.IO
         // Helper stream reading funtions.
         //
 
-        private static short ReadShort(ref FileStream s)
+        private static short ReadShort(ref MemoryStream s)
         {
 	        int b1 = s.ReadByte();
 	        int b2 = s.ReadByte();
 	        return (short)(((0xff & b2) << 8) | (0xff & b1));
         }
 
-        private static Int32 ReadInt32(ref FileStream s)
+        private static Int32 ReadInt32(ref MemoryStream s)
         {
             Int32 b1 = s.ReadByte();
             Int32 b2 = s.ReadByte();
@@ -396,12 +457,12 @@ namespace LOLViewer.IO
                 ((0xff & b4) << 24);
         }
 
-        private static float ReadFloat(ref FileStream s)
+        private static float ReadFloat(ref MemoryStream s)
         {
             return BitConverter.ToSingle(BitConverter.GetBytes(ReadInt32(ref s)), 0);
         }
 
-        private static long[] ReadSegmentKeys(ref FileStream s)
+        private static long[] ReadSegmentKeys(ref MemoryStream s)
         {
             int count = (int) ReadShort(ref s);
 #if VERBOSE
@@ -425,7 +486,7 @@ namespace LOLViewer.IO
             return result;
         }
 
-        public static String ReadNulTerminatedString(ref FileStream s, int atOffset)
+        public static String ReadNulTerminatedString(ref MemoryStream s, int atOffset)
         {
             long oldPos = s.Position;
             s.Seek(atOffset, SeekOrigin.Begin);

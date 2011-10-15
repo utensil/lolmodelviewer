@@ -162,8 +162,11 @@ namespace LOLViewer.IO
                 properties.ContainsKey(textureID) )
             {
                 m.skn = (String)properties[sknID];
+                m.skn = m.skn.ToLower();
                 m.skl = (String)properties[sklID];
+                m.skl = m.skl.ToLower();
                 m.tex = (String)properties[textureID];
+                m.tex = m.tex.ToLower();
 
                 result = true;
             }
