@@ -42,30 +42,22 @@ namespace LOLViewer.IO
 {
     class LOLModel
     {
-        public FileInfo fileSkn;
-        public FileInfo fileSkl;
-        public FileInfo fileTexture;
-
-        public RAFFileListEntry rafSkn;
-        public RAFFileListEntry rafSkl;
-        public RAFFileListEntry rafTexture;
+        public RAFFileListEntry skn;
+        public RAFFileListEntry skl;
+        public RAFFileListEntry texture;
 
         public int skinNumber; // used for animating
-        public String anmList;
-        public Dictionary<String, FileInfo> animations;
+        public String animationList;
+        public Dictionary<String, RAFFileListEntry> animations;
 
         public LOLModel() 
         {
-            fileSkn = null;
-            fileSkl = null;
-            fileTexture = null;
+            skn = null;
+            skl = null;
+            texture = null;
 
-            rafSkn = null;
-            rafSkl = null;
-            rafTexture = null;
-
-            anmList = String.Empty;
-            animations = new Dictionary<String, FileInfo>();
+            animationList = String.Empty;
+            animations = new Dictionary<String, RAFFileListEntry>();
 
             skinNumber = -1;
         }

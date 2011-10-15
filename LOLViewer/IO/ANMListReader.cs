@@ -41,11 +41,50 @@ using System.Linq;
 using System.Text;
 
 using System.IO;
+using RAFLib;
 
 namespace LOLViewer.IO
 {
     class ANMListReader
     {
+        public static bool ReadAnimationList(int skin, RAFFileListEntry file,
+            ref Dictionary<String, String> animations)
+        {
+            bool result = true;
+
+            // This happens when the file does not actually exist in the RAF archive.
+            if (file.IsMemoryEntry == true)
+            {
+                String directoryName = file.RAFArchive.RAFFilePath;
+                directoryName = directoryName.Replace("\\", "/");
+                int pos = directoryName.LastIndexOf("/");
+                directoryName = directoryName.Remove(pos);
+
+                String fileName = directoryName + file.FileName;
+
+                // Read it from the disk.
+                return ReadAnimationList(skin, new FileInfo(fileName), ref animations);
+            }
+
+            try
+            {
+                MemoryStream myInput = new MemoryStream(file.GetContent());
+                StreamReader reader = new StreamReader(myInput);
+
+                ParseAnimations(skin, reader, ref animations);
+
+                reader.Close();
+                myInput.Close();
+            }
+            catch
+            {
+                result = false;
+                animations.Clear();
+            }
+
+            return result;
+        }
+
         public static bool ReadAnimationList(int skin, FileInfo file,
             ref Dictionary<String, String> animations)
         {
@@ -75,7 +114,7 @@ namespace LOLViewer.IO
             while (f.EndOfStream == false)
             {
                 String line = f.ReadLine();
-                if( line.Length <= 0 )
+                if (line.Length <= 0)
                     continue;
 
                 if (line[0] != ';' &&
@@ -89,7 +128,7 @@ namespace LOLViewer.IO
                         int skinNumber = -1;
                         if (line[6] == ']') // Seems pretty hacky : /
                         {
-                            skinNumber = Int32.Parse( line[5].ToString() );
+                            skinNumber = Int32.Parse(line[5].ToString());
                         }
                         else
                         {
@@ -110,13 +149,17 @@ namespace LOLViewer.IO
                                 data.Add(s);
                         }
 
-                        ParseAnimation(false, data[0], data[1], ref animations);
+                        // Sanity
+                        if (data.Count > 1)
+                        {
+                            ParseAnimation(false, data[0], data[1], ref animations);
+                        }
                     }
                 }
             }
         }
 
-        public static void ParseSkinSpecificAnimations(int modelSkin, int animationSkin, ref StreamReader f, 
+        public static void ParseSkinSpecificAnimations(int modelSkin, int animationSkin, ref StreamReader f,
             ref Dictionary<String, String> animations)
         {
             // We need to read or skip over these animations.
@@ -147,7 +190,11 @@ namespace LOLViewer.IO
                                 data.Add(s);
                         }
 
-                        ParseAnimation(true, data[0], data[1], ref animations);
+                        // Sanity
+                        if (data.Count > 1)
+                        {
+                            ParseAnimation(true, data[0], data[1], ref animations);
+                        }
                     }
                 }
                 else
