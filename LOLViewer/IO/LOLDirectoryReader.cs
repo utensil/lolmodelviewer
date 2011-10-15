@@ -42,7 +42,7 @@ using RAFLib;
 
 namespace LOLViewer.IO
 {
-    class LOLDirectoryReader
+    public class LOLDirectoryReader
     {
         public const String DEFAULT_ROOT = "C:/Riot Games";
         public const String DEFAULT_MODEL_ROOT = "/DATA/Characters";
@@ -231,6 +231,20 @@ namespace LOLViewer.IO
             }
 
             return result;
+        }
+
+        public void SortModelNames()
+        {
+            IEnumerable<KeyValuePair<String, LOLModel>> alphabetical = models.OrderBy(model => model.Key);
+
+            Dictionary<String, LOLModel> temp = new Dictionary<String, LOLModel>();
+            foreach (var m in alphabetical)
+            {
+                temp.Add(m.Key, m.Value);
+            }
+
+            models.Clear();
+            models = temp;
         }
 
         public List<String> GetModelNames()

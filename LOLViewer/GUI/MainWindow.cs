@@ -58,7 +58,7 @@ namespace LOLViewer
         private GLCamera camera;
 
         // IO Variables
-        LOLDirectoryReader reader;
+        public LOLDirectoryReader reader;
 
         // GUI Variables
         // converts from World Transform scale to trackbar units.
@@ -81,6 +81,9 @@ namespace LOLViewer
             InitializeComponent();
             modelScaleTrackbar.Value = (int) (GLRenderer.DEFAULT_MODEL_SCALE * DEFAULT_SCALE_TRACKBAR);
             yOffsetTrackbar.Value = -GLRenderer.DEFAULT_MODEL_YOFFSET;
+
+            // Main window Callbacks
+            this.Shown += new EventHandler(OnMainWindowShown);
 
             // GLControl Callbacks
             glControlMain.Load += new EventHandler(GLControlMainOnLoad);
@@ -139,6 +142,20 @@ namespace LOLViewer
             animationController.DisableAnimation();
         }
 
+        //
+        // Main Window Handlers
+        //
+
+        void OnMainWindowShown(object sender, EventArgs e)
+        {
+            // Read model files.
+            OnReadModels(sender, e);
+        }
+
+        //
+        // GLControl Handlers
+        //
+
         public void GLControlMainOnPaint(object sender, PaintEventArgs e)
         {
             if (isGLLoaded == false)
@@ -168,9 +185,6 @@ namespace LOLViewer
         public void GLControlMainOnLoad(object sender, EventArgs e)
         {
             isGLLoaded = true;
-
-            // Read model files.
-            OnReadModels(sender, e);
 
             // Set up renderer.
             bool result = renderer.OnLoad();
@@ -310,8 +324,17 @@ namespace LOLViewer
 
         void OnReadModels(object sender, EventArgs e)
         {
-            bool result = reader.Read();
-            if (result == false)
+            // Clear old data.
+            modelListBox.Items.Clear();
+            renderer.DestroyCurrentModels();
+            glControlMain.Invalidate();
+
+            LoadingModelsWindow loader = new LoadingModelsWindow();
+            loader.reader = reader;
+            loader.ShowDialog();
+
+            DialogResult result = loader.result;
+            if (result == DialogResult.Abort)
             {
                 MessageBox.Show("Unable to read models. If you installed League of legends" +
                                  " in a non-default location, change the default directory" +
@@ -319,9 +342,13 @@ namespace LOLViewer
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
+            else if (result == DialogResult.Cancel)
+            {
+                modelListBox.Items.Clear();
+                return;
+            }
 
             // Populate the model list box.
-            modelListBox.Items.Clear();
             List<String> modelNames = reader.GetModelNames();
             foreach (String name in modelNames)
             {

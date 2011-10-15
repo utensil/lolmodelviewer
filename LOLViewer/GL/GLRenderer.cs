@@ -322,26 +322,7 @@ namespace LOLViewer
         {
             bool result = true;
 
-            // Clear out old model data.
-            foreach (var s in sModels)
-            {
-                s.Value.Destory();
-            }
-            sModels.Clear();
-
-            foreach (var r in rModels)
-            {
-                r.Value.Destroy();
-            }
-            rModels.Clear();
-
-            GL.BindTexture(TextureTarget.Texture2D, 0);
-            foreach (var t in textures)
-            {
-                t.Value.Destroy();
-            }
-            textures.Clear();
-            // End Clearing
+            DestroyCurrentModels();
 
             //
             // Create model geometry
@@ -604,6 +585,30 @@ namespace LOLViewer
             {
                 m.Value.Update(elapsedTime);
             }
+        }
+
+        public void DestroyCurrentModels()
+        {
+            // Clear out old model data.
+            foreach (var s in sModels)
+            {
+                s.Value.Destory();
+            }
+            sModels.Clear();
+
+            foreach (var r in rModels)
+            {
+                r.Value.Destroy();
+            }
+            rModels.Clear();
+
+            GL.BindTexture(TextureTarget.Texture2D, 0);
+            foreach (var t in textures)
+            {
+                t.Value.Destroy();
+            }
+            textures.Clear();
+            // End Clearing
         }
 
         public void ShutDown()
