@@ -78,6 +78,7 @@ namespace LOLViewer.IO
 
             animationLists = new Dictionary<String, RAFFileListEntry>();
             animations = new Dictionary<String, RAFFileListEntry>();
+            
             skls = new Dictionary<String, RAFFileListEntry>();
             skns = new Dictionary<String, RAFFileListEntry>();
             textures = new Dictionary<String, RAFFileListEntry>();
@@ -140,7 +141,6 @@ namespace LOLViewer.IO
                         try
                         {
                             LOLModel model;
-
                             bool storeResult = StoreModel(modelDefs[i], out model);
                             if (storeResult == true)
                             {
@@ -150,10 +150,19 @@ namespace LOLViewer.IO
 
                             if (storeResult == true)
                             {
-                                // Name the model the name of the texture -
-                                // its extension.
-                                String name = modelDefs[i].tex;
-                                name = name.Substring(0, name.Length - 4);
+                                String name = modelDefs[i].name;
+
+                                if (name == "")
+                                {
+                                    // Name the model after the parent directory
+                                    // of the .inibin.
+
+                                    name = f.FileName;
+                                    int pos = name.LastIndexOf("/");
+                                    name = name.Remove(pos);
+                                    pos = name.LastIndexOf("/");
+                                    name = name.Substring(pos + 1);
+                                }
 
                                 if (models.ContainsKey(name) == false)
                                     models.Add(name, model);

@@ -423,22 +423,27 @@ namespace LOLViewer.IO
 
 #if VERBOSE
                 // Debuging Code
+                //Debug.WriteLine("Skin #1 Name: " + file.properties[(long) InibinHashID.SKIN_ONE_NAME]);
                 Debug.WriteLine("Skin #1 SKN: " + file.properties[(long) InibinHashID.SKIN_ONE_SKN]);
                 Debug.WriteLine("Skin #1 SKL: " + file.properties[(long) InibinHashID.SKIN_ONE_SKL]);
                 Debug.WriteLine("Skin #1 DDS: " + file.properties[(long) InibinHashID.SKIN_ONE_TEXTURE]);
 
+                Debug.WriteLine("Skin #2 Name: " + file.properties[(long) InibinHashID.SKIN_TWO_NAME]);
                 Debug.WriteLine("Skin #2 SKN: " + file.properties[(long) InibinHashID.SKIN_TWO_SKN]);
                 Debug.WriteLine("Skin #2 SKL: " + file.properties[(long) InibinHashID.SKIN_TWO_SKL]);
                 Debug.WriteLine("Skin #2 DDS: " + file.properties[(long) InibinHashID.SKIN_TWO_TEXTURE]);
 
+                Debug.WriteLine("Skin #3 Name: " + file.properties[(long) InibinHashID.SKIN_THREE_NAME]);
                 Debug.WriteLine("Skin #3 SKN: " + file.properties[(long) InibinHashID.SKIN_THREE_SKN]);
                 Debug.WriteLine("Skin #3 SKL: " + file.properties[(long) InibinHashID.SKIN_THREE_SKL]);
                 Debug.WriteLine("Skin #3 DDS: " + file.properties[(long) InibinHashID.SKIN_THREE_TEXTURE]);
 
+                Debug.WriteLine("Skin #4 Name: " + file.properties[(long) InibinHashID.SKIN_FOUR_NAME]);
                 Debug.WriteLine("Skin #4 SKN: " + file.properties[(long) InibinHashID.SKIN_FOUR_SKN]);
                 Debug.WriteLine("Skin #4 SKL: " + file.properties[(long) InibinHashID.SKIN_FOUR_SKL]);
                 Debug.WriteLine("Skin #4 DDS: " + file.properties[(long) InibinHashID.SKIN_FOUR_TEXTURE]);
 
+                Debug.WriteLine("Skin #5 Name: " + file.properties[(long) InibinHashID.SKIN_FIVE_NAME]);
                 Debug.WriteLine("Skin #5 SKN: " + file.properties[(long) InibinHashID.SKIN_FIVE_SKN]);
                 Debug.WriteLine("Skin #5 SKL: " + file.properties[(long) InibinHashID.SKIN_FIVE_SKL]);
                 Debug.WriteLine("Skin #5 DDS: " + file.properties[(long) InibinHashID.SKIN_FIVE_TEXTURE]); 
