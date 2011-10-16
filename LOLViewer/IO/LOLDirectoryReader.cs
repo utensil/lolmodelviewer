@@ -30,6 +30,8 @@ along with LOLViewer.  If not, see <http://www.gnu.org/licenses/>.
 // structure.
 //
 
+//#define VERBOSE
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,6 +39,7 @@ using System.Text;
 
 using System.IO;
 using System.Diagnostics;
+using System.Windows.Forms;
 
 using RAFLib;
 
@@ -337,10 +340,18 @@ namespace LOLViewer.IO
                         break;
                 }
             }
+#if VERBOSE
+            catch(Exception e)
+            {
+                result = false;
+                ErrorMessage(e.Message);
+            }
+#else
             catch
             {
                 result = false;
             }
+#endif
 
             return result;
         }
@@ -360,10 +371,18 @@ namespace LOLViewer.IO
                         break;
                 }
             }
+#if VERBOSE
+            catch(Exception e)
+            {
+                result = false;
+                ErrorMessage(e.Message);
+            }
+#else
             catch
             {
                 result = false;
             }
+#endif
 
             return result;
         }
@@ -389,10 +408,18 @@ namespace LOLViewer.IO
                     }
                 }
             }
+#if VERBOSE
+            catch(Exception e)
+            {
+                result = false;
+                ErrorMessage(e.Message);
+            }
+#else
             catch
             {
                 result = false;
             }
+#endif
 
             // Note: archive will always equal the last RAFArchive in the directory.
             // So, we alawys apend files to the last one if there's more than one in a directory.
@@ -429,6 +456,9 @@ namespace LOLViewer.IO
                     if (e.Message.Contains("Could not find a part of the path") == false)
                     {
                         result = false;
+#if VERBOSE
+                        ErrorMessage(e.Message);
+#endif
                     }
                 }
             }
@@ -559,10 +589,18 @@ namespace LOLViewer.IO
                         animations.Add(name, e);
                 }
             }
+#if VERBOSE
+            catch(Exception e)
+            {
+                result = false;
+                ErrorMessage(e.Message);
+            }
+#else
             catch
             {
                 result = false;
             }
+#endif
 
             return result;
         }
@@ -592,10 +630,18 @@ namespace LOLViewer.IO
                     }
                 }
             }
+#if VERBOSE
+            catch(Exception e)
+            {
+                result = false;
+                ErrorMessage(e.Message);
+            }
+#else
             catch
             {
                 result = false;
             }
+#endif
 
             return result;
         }
@@ -735,6 +781,16 @@ namespace LOLViewer.IO
                     }
             };
         }
+
+        //
+        // Helper Debugging Funtion
+        //
+#if VERBOSE
+        private void  ErrorMessage(String message)
+        {
+            MessageBox.Show(message);
+        }
+#endif
     }
 }
 
