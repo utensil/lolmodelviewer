@@ -43,6 +43,7 @@ namespace LOLViewer.IO
     {
         public int skin;
         public String anmListKey; // for finding animation files.
+        public String name;
         public String skn;
         public String skl;
         public String tex;
@@ -51,6 +52,7 @@ namespace LOLViewer.IO
         {
             skin = -1;
             anmListKey = String.Empty;
+            name = String.Empty;
             skn = String.Empty;
             skl = String.Empty;
             tex = String.Empty;
@@ -84,7 +86,7 @@ namespace LOLViewer.IO
             ModelDefinition def = new ModelDefinition();
             def.anmListKey = directory.Name;
 
-            bool flag = GetModelStrings((long)InibinHashID.SKIN_ONE_SKN,
+            bool flag = GetModelStrings(0, (long)InibinHashID.SKIN_ONE_SKN,
                 (long)InibinHashID.SKIN_ONE_SKL,
                 (long)InibinHashID.SKIN_ONE_TEXTURE, ref def);
 
@@ -97,7 +99,8 @@ namespace LOLViewer.IO
             // Read in model 2
             def = new ModelDefinition();
             def.anmListKey = directory.Name;
-            flag = GetModelStrings((long)InibinHashID.SKIN_TWO_SKN,
+            flag = GetModelStrings((long)InibinHashID.SKIN_TWO_NAME,
+                (long)InibinHashID.SKIN_TWO_SKN,
                 (long)InibinHashID.SKIN_TWO_SKL,
                 (long)InibinHashID.SKIN_TWO_TEXTURE, ref def);
 
@@ -110,7 +113,8 @@ namespace LOLViewer.IO
             // Read in model 3
             def = new ModelDefinition();
             def.anmListKey = directory.Name;
-            flag = GetModelStrings((long)InibinHashID.SKIN_THREE_SKN,
+            flag = GetModelStrings((long)InibinHashID.SKIN_THREE_NAME,
+                (long)InibinHashID.SKIN_THREE_SKN,
                 (long)InibinHashID.SKIN_THREE_SKL,
                 (long)InibinHashID.SKIN_THREE_TEXTURE, ref def);
 
@@ -123,7 +127,8 @@ namespace LOLViewer.IO
             // Read in model 4
             def = new ModelDefinition();
             def.anmListKey = directory.Name;
-            flag = GetModelStrings((long)InibinHashID.SKIN_FOUR_SKN,
+            flag = GetModelStrings((long)InibinHashID.SKIN_FOUR_NAME,
+                (long)InibinHashID.SKIN_FOUR_SKN,
                 (long)InibinHashID.SKIN_FOUR_SKL,
                 (long)InibinHashID.SKIN_FOUR_TEXTURE, ref def);
 
@@ -136,7 +141,8 @@ namespace LOLViewer.IO
             // Read in model 5 
             def = new ModelDefinition();
             def.anmListKey = directory.Name;
-            flag = GetModelStrings((long)InibinHashID.SKIN_FIVE_SKN,
+            flag = GetModelStrings((long)InibinHashID.SKIN_FIVE_NAME,
+                (long)InibinHashID.SKIN_FIVE_SKN,
                 (long)InibinHashID.SKIN_FIVE_SKL,
                 (long)InibinHashID.SKIN_FIVE_TEXTURE, ref def);
 
@@ -153,22 +159,46 @@ namespace LOLViewer.IO
         //
         // Helper Function
         //
-        private bool GetModelStrings(long sknID, long sklID, long textureID, ref ModelDefinition m)
+        private bool GetModelStrings(long nameID, long sknID, long sklID, 
+            long textureID, ref ModelDefinition m)
         {
             bool result = false;
 
-            if( properties.ContainsKey(sknID) &&
-                properties.ContainsKey(sklID) &&
-                properties.ContainsKey(textureID) )
+            // For skin 1
+            if (nameID == 0)
             {
-                m.skn = (String)properties[sknID];
-                m.skn = m.skn.ToLower();
-                m.skl = (String)properties[sklID];
-                m.skl = m.skl.ToLower();
-                m.tex = (String)properties[textureID];
-                m.tex = m.tex.ToLower();
+                if (properties.ContainsKey(sknID) &&
+                    properties.ContainsKey(sklID) &&
+                    properties.ContainsKey(textureID))
+                {
+                    m.skn = (String)properties[sknID];
+                    m.skn = m.skn.ToLower();
+                    m.skl = (String)properties[sklID];
+                    m.skl = m.skl.ToLower();
+                    m.tex = (String)properties[textureID];
+                    m.tex = m.tex.ToLower();
 
-                result = true;
+                    result = true;
+                }
+            }
+            // For other skins.
+            else
+            {
+                if (properties.ContainsKey(nameID) &&
+                    properties.ContainsKey(sknID) &&
+                    properties.ContainsKey(sklID) &&
+                    properties.ContainsKey(textureID))
+                {
+                    m.name = (String)properties[nameID];
+                    m.skn = (String)properties[sknID];
+                    m.skn = m.skn.ToLower();
+                    m.skl = (String)properties[sklID];
+                    m.skl = m.skl.ToLower();
+                    m.tex = (String)properties[textureID];
+                    m.tex = m.tex.ToLower();
+
+                    result = true;
+                }
             }
 
             return result;
