@@ -60,6 +60,10 @@ namespace LOLViewer
         // IO Variables
         public LOLDirectoryReader reader;
 
+        // Model Name Search Variables
+        public String lastSearch;
+        public List<String> currentSearchSubset;
+
         // GUI Variables
         // converts from World Transform scale to trackbar units.
         private const float DEFAULT_SCALE_TRACKBAR = 1000.0f;
@@ -81,6 +85,9 @@ namespace LOLViewer
             InitializeComponent();
             modelScaleTrackbar.Value = (int) (GLRenderer.DEFAULT_MODEL_SCALE * DEFAULT_SCALE_TRACKBAR);
             yOffsetTrackbar.Value = -GLRenderer.DEFAULT_MODEL_YOFFSET;
+
+            lastSearch = String.Empty;
+            currentSearchSubset = new List<String>();
 
             // Main window Callbacks
             this.Shown += new EventHandler(OnMainWindowShown);
@@ -140,6 +147,9 @@ namespace LOLViewer
             currentAnimationComboBox.SelectedIndexChanged += new EventHandler(animationController.OnCurrentAnimationComboBoxSelectedIndexChanged);
 
             animationController.DisableAnimation();
+
+            // Search Box
+            modelSearchBox.TextChanged += new EventHandler(OnModelSearchBoxTextChanged);
         }
 
         //
@@ -344,7 +354,6 @@ namespace LOLViewer
             }
             else if (result == DialogResult.Cancel)
             {
-                modelListBox.Items.Clear();
                 return;
             }
 
@@ -446,6 +455,58 @@ namespace LOLViewer
 
                 glControlMain.Invalidate();
             }
+        }
+
+        void OnModelSearchBoxTextChanged(object sender, EventArgs e)
+        {
+            String search = modelSearchBox.Text;
+            search = search.ToLower();
+
+            // Santiy
+            if (search == lastSearch)
+                return;
+
+            // We need to start from scratch.
+            if (search.Contains(lastSearch) == false ||
+                lastSearch == "")
+            {
+                currentSearchSubset = reader.GetModelNames();
+            }
+            //else
+            // We can search off of the last subset of strings.
+
+            lastSearch = search;
+            modelListBox.Items.Clear();
+
+            if (search != "")
+            {
+                List<String> result = new List<String>();
+                foreach (String s in currentSearchSubset)
+                {
+                    String compare = s.ToLower();
+                    if (compare.Contains(search) == true)
+                    {
+                        result.Add(s);
+                        modelListBox.Items.Add(s); // update gui as we go.
+                    }
+                }
+
+                currentSearchSubset = result;
+            }
+            else
+            {
+                // Special base where we just repopulate the list.
+                foreach (String s in reader.GetModelNames())
+                {
+                    modelListBox.Items.Add(s);
+                }
+            }
+
+            if (modelListBox.Items.Count > 0)
+                modelListBox.SelectedIndex = 0;
+
+            // Redraw the list box.
+            modelListBox.Invalidate();
         }
         
         //

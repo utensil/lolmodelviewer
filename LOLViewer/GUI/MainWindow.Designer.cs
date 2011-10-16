@@ -85,8 +85,10 @@ namespace LOLViewer
             this.currentAnimationComboBox = new System.Windows.Forms.ComboBox();
             this.currentAnimationLabel = new System.Windows.Forms.Label();
             this.enableAnimationCheckBox = new System.Windows.Forms.CheckBox();
-            this.modelListBox = new System.Windows.Forms.ListBox();
             this.glTabModelListBoxSplitContainer = new System.Windows.Forms.SplitContainer();
+            this.modelListBox = new System.Windows.Forms.ListBox();
+            this.modelSearchBox = new System.Windows.Forms.TextBox();
+            this.modelSearchLabel = new System.Windows.Forms.Label();
             this.mainWindowMenuStrip.SuspendLayout();
             this.mainWindowStatusStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.glControlTabControlSplitContainer)).BeginInit();
@@ -410,15 +412,6 @@ namespace LOLViewer
             this.enableAnimationCheckBox.Text = "Enable Animation";
             this.enableAnimationCheckBox.UseVisualStyleBackColor = true;
             // 
-            // modelListBox
-            // 
-            this.modelListBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.modelListBox.FormattingEnabled = true;
-            this.modelListBox.Location = new System.Drawing.Point(0, 0);
-            this.modelListBox.Name = "modelListBox";
-            this.modelListBox.Size = new System.Drawing.Size(150, 378);
-            this.modelListBox.TabIndex = 10;
-            // 
             // glTabModelListBoxSplitContainer
             // 
             this.glTabModelListBoxSplitContainer.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -433,10 +426,41 @@ namespace LOLViewer
             // glTabModelListBoxSplitContainer.Panel2
             // 
             this.glTabModelListBoxSplitContainer.Panel2.Controls.Add(this.modelListBox);
+            this.glTabModelListBoxSplitContainer.Panel2.Controls.Add(this.modelSearchBox);
+            this.glTabModelListBoxSplitContainer.Panel2.Controls.Add(this.modelSearchLabel);
             this.glTabModelListBoxSplitContainer.Panel2MinSize = 150;
             this.glTabModelListBoxSplitContainer.Size = new System.Drawing.Size(604, 378);
             this.glTabModelListBoxSplitContainer.SplitterDistance = 450;
             this.glTabModelListBoxSplitContainer.TabIndex = 11;
+            // 
+            // modelListBox
+            // 
+            this.modelListBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.modelListBox.FormattingEnabled = true;
+            this.modelListBox.Location = new System.Drawing.Point(0, 52);
+            this.modelListBox.Name = "modelListBox";
+            this.modelListBox.Size = new System.Drawing.Size(150, 329);
+            this.modelListBox.TabIndex = 17;
+            // 
+            // modelSearchBox
+            // 
+            this.modelSearchBox.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.modelSearchBox.Location = new System.Drawing.Point(25, 24);
+            this.modelSearchBox.Name = "modelSearchBox";
+            this.modelSearchBox.Size = new System.Drawing.Size(100, 20);
+            this.modelSearchBox.TabIndex = 16;
+            // 
+            // modelSearchLabel
+            // 
+            this.modelSearchLabel.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this.modelSearchLabel.AutoSize = true;
+            this.modelSearchLabel.Location = new System.Drawing.Point(52, 6);
+            this.modelSearchLabel.Name = "modelSearchLabel";
+            this.modelSearchLabel.Size = new System.Drawing.Size(41, 13);
+            this.modelSearchLabel.TabIndex = 15;
+            this.modelSearchLabel.Text = "Search";
             // 
             // MainWindow
             // 
@@ -468,6 +492,7 @@ namespace LOLViewer
             this.animationOptionsTab.PerformLayout();
             this.glTabModelListBoxSplitContainer.Panel1.ResumeLayout(false);
             this.glTabModelListBoxSplitContainer.Panel2.ResumeLayout(false);
+            this.glTabModelListBoxSplitContainer.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.glTabModelListBoxSplitContainer)).EndInit();
             this.glTabModelListBoxSplitContainer.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -491,7 +516,6 @@ namespace LOLViewer
         private System.Windows.Forms.TabControl optionsTabControl;
         private System.Windows.Forms.TabPage renderOptionsTab;
         private System.Windows.Forms.TabPage animationOptionsTab;
-        private System.Windows.Forms.ListBox modelListBox;
         private System.Windows.Forms.SplitContainer glTabModelListBoxSplitContainer;
         private System.Windows.Forms.ToolStripStatusLabel mainWindowStatusLabel;
         private System.Windows.Forms.TrackBar yOffsetTrackbar;
@@ -511,6 +535,9 @@ namespace LOLViewer
         private System.Windows.Forms.ToolStripSeparator fileToolStripSeparator;
         private System.Windows.Forms.Button backgroundColorButton;
         private System.Windows.Forms.Label backgroundLabel;
+        private System.Windows.Forms.ListBox modelListBox;
+        private System.Windows.Forms.TextBox modelSearchBox;
+        private System.Windows.Forms.Label modelSearchLabel;
     }
 }
 
