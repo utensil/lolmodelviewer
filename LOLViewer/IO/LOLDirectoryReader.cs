@@ -47,7 +47,7 @@ namespace LOLViewer.IO
 {
     public class LOLDirectoryReader
     {
-        public const String DEFAULT_ROOT = "C:/Riot Games";
+        public const String DEFAULT_ROOT = "C:/Riot Games/League of Legends";
         public const String DEFAULT_MODEL_ROOT = "/DATA/Characters";
         public const String DEFAULT_RAF_DIRECTORY_ONE = "DATA";
         public const String DEFAULT_RAF_DIRECTORY_TWO = "Characters";
@@ -111,8 +111,17 @@ namespace LOLViewer.IO
             animationLists.Clear();
             animations.Clear();           
 
+            // Sanity
+            if (root.Contains("League of Legends") == false &&
+                root.Contains("Riot Games") == false)
+            {
+                return false;
+            }
+
+            //
             // Start from the root and try to read
             // model files and textures.
+            //
             try
             {
                 DirectoryInfo di = new DirectoryInfo(root);
@@ -296,40 +305,54 @@ namespace LOLViewer.IO
         {
             bool result = true;
 
+            //
             // Parse the directory's name and determine what to do.
-            switch (dir.Name)
+            //
+
+            // Odd case
+            // US Client: "League of Legends"
+            // EU Client: "League of Legends EU"
+            // etc.
+            if (dir.Name.Contains("League of Legends") == true)
             {
-                case "League of Legends":
-                    {
-                        result = OpenDirectory(dir);
-                        break;
-                    };
-                case "RADS":
-                    {
-                        result = OpenDirectory(dir);
-                        break;
-                    };
-                case "projects":
-                    {
-                        result = OpenDirectory(dir);
-                        break;
-                    };
-                case "lol_game_client":
-                    {
-                        result = OpenDirectory(dir);
-                        break;
-                    };
-                case "filearchives":
-                    {
-                        result = OpenModelsRoot(dir);
-                        break;
-                    };
-                default:
-                    {
-                        // Just ignore this directory.
-                        break;
-                    }
-            };
+                result = OpenDirectory(dir);
+            }
+            else
+            {
+                //
+                // Standard Case
+                //
+
+                switch (dir.Name)
+                {
+                    case "RADS":
+                        {
+                            result = OpenDirectory(dir);
+                            break;
+                        };
+                    case "projects":
+                        {
+                            result = OpenDirectory(dir);
+                            break;
+                        };
+                    case "lol_game_client":
+                        {
+                            result = OpenDirectory(dir);
+                            break;
+                        };
+                    case "filearchives":
+                        {
+                            result = OpenModelsRoot(dir);
+                            break;
+                        };
+                    default:
+                        {
+                            // Just ignore this directory.
+                            break;
+                        }
+                };
+
+            }
 
             return result;
         }
