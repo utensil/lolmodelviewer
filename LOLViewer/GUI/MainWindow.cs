@@ -292,7 +292,7 @@ namespace LOLViewer
         void OnSetDirectory(object sender, EventArgs e)
         {
             FolderBrowserDialog dlg = new FolderBrowserDialog();
-            dlg.Description = "Select the 'Riot Games' folder.";
+            dlg.Description = "Select the 'League of Legends' folder.";
             dlg.ShowNewFolderButton = false;
 
             DialogResult result = dlg.ShowDialog();
@@ -300,30 +300,11 @@ namespace LOLViewer
             String selectedDir = String.Empty;
             if (result == DialogResult.OK)
             {
-                // Check end of string equals 'Riot Games'
-                try
-                {
-                    char[] folder = new char[10];
-                    dlg.SelectedPath.CopyTo(dlg.SelectedPath.Length - 10, folder,
-                        0, 10);
-                    selectedDir = new String(folder);
-                }
-                catch {}
-
-                if (selectedDir == "Riot Games")
-                {
-                    // Set the new root.
-                    reader.SetRoot(dlg.SelectedPath);
+                // Lets not check and let the directory reader sort it out.
+                reader.SetRoot(dlg.SelectedPath);
                     
-                    // Reread the models.
-                    OnReadModels(sender, e);
-                }
-                else
-                {
-                    // Output an error
-                    MessageBox.Show("The 'Riot Games' folder was not selected.", "Error",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                // Reread the models.
+                OnReadModels(sender, e);
             }
         }
 
@@ -348,7 +329,7 @@ namespace LOLViewer
             {
                 MessageBox.Show("Unable to read models. If you installed League of legends" +
                                  " in a non-default location, change the default directory" +
-                                 " to the 'Riot Games' folder by using the command in the 'Options' menu.", "Error",
+                                 " to the 'League of Legends' folder by using the command in the 'Options' menu.", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
