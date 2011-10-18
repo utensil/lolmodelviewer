@@ -145,6 +145,7 @@ namespace LOLViewer
         {
             GLBone poseBone = null;
 
+            // Determine which frame this data applies to.
             if (frame == 0)
             {
                 poseBone = currentFrame[boneID];
@@ -157,8 +158,12 @@ namespace LOLViewer
             poseBone.parent = bindingJoints[boneID].parent;
             poseBone.scale = bindingJoints[boneID].scale;
 
+            // Is this a root bone?
             if (poseBone.parent == -1)
             {
+                // No parent bone for root bones.
+                // So, just calculate directly.
+
                 Matrix4 worldTransform = Matrix4.Rotate(orientation);
                 worldTransform.M41 = position.X * ( 1.0f / poseBone.scale );
                 worldTransform.M42 = position.Y * ( 1.0f / poseBone.scale );
@@ -168,6 +173,7 @@ namespace LOLViewer
             }
             else
             {
+                // Determine the parent bone.
                 GLBone parentBone = null;
                 if (frame == 0)
                 {
@@ -183,6 +189,7 @@ namespace LOLViewer
                 localTransform.M42 = position.Y * ( 1.0f / poseBone.scale );
                 localTransform.M43 = position.Z * ( 1.0f / poseBone.scale );
 
+                // Create the final transform based off the parent.
                 poseBone.worldTransform = localTransform *
                     parentBone.worldTransform;
             }
