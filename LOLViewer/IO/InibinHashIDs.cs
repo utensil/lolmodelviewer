@@ -63,18 +63,19 @@ namespace LOLViewer.IO
         SKIN_FIVE_TEXTURE = -1595152421L,
         SKIN_FIVE_SKL = 935582317L,
 
-        // TODO: Figure out skins 6+
-        // Right now the reader only parses data from version 1
-        // .inibin files.  If the file is of version 2 or higher, it
-        // just parses the data common to version 1.  I think characters
-        // with six or more skins have their sixth and higher skin stored
-        // in the version 2 section of the file.
+        SKIN_SIX_NAME = 1383987216L,
+        SKIN_SIX_SKN = 1185683726L,
+        SKIN_SIX_TEXTURE = 1946527196L,
+        SKIN_SIX_SKL = -384131924L,
 
-        // WHERE ARE FROZEN AND REVERSE ANNIE? NOOOOOOOOOOOOOOOOOO
+        SKIN_SEVEN_NAME = 1294367823L,
+        SKIN_SEVEN_SKN = 1405594573L,
+        SKIN_SEVEN_TEXTURE = 1193239517L,
+        SKIN_SEVEN_SKL = -1703846165L,
 
         // Keys from original code.
-        // I don't use them nor have I confirmed their correctness.
-        // However, they're here if anyone needs to extend this class.
+        // LOLModel Viewer does not use them.  So, I have never confirmed their correctness.
+        // However, the originals are here if anyone needs to extend this class.
         PROP_ID = 2921476548L,
         PROP_HP = 742042233L,
         PROP_HPL = 3306821199L,

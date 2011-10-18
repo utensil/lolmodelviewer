@@ -151,6 +151,7 @@ namespace LOLViewer.IO
                         {
                             LOLModel model;
                             bool storeResult = StoreModel(modelDefs[i], out model);
+
                             if (storeResult == true)
                             {
                                 // Try to store animations for model as well
@@ -159,18 +160,26 @@ namespace LOLViewer.IO
 
                             if (storeResult == true)
                             {
+                                // Name the model after the parent directory
+                                // of the .inibin plus the name from the .inibin.
+                                // Some things overlap without both.
                                 String name = modelDefs[i].name;
 
+                                String directoryName = f.FileName;
+                                int pos = directoryName.LastIndexOf("/");
+                                directoryName = directoryName.Remove(pos);
+                                pos = directoryName.LastIndexOf("/");
+                                directoryName = directoryName.Substring(pos + 1);
+
+                                // Sometimes the name from the .inibin file is "".
+                                // So, just name it after the directory
                                 if (name == "")
                                 {
-                                    // Name the model after the parent directory
-                                    // of the .inibin.
-
-                                    name = f.FileName;
-                                    int pos = name.LastIndexOf("/");
-                                    name = name.Remove(pos);
-                                    pos = name.LastIndexOf("/");
-                                    name = name.Substring(pos + 1);
+                                    name = directoryName + "/" + directoryName;
+                                }
+                                else
+                                {
+                                    name = directoryName + "/" + name;
                                 }
 
                                 if (models.ContainsKey(name) == false)
