@@ -114,7 +114,7 @@ namespace LOLViewer
 
             wasDraggedSinceLastUpdate = false;
             center = Vector3.Zero;
-            radius = defaultRadius = 100.0f;
+            radius = defaultRadius = 300.0f;
             minRadius = 20.0f;
             maxRadius = 1000.0f;
 

@@ -348,118 +348,117 @@ namespace LOLViewer.IO
                         }
                     }
                 }
-
-                // 4-byte color values or something?
-                if ((format & 0x0400) == 0)
-                {
-#if VERBOSE
-                    DebugOut("No 4-byte color segment", "skipping");
-#endif
-                }
-                else
-                {
-#if VERBOSE
-                    DebugOut("Color? properties start position", stream.Position);
-#endif
-                    long[] keys = ReadSegmentKeys( ref stream );
-                    if (keys != null)
-                    {
-                        foreach (long key in keys)
-                        {
-                            long val = (long)ReadInt32(ref stream);
-#if VERBOSE
-                            DebugOut("U32 color prop(" + key + ")", val);
-#endif
-
-                            file.AddProperty(key, val);
-                        }
-                    }
-                }
-
-                // Old-style offsets to strings
-                if ((format & 0x1000) == 0)
-                {
-#if VERBOSE
-                    DebugOut("No offsets segment", "skipping");
-#endif
-                }
-                else
-                {
-#if VERBOSE
-                    DebugOut("Old style data position", stream.Position);
-#endif
-                    int lastOffset = -1;
-                    long[] keys = ReadSegmentKeys( ref stream );
-
-                    //
-                    // New method to read the newer .inibins.
-                    // Why compute offset by reading in data from the file
-                    // when we can just compute it?  This seems to fix the problem
-                    // with newer .inibins.  I'm not sure what the actual value is used for
-                    // in the file header though.
-                    //
-                    oldStyleOffset = (int)stream.Position + keys.Length * 2;
-
-                    if (keys != null)
-                    {
-                        foreach (long key in keys)
-                        {
-                            int offset = (int)ReadShort(ref stream);
-#if VERBOSE
-                            DebugOut("String offset(" + key + ")", offset);
-#endif
-                            String val = ReadNulTerminatedString(ref stream,
-                                oldStyleOffset + offset);
-#if VERBOSE
-                            DebugOut("String prop(" + key + ")", val);
-#endif
-
-                            file.AddProperty(key, val);
-
-                            lastOffset = offset;
-                        }
-                    }
-                }
-
-#if VERBOSE
-                // Debuging Code
-                //Debug.WriteLine("Skin #1 Name: " + file.properties[(long) InibinHashID.SKIN_ONE_NAME]);
-                Debug.WriteLine("Skin #1 SKN: " + file.properties[(long) InibinHashID.SKIN_ONE_SKN]);
-                Debug.WriteLine("Skin #1 SKL: " + file.properties[(long) InibinHashID.SKIN_ONE_SKL]);
-                Debug.WriteLine("Skin #1 DDS: " + file.properties[(long) InibinHashID.SKIN_ONE_TEXTURE]);
-
-                Debug.WriteLine("Skin #2 Name: " + file.properties[(long) InibinHashID.SKIN_TWO_NAME]);
-                Debug.WriteLine("Skin #2 SKN: " + file.properties[(long) InibinHashID.SKIN_TWO_SKN]);
-                Debug.WriteLine("Skin #2 SKL: " + file.properties[(long) InibinHashID.SKIN_TWO_SKL]);
-                Debug.WriteLine("Skin #2 DDS: " + file.properties[(long) InibinHashID.SKIN_TWO_TEXTURE]);
-
-                Debug.WriteLine("Skin #3 Name: " + file.properties[(long) InibinHashID.SKIN_THREE_NAME]);
-                Debug.WriteLine("Skin #3 SKN: " + file.properties[(long) InibinHashID.SKIN_THREE_SKN]);
-                Debug.WriteLine("Skin #3 SKL: " + file.properties[(long) InibinHashID.SKIN_THREE_SKL]);
-                Debug.WriteLine("Skin #3 DDS: " + file.properties[(long) InibinHashID.SKIN_THREE_TEXTURE]);
-
-                Debug.WriteLine("Skin #4 Name: " + file.properties[(long) InibinHashID.SKIN_FOUR_NAME]);
-                Debug.WriteLine("Skin #4 SKN: " + file.properties[(long) InibinHashID.SKIN_FOUR_SKN]);
-                Debug.WriteLine("Skin #4 SKL: " + file.properties[(long) InibinHashID.SKIN_FOUR_SKL]);
-                Debug.WriteLine("Skin #4 DDS: " + file.properties[(long) InibinHashID.SKIN_FOUR_TEXTURE]);
-
-                Debug.WriteLine("Skin #5 Name: " + file.properties[(long) InibinHashID.SKIN_FIVE_NAME]);
-                Debug.WriteLine("Skin #5 SKN: " + file.properties[(long) InibinHashID.SKIN_FIVE_SKN]);
-                Debug.WriteLine("Skin #5 SKL: " + file.properties[(long) InibinHashID.SKIN_FIVE_SKL]);
-                Debug.WriteLine("Skin #5 DDS: " + file.properties[(long) InibinHashID.SKIN_FIVE_TEXTURE]); 
-
-                Debug.WriteLine("Skin #6 Name: " + file.properties[(long) InibinHashID.SKIN_SIX_NAME]);
-                Debug.WriteLine("Skin #6 SKN: " + file.properties[(long) InibinHashID.SKIN_SIX_SKN]);
-                Debug.WriteLine("Skin #6 SKL: " + file.properties[(long) InibinHashID.SKIN_SIX_SKL]);
-                Debug.WriteLine("Skin #6 DDS: " + file.properties[(long) InibinHashID.SKIN_SIX_TEXTURE]); 
-
-                Debug.WriteLine("Skin #7 Name: " + file.properties[(long) InibinHashID.SKIN_SEVEN_NAME]);
-                Debug.WriteLine("Skin #7 SKN: " + file.properties[(long) InibinHashID.SKIN_SEVEN_SKN]);
-                Debug.WriteLine("Skin #7 SKL: " + file.properties[(long) InibinHashID.SKIN_SEVEN_SKL]);
-                Debug.WriteLine("Skin #7 DDS: " + file.properties[(long) InibinHashID.SKIN_SEVEN_TEXTURE]); 
-#endif
             }
 
+            // 4-byte color values or something?
+            if ((format & 0x0400) == 0)
+            {
+#if VERBOSE
+                DebugOut("No 4-byte color segment", "skipping");
+#endif
+            }
+            else
+            {
+#if VERBOSE
+                DebugOut("Color? properties start position", stream.Position);
+#endif
+                long[] keys = ReadSegmentKeys( ref stream );
+                if (keys != null)
+                {
+                    foreach (long key in keys)
+                    {
+                        long val = (long)ReadInt32(ref stream);
+#if VERBOSE
+                        DebugOut("U32 color prop(" + key + ")", val);
+#endif
+
+                        file.AddProperty(key, val);
+                    }
+                }
+            }
+
+            // Old-style offsets to strings
+            if ((format & 0x1000) == 0)
+            {
+#if VERBOSE
+                DebugOut("No offsets segment", "skipping");
+#endif
+            }
+            else
+            {
+#if VERBOSE
+                DebugOut("Old style data position", stream.Position);
+#endif
+                int lastOffset = -1;
+                long[] keys = ReadSegmentKeys( ref stream );
+
+                //
+                // New method to read the newer .inibins.
+                // Why compute offset by reading in data from the file
+                // when we can just compute it?  This seems to fix the problem
+                // with newer .inibins.  I'm not sure what the actual value is used for
+                // in the file header though.
+                //
+                oldStyleOffset = (int)stream.Position + keys.Length * 2;
+
+                if (keys != null)
+                {
+                    foreach (long key in keys)
+                    {
+                        int offset = (int)ReadShort(ref stream);
+#if VERBOSE
+                        DebugOut("String offset(" + key + ")", offset);
+#endif
+                        String val = ReadNulTerminatedString(ref stream,
+                            oldStyleOffset + offset);
+#if VERBOSE
+                        DebugOut("String prop(" + key + ")", val);
+#endif
+
+                        file.AddProperty(key, val);
+
+                        lastOffset = offset;
+                    }
+                }
+            }
+
+#if VERBOSE
+            // Debuging Code
+            //Debug.WriteLine("Skin #1 Name: " + file.properties[(long) InibinHashID.SKIN_ONE_NAME]);
+            Debug.WriteLine("Skin #1 SKN: " + file.properties[(long) InibinHashID.SKIN_ONE_SKN]);
+            Debug.WriteLine("Skin #1 SKL: " + file.properties[(long) InibinHashID.SKIN_ONE_SKL]);
+            Debug.WriteLine("Skin #1 DDS: " + file.properties[(long) InibinHashID.SKIN_ONE_TEXTURE]);
+
+            Debug.WriteLine("Skin #2 Name: " + file.properties[(long) InibinHashID.SKIN_TWO_NAME]);
+            Debug.WriteLine("Skin #2 SKN: " + file.properties[(long) InibinHashID.SKIN_TWO_SKN]);
+            Debug.WriteLine("Skin #2 SKL: " + file.properties[(long) InibinHashID.SKIN_TWO_SKL]);
+            Debug.WriteLine("Skin #2 DDS: " + file.properties[(long) InibinHashID.SKIN_TWO_TEXTURE]);
+
+            Debug.WriteLine("Skin #3 Name: " + file.properties[(long) InibinHashID.SKIN_THREE_NAME]);
+            Debug.WriteLine("Skin #3 SKN: " + file.properties[(long) InibinHashID.SKIN_THREE_SKN]);
+            Debug.WriteLine("Skin #3 SKL: " + file.properties[(long) InibinHashID.SKIN_THREE_SKL]);
+            Debug.WriteLine("Skin #3 DDS: " + file.properties[(long) InibinHashID.SKIN_THREE_TEXTURE]);
+
+            Debug.WriteLine("Skin #4 Name: " + file.properties[(long) InibinHashID.SKIN_FOUR_NAME]);
+            Debug.WriteLine("Skin #4 SKN: " + file.properties[(long) InibinHashID.SKIN_FOUR_SKN]);
+            Debug.WriteLine("Skin #4 SKL: " + file.properties[(long) InibinHashID.SKIN_FOUR_SKL]);
+            Debug.WriteLine("Skin #4 DDS: " + file.properties[(long) InibinHashID.SKIN_FOUR_TEXTURE]);
+
+            Debug.WriteLine("Skin #5 Name: " + file.properties[(long) InibinHashID.SKIN_FIVE_NAME]);
+            Debug.WriteLine("Skin #5 SKN: " + file.properties[(long) InibinHashID.SKIN_FIVE_SKN]);
+            Debug.WriteLine("Skin #5 SKL: " + file.properties[(long) InibinHashID.SKIN_FIVE_SKL]);
+            Debug.WriteLine("Skin #5 DDS: " + file.properties[(long) InibinHashID.SKIN_FIVE_TEXTURE]); 
+
+            Debug.WriteLine("Skin #6 Name: " + file.properties[(long) InibinHashID.SKIN_SIX_NAME]);
+            Debug.WriteLine("Skin #6 SKN: " + file.properties[(long) InibinHashID.SKIN_SIX_SKN]);
+            Debug.WriteLine("Skin #6 SKL: " + file.properties[(long) InibinHashID.SKIN_SIX_SKL]);
+            Debug.WriteLine("Skin #6 DDS: " + file.properties[(long) InibinHashID.SKIN_SIX_TEXTURE]); 
+
+            Debug.WriteLine("Skin #7 Name: " + file.properties[(long) InibinHashID.SKIN_SEVEN_NAME]);
+            Debug.WriteLine("Skin #7 SKN: " + file.properties[(long) InibinHashID.SKIN_SEVEN_SKN]);
+            Debug.WriteLine("Skin #7 SKL: " + file.properties[(long) InibinHashID.SKIN_SEVEN_SKL]);
+            Debug.WriteLine("Skin #7 DDS: " + file.properties[(long) InibinHashID.SKIN_SEVEN_TEXTURE]); 
+#endif
             return result;
         }
         
