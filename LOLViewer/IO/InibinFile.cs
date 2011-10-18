@@ -152,6 +152,34 @@ namespace LOLViewer.IO
                 result.Add(def);
             }
 
+            // Read in model 6
+            def = new ModelDefinition();
+            def.anmListKey = directory.Name;
+            flag = GetModelStrings((long)InibinHashID.SKIN_SIX_NAME,
+                (long)InibinHashID.SKIN_SIX_SKN,
+                (long)InibinHashID.SKIN_SIX_SKL,
+                (long)InibinHashID.SKIN_SIX_TEXTURE, ref def);
+
+            if (flag == true)
+            {
+                def.skin = 6;
+                result.Add(def);
+            }
+
+            // Read in model 7
+            def = new ModelDefinition();
+            def.anmListKey = directory.Name;
+            flag = GetModelStrings((long)InibinHashID.SKIN_SEVEN_NAME,
+                (long)InibinHashID.SKIN_SEVEN_SKN,
+                (long)InibinHashID.SKIN_SEVEN_SKL,
+                (long)InibinHashID.SKIN_SEVEN_TEXTURE, ref def);
+
+            if (flag == true)
+            {
+                def.skin = 7;
+                result.Add(def);
+            }
+
             return result;
         }
 
