@@ -135,9 +135,17 @@ namespace LOLViewer.IO
                 result = false;
             }
 
+            //
+            // We need to generate models based on most recent .inibin files first.
+            // This way when old and out dated model information is read in, it will be
+            // discarded since there already exists a key for that model/skin.
+            //
+
             // Generate model difinitions from the *.inibin files.
-            foreach (RAFFileListEntry f in inibins)
+            for (int i = inibins.Count - 1; i > -1; --i)
             {
+                RAFFileListEntry f = inibins[i];
+
                 InibinFile iniFile = new InibinFile();
                 bool readResult = InibinReader.ReadCharacterInibin(f, ref iniFile);
 
@@ -145,12 +153,12 @@ namespace LOLViewer.IO
                 {
                     // Add the models from this .inibin file
                     List<ModelDefinition> modelDefs = iniFile.GetModelStrings();
-                    for (int i = 0; i < modelDefs.Count; ++i)
+                    for (int j = 0; j < modelDefs.Count; ++j)
                     {
                         try
                         {
                             LOLModel model;
-                            bool storeResult = StoreModel(modelDefs[i], out model);
+                            bool storeResult = StoreModel(modelDefs[j], out model);
 
                             if (storeResult == true)
                             {
@@ -163,7 +171,7 @@ namespace LOLViewer.IO
                                 // Name the model after the parent directory
                                 // of the .inibin plus the name from the .inibin.
                                 // Some things overlap without both.
-                                String name = modelDefs[i].name;
+                                String name = modelDefs[j].name;
 
                                 String directoryName = f.FileName;
                                 int pos = directoryName.LastIndexOf("/");
