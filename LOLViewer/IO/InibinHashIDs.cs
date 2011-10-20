@@ -73,6 +73,11 @@ namespace LOLViewer.IO
         SKIN_SEVEN_TEXTURE = 1193239517L,
         SKIN_SEVEN_SKL = -1703846165L,
 
+        SKIN_EIGHT_NAME = 1204748430L,
+        SKIN_EIGHT_SKN = 1625505420L,
+        SKIN_EIGHT_TEXTURE = 439951838L,
+        SKIN_EIGHT_SKL = 1271406890L,
+
         // Keys from original code.
         // LOLModel Viewer does not use them.  So, I have never confirmed their correctness.
         // However, the originals are here if anyone needs to extend this class.

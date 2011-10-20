@@ -194,8 +194,6 @@ namespace LOLViewer
 
         public void GLControlMainOnLoad(object sender, EventArgs e)
         {
-            isGLLoaded = true;
-
             // Set up renderer.
             bool result = renderer.OnLoad();
             if (result == false)
@@ -203,6 +201,8 @@ namespace LOLViewer
                 this.Close();
                 return;
             }
+
+            isGLLoaded = true;
 
             // Call an initial resize to get some camera and renderer parameters set up.
             GLControlMainOnResize(sender, e);
