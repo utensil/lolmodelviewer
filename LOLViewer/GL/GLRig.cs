@@ -168,8 +168,9 @@ namespace LOLViewer
                 worldTransform.M41 = position.X * ( 1.0f / poseBone.scale );
                 worldTransform.M42 = position.Y * ( 1.0f / poseBone.scale );
                 worldTransform.M43 = position.Z * ( 1.0f / poseBone.scale );
-
                 poseBone.worldTransform = worldTransform;
+                
+                poseBone.worldOrientation = orientation;
             }
             else
             {
@@ -192,6 +193,10 @@ namespace LOLViewer
                 // Create the final transform based off the parent.
                 poseBone.worldTransform = localTransform *
                     parentBone.worldTransform;
+
+                // Append matrices for position transform A * B
+                // Append quaternions for rotation transform B * A
+                poseBone.worldOrientation = parentBone.worldOrientation * orientation;
             }
         }
 
@@ -211,14 +216,16 @@ namespace LOLViewer
                 Matrix4 inv = bindingJoints[i].worldTransform;
                 inv.Invert();
 
-                /*  The math isn't quite right with this yet.
                 //
                 // Interpolate between the current frame
                 // and the next frame.
                 //
 
-                // Decompose matrix data.
-                // Get positions.
+                // Interpolate
+                Quaternion finalOrientation = Quaternion.Slerp(currentFrame[i].worldOrientation,
+                    nextFrame[i].worldOrientation, blend);
+
+                // Get the position vectors from final matrix transforms.
                 Vector3 currentPosition = Vector3.Zero;
                 currentPosition.X = currentFrame[i].worldTransform.M41;
                 currentPosition.Y = currentFrame[i].worldTransform.M42;
@@ -229,13 +236,9 @@ namespace LOLViewer
                 nextPosition.Y = nextFrame[i].worldTransform.M42;
                 nextPosition.Z = nextFrame[i].worldTransform.M43;
 
-                // Get orientations.
-                Quaternion currentOrientation = OpenTKExtras.Matrix4.CreateQuatFromMatrix(currentFrame[i].worldTransform);
-                Quaternion nextOrientation = OpenTKExtras.Matrix4.CreateQuatFromMatrix(nextFrame[i].worldTransform);
-
                 // Interpolate
-                Quaternion finalOrientation = Quaternion.Slerp(currentOrientation, nextOrientation, blend);
-                Vector3 finalPosition = Vector3.Lerp(currentPosition, nextPosition, blend);
+                Vector3 finalPosition = Vector3.Lerp(currentPosition, 
+                    nextPosition, blend);
 
                 // Store
                 Matrix4 finalTransform = Matrix4.Rotate(finalOrientation);
@@ -247,12 +250,6 @@ namespace LOLViewer
                 transforms[i] = inv *                                           // invert of default/binding pose
                     Matrix4.Scale(1.0f / bindingJoints[i].scale) *              // invert the bone scale
                     finalTransform;                                             // transform by the current key frame's pose
-                */
-
-                // Update to form final transform.
-                transforms[i] = inv *                                           // invert of default/binding pose
-                    Matrix4.Scale(1.0f / bindingJoints[i].scale) *              // invert the bone scale
-                    currentFrame[i].worldTransform;                             // transform by the current key frame's pose
             }
             
             return transforms;
