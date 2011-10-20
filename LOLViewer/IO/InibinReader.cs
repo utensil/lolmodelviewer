@@ -53,6 +53,55 @@ namespace LOLViewer.IO
 {
     class InibinReader
     {
+        public static bool ReadCharacterInibin(RAFFileListEntry file, ref InibinFile data)
+        {
+            bool result = true;
+
+            // This happens when the file does not actually exist in the RAF archive.
+            if (file.IsMemoryEntry == true)
+            {
+                String directoryName = file.RAFArchive.RAFFilePath;
+                directoryName = directoryName.Replace("\\", "/");
+                int pos = directoryName.LastIndexOf("/");
+                directoryName = directoryName.Remove(pos);
+
+                String fileName = directoryName + file.FileName;
+
+                // Read it from the disk.
+                return ReadCharacterInibin(new FileInfo(fileName), ref data);
+            }
+
+            // Create a new archive
+            RAFArchive rafArchive = new RAFArchive(file.RAFArchive.RAFFilePath);
+            
+            try
+            {
+                // Get the data from the archive
+                MemoryStream myInput = 
+                    new MemoryStream(rafArchive.GetDirectoryFile().GetFileList().GetFileEntry(file.FileName).GetContent());
+                result = ReadCharacterInibin(myInput, ref data);
+
+                int end = file.FileName.LastIndexOf("/");
+                String directory = file.FileName.Substring(0, end);
+                String archive = file.RAFArchive.RAFFilePath;
+                archive = archive.Replace("\\", "/");
+                end = archive.LastIndexOf("/");
+                archive = archive.Substring(0, end);
+
+                data.directory = new DirectoryInfo(archive + "/" + directory);
+                myInput.Close();
+            }
+            catch
+            {
+                result = false;
+            }
+
+            // Release the archive
+            rafArchive.GetDataFileContentStream().Close();
+
+            return result;
+        }
+
         public static bool ReadCharacterInibin(FileInfo f, ref InibinFile data)
         {
             bool result = true;
@@ -74,48 +123,6 @@ namespace LOLViewer.IO
 
             return result;
         }
-
-        public static bool ReadCharacterInibin(RAFFileListEntry file, ref InibinFile data)
-        {
-            bool result = true;
-
-            // This happens when the file does not actually exist in the RAF archive.
-            if (file.IsMemoryEntry == true)
-            {
-                String directoryName = file.RAFArchive.RAFFilePath;
-                directoryName = directoryName.Replace("\\", "/");
-                int pos = directoryName.LastIndexOf("/");
-                directoryName = directoryName.Remove(pos);
-
-                String fileName = directoryName + file.FileName;
-
-                // Read it from the disk.
-                return ReadCharacterInibin(new FileInfo(fileName), ref data);
-            }
-
-            try
-            {
-                MemoryStream myInput = new MemoryStream(file.GetContent());
-                result = ReadCharacterInibin(myInput, ref data);
-                
-                int end = file.FileName.LastIndexOf("/");
-                String directory = file.FileName.Substring(0, end);
-                String archive = file.RAFArchive.RAFFilePath;
-                archive = archive.Replace("\\", "/");
-                end = archive.LastIndexOf("/");
-                archive = archive.Substring(0, end);
-
-                data.directory = new DirectoryInfo( archive + "/" + directory );
-                myInput.Close();
-            }
-            catch
-            {
-                result = false;
-            }
-
-            return result;
-        }
-
 
         private static bool ReadBinary(FileStream input, ref InibinFile data)
         {

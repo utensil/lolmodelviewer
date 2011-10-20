@@ -55,9 +55,6 @@ namespace LOLViewer.IO
         public const String DEFAULT_EXTRACTED_TEXTURES_ROOT = "content/textures/";
         public String root;
 
-        // Don't clear me. This is a bug work around.
-        public Dictionary<String, RAFArchive> rafArchives;
-
         public Dictionary<String, RAFFileListEntry> skls;
         public Dictionary<String, RAFFileListEntry> skns;
         public Dictionary<String, RAFFileListEntry> textures;
@@ -73,7 +70,6 @@ namespace LOLViewer.IO
         {
             root = DEFAULT_ROOT;
 
-            rafArchives = new Dictionary<String, RAFArchive>();
             inibins = new List<RAFFileListEntry>();
 
             animationLists = new Dictionary<String, RAFFileListEntry>();
@@ -450,6 +446,7 @@ namespace LOLViewer.IO
                     if (f.Extension != ".raf")
                         continue;
                     
+                    // ReadRAF() opens the archive.
                     result = ReadRAF(f, ref archive);
                     if (result == false)
                     {
@@ -512,6 +509,12 @@ namespace LOLViewer.IO
                 }
             }
 
+            // If the archive was opened, we need to release the file pointer.
+            if (archive != null)
+            {
+                archive.GetDataFileContentStream().Close();
+            }
+
             return result;
         }
 
@@ -522,20 +525,8 @@ namespace LOLViewer.IO
             try
             {
                 // Open the archive
+                archive = new RAFArchive(f.FullName);
 
-                // TODO: Bug. These archives don't release their file handle and
-                // there's no function to close them.
-                // So, for now, let's just hold onto them incase we need them later.
-
-                if (rafArchives.ContainsKey(f.FullName) == true)
-                {
-                    archive = rafArchives[f.FullName];
-                }
-                else
-                {
-                    archive = new RAFArchive(f.FullName);
-                    rafArchives.Add(f.FullName, archive);
-                }
 
                 // Get directory
                 RAFDirectoryFile directory = archive.GetDirectoryFile();

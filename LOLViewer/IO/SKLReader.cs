@@ -40,24 +40,6 @@ namespace LOLViewer
 {
     class SKLReader
     {
-        public static bool Read(FileInfo file, ref SKLFile data)
-        {
-            bool result = true;
-
-            try
-            {
-                FileStream myInput = new FileStream(file.FullName, FileMode.Open);
-                result = ReadBinary(myInput, ref data);
-                myInput.Close();
-            }
-            catch
-            {
-                result = false;
-            }
-
-            return result;
-        }
-
         public static bool Read(RAFFileListEntry file, ref SKLFile data)
         {
             bool result = true;
@@ -76,9 +58,35 @@ namespace LOLViewer
                 return Read(new FileInfo(fileName), ref data);
             }
 
+            // Create a new archive
+            RAFArchive rafArchive = new RAFArchive(file.RAFArchive.RAFFilePath);
+
             try
             {
-                MemoryStream myInput = new MemoryStream(file.GetContent());
+                // Get the data from the archive
+                MemoryStream myInput
+                    = new MemoryStream(rafArchive.GetDirectoryFile().GetFileList().GetFileEntry(file.FileName).GetContent());
+                result = ReadBinary(myInput, ref data);
+                myInput.Close();
+            }
+            catch
+            {
+                result = false;
+            }
+
+            // Release the archive
+            rafArchive.GetDataFileContentStream().Close();
+
+            return result;
+        }
+
+        public static bool Read(FileInfo file, ref SKLFile data)
+        {
+            bool result = true;
+
+            try
+            {
+                FileStream myInput = new FileStream(file.FullName, FileMode.Open);
                 result = ReadBinary(myInput, ref data);
                 myInput.Close();
             }

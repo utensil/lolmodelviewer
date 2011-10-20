@@ -312,16 +312,23 @@ namespace LOLViewer
                 return CreateDDSTexture(new FileInfo(fileName), target);
             }
 
+            // Create a new archive
+            RAFArchive rafArchive = new RAFArchive(f.RAFArchive.RAFFilePath);
+
             try
             {
-                TextureLoaders.ImageDDS.LoadFromMemory(f.GetContent(), out handle,
-                    out dimension);
+                // Get the data from the archive
+                TextureLoaders.ImageDDS.LoadFromMemory(rafArchive.GetDirectoryFile().GetFileList().GetFileEntry(f.FileName).GetContent(), 
+                    out handle, out dimension);
             }
             catch
             {
                 // The DDS loader can't read all types of DDS files.
                 result = false;
             }
+
+            // Release the archive
+            rafArchive.GetDataFileContentStream().Close();
 
             if (handle > 0)
             {
