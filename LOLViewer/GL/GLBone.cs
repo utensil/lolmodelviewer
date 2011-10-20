@@ -41,6 +41,7 @@ namespace LOLViewer
         public int parent;
         public float scale;
         public Matrix4 worldTransform;
+        public Quaternion worldOrientation;
 
         public GLBone()
         {
@@ -48,6 +49,7 @@ namespace LOLViewer
             parent = -2;
             scale = 0.0f;
             worldTransform = Matrix4.Identity;
+            worldOrientation = Quaternion.Identity;
         }
     }
 }
