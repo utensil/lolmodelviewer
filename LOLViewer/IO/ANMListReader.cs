@@ -66,9 +66,14 @@ namespace LOLViewer.IO
                 return ReadAnimationList(skin, new FileInfo(fileName), ref animations);
             }
 
+            // Create a new archive
+            RAFArchive rafArchive = new RAFArchive(file.RAFArchive.RAFFilePath);
+
             try
             {
-                MemoryStream myInput = new MemoryStream(file.GetContent());
+                // Get the data from the archive
+                MemoryStream myInput 
+                    = new MemoryStream(rafArchive.GetDirectoryFile().GetFileList().GetFileEntry(file.FileName).GetContent());
                 StreamReader reader = new StreamReader(myInput);
 
                 ParseAnimations(skin, reader, ref animations);
@@ -81,6 +86,9 @@ namespace LOLViewer.IO
                 result = false;
                 animations.Clear();
             }
+
+            // Release the archive
+            rafArchive.GetDataFileContentStream().Close();
 
             return result;
         }

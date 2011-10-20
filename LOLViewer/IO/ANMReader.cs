@@ -44,30 +44,6 @@ namespace LOLViewer.IO
     class ANMReader
     {
         /// <summary>
-        /// Reads in a binary .anm file from disc.
-        /// </summary>
-        /// <param name="file">The file.</param>
-        /// <param name="data">The contents of the file are stored in here.</param>
-        /// <returns></returns>
-        public static bool Read(FileInfo file, ref ANMFile data)
-        {
-            bool result = true;
-
-            try
-            {
-                FileStream myInput = new FileStream(file.FullName, FileMode.Open);
-                result = ReadBinary(myInput, ref data);
-                myInput.Close();
-            }
-            catch
-            {
-                result = false;
-            }
-
-            return result;
-        }
-
-        /// <summary>
         /// Read in binary .anm file from RAF.
         /// </summary>
         /// <param name="file">The file.</param>
@@ -91,9 +67,41 @@ namespace LOLViewer.IO
                 return Read(new FileInfo(fileName), ref data);
             }
 
+            // Create a new archive
+            RAFArchive rafArchive = new RAFArchive(file.RAFArchive.RAFFilePath);
+
             try
             {
-                MemoryStream myInput = new MemoryStream(file.GetContent());
+                // Get the data from the archive
+                MemoryStream myInput
+                    = new MemoryStream(rafArchive.GetDirectoryFile().GetFileList().GetFileEntry(file.FileName).GetContent());
+                result = ReadBinary(myInput, ref data);
+                myInput.Close();
+            }
+            catch
+            {
+                result = false;
+            }
+
+            // Release the archive
+            rafArchive.GetDataFileContentStream().Close();
+
+            return result;
+        }
+
+        /// <summary>
+        /// Reads in a binary .anm file from disc.
+        /// </summary>
+        /// <param name="file">The file.</param>
+        /// <param name="data">The contents of the file are stored in here.</param>
+        /// <returns></returns>
+        public static bool Read(FileInfo file, ref ANMFile data)
+        {
+            bool result = true;
+
+            try
+            {
+                FileStream myInput = new FileStream(file.FullName, FileMode.Open);
                 result = ReadBinary(myInput, ref data);
                 myInput.Close();
             }
