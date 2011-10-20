@@ -180,6 +180,20 @@ namespace LOLViewer.IO
                 result.Add(def);
             }
 
+            // Read in model 8
+            def = new ModelDefinition();
+            def.anmListKey = directory.Name;
+            flag = GetModelStrings((long)InibinHashID.SKIN_EIGHT_NAME,
+                (long)InibinHashID.SKIN_EIGHT_SKN,
+                (long)InibinHashID.SKIN_EIGHT_SKL,
+                (long)InibinHashID.SKIN_EIGHT_TEXTURE, ref def);
+
+            if (flag == true)
+            {
+                def.skin = 8;
+                result.Add(def);
+            }
+
             return result;
         }
 
