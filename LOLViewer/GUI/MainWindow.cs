@@ -200,6 +200,10 @@ namespace LOLViewer
             bool result = renderer.OnLoad();
             if (result == false)
             {
+                MessageBox.Show("OpenGL failed to load." +
+                    "  Please install the latest drivers from your GPU manufacturer.", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+
                 this.Close();
                 return;
             }
