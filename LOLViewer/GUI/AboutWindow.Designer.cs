@@ -64,11 +64,11 @@ namespace LOLViewer
             // titleLabel
             // 
             this.titleLabel.AutoSize = true;
-            this.titleLabel.Location = new System.Drawing.Point(31, 10);
+            this.titleLabel.Location = new System.Drawing.Point(30, 10);
             this.titleLabel.Name = "titleLabel";
-            this.titleLabel.Size = new System.Drawing.Size(115, 13);
+            this.titleLabel.Size = new System.Drawing.Size(121, 13);
             this.titleLabel.TabIndex = 0;
-            this.titleLabel.Text = "LOLViewer Version 1.1";
+            this.titleLabel.Text = "LOLViewer Version 1.11";
             // 
             // descriptionTextBox
             // 
@@ -77,15 +77,16 @@ namespace LOLViewer
             this.descriptionTextBox.Multiline = true;
             this.descriptionTextBox.Name = "descriptionTextBox";
             this.descriptionTextBox.ReadOnly = true;
-            this.descriptionTextBox.Size = new System.Drawing.Size(156, 112);
+            this.descriptionTextBox.Size = new System.Drawing.Size(156, 150);
             this.descriptionTextBox.TabIndex = 1;
             this.descriptionTextBox.TabStop = false;
-            this.descriptionTextBox.Text = "Original Author: \r\n - Authentication\r\n\r\nSpecial Thanks:\r\n - ThiSpawn\r\n - ItzWarty" +
-                "\r\n - yourbuddypal\r\n - RobTheBloke (Gamedev.net)";
+            this.descriptionTextBox.Text = "Original Author: \r\n - Authentication\r\n\r\nContributors:\r\n - lordgreggreg\r\n\r\nSpecial" +
+                " Thanks:\r\n - ThiSpawn\r\n - ItzWarty\r\n - yourbuddypal\r\n - RobTheBloke (Gamedev.net" +
+                ")";
             // 
             // okButton
             // 
-            this.okButton.Location = new System.Drawing.Point(55, 155);
+            this.okButton.Location = new System.Drawing.Point(53, 190);
             this.okButton.Name = "okButton";
             this.okButton.Size = new System.Drawing.Size(75, 23);
             this.okButton.TabIndex = 2;
@@ -96,15 +97,15 @@ namespace LOLViewer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(180, 188);
+            this.ClientSize = new System.Drawing.Size(180, 218);
             this.Controls.Add(this.okButton);
             this.Controls.Add(this.descriptionTextBox);
             this.Controls.Add(this.titleLabel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
-            this.MaximumSize = new System.Drawing.Size(186, 214);
+            this.MaximumSize = new System.Drawing.Size(186, 246);
             this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(186, 214);
+            this.MinimumSize = new System.Drawing.Size(186, 246);
             this.Name = "AboutWindow";
             this.ShowInTaskbar = false;
             this.Text = "About";
