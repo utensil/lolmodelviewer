@@ -446,10 +446,11 @@ namespace LOLViewer
             // 
             // modelSearchBox
             // 
-            this.modelSearchBox.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.modelSearchBox.Location = new System.Drawing.Point(25, 24);
+            this.modelSearchBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.modelSearchBox.Location = new System.Drawing.Point(0, 24);
             this.modelSearchBox.Name = "modelSearchBox";
-            this.modelSearchBox.Size = new System.Drawing.Size(100, 20);
+            this.modelSearchBox.Size = new System.Drawing.Size(150, 20);
             this.modelSearchBox.TabIndex = 16;
             // 
             // modelSearchLabel

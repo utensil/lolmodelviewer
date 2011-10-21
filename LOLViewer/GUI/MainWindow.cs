@@ -150,6 +150,8 @@ namespace LOLViewer
 
             // Search Box
             modelSearchBox.TextChanged += new EventHandler(OnModelSearchBoxTextChanged);
+            modelSearchBox.KeyPress += new KeyPressEventHandler(OnModelSearchBoxKeyPress);
+            modelSearchBox.PreviewKeyDown += new PreviewKeyDownEventHandler(OnModelSearchBoxPreviewKeyDown);
         }
 
         //
@@ -438,6 +440,10 @@ namespace LOLViewer
             }
         }
 
+        //
+        // Search Box Handlers
+        //
+
         void OnModelSearchBoxTextChanged(object sender, EventArgs e)
         {
             String search = modelSearchBox.Text;
@@ -488,6 +494,44 @@ namespace LOLViewer
 
             // Redraw the list box.
             modelListBox.Invalidate();
+        }
+
+        void OnModelSearchBoxKeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e)
+        {
+            // Pass it through to the list box handler.
+            OnModelListKeyPress(sender, e);
+        }
+
+        void OnModelSearchBoxPreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
+        {
+            //
+            // The default windows forms behavior will intercept the arrow key messages
+            // and handle them in the background.  This is normally ideal.  However, here, it would
+            // be nice if the search box could change the the selection of the list box.  That way, users
+            // can manipulate the list box while their typing in a search.
+            //
+
+            // Handle the arrow keys at this point.
+            if (e.KeyCode == Keys.Down )
+            {
+                // Not doing a wrap around on this.  Just increment it if we can.
+                if (modelListBox.Items.Count > 0 && modelListBox.SelectedIndex + 1 < modelListBox.Items.Count)
+                {
+                    modelListBox.SelectedIndex++;
+                }
+
+                e.IsInputKey = true;
+            }
+            else if (e.KeyCode == Keys.Up)
+            {
+                // Not doing a wrap around on this.  Just decrement it if we can.
+                if (modelListBox.Items.Count > 0 && modelListBox.SelectedIndex - 1 >= 0)
+                {
+                    modelListBox.SelectedIndex--;
+                }
+
+                e.IsInputKey = true;
+            }
         }
         
         //
