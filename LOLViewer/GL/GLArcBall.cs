@@ -178,7 +178,7 @@ namespace LOLViewer
                 z = (float)Math.Sqrt(1.0f - mag);
             }
 
-            return new Vector3(x, y, z);
+            return new Vector3(-x, y, -z);
         }
 
         private Quaternion QuatFromBallPoints(Vector3 from, Vector3 to)
