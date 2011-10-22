@@ -62,6 +62,13 @@ namespace LOLViewer
         public Vector3 eye, target, defaultEye, defaultTarget;
         public Matrix4 view, projection;
 
+        // We need to account for the fact that OpenGL does not have
+        // the same handedness as DirectX.  So, we compute everything 
+        // left handed as a DirectX pipeline would.  Then, at the very last step,
+        // we multiply in the conversion into the view matrix.  This will convert
+        // the data to a right handed system.
+        public Matrix4 handConverter;
+
         public Dictionary<CameraKeyValues, bool> keyState;
         public const float MOVEMENT_SCALE = 100.0f;
         public Vector3 velocity;
@@ -87,6 +94,8 @@ namespace LOLViewer
 
             view        = Matrix4.Identity;
             projection  = Matrix4.Identity;
+            handConverter = Matrix4.Identity;
+            handConverter.M33 = -handConverter.M33;
 
             // Default Keybindings
             bindings = new Dictionary<Keys, CameraKeyValues>();
@@ -266,6 +275,7 @@ namespace LOLViewer
 
             // Update view
             view = Matrix4.LookAt(eye, target, worldUp);
+            view = handConverter * view;
 
             // After a drag has finished
             if (updateLastRotation == true)
@@ -288,6 +298,7 @@ namespace LOLViewer
             this.target = this.defaultTarget = target;
 
             view = Matrix4.LookAt(eye, target, new Vector3(0.0f, 1.0f, 0.0f));
+            view = handConverter * view;
 
             // Update arc ball
             Matrix4 rotation = Matrix4.LookAt(eye, target, new Vector3(0.0f, 1.0f, 0.0f));
