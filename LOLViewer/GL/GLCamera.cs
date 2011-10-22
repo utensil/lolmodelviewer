@@ -261,7 +261,7 @@ namespace LOLViewer
             // Transform vectors based on rotation matrix
             Vector3 worldUp = Vector3.Transform( new Vector3( 0.0f, 1.0f, 0.0f ),
                         invCamRotation);
-            Vector3 worldAhead = Vector3.Transform( new Vector3(0.0f, 0.0f, -1.0f),
+            Vector3 worldAhead = Vector3.Transform( new Vector3(0.0f, 0.0f, 1.0f),
                         invCamRotation);
 
             // Transform delta position
