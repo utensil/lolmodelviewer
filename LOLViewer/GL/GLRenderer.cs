@@ -298,6 +298,7 @@ namespace LOLViewer
             // Misc. OpenGL Parameters.
             if (result == true)
             {
+                GL.FrontFace(FrontFaceDirection.Cw);
                 GL.CullFace(CullFaceMode.Back);
                 GL.Enable(EnableCap.CullFace);
                 SetClearColor(clearColor);

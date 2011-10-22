@@ -77,7 +77,7 @@ namespace LOLViewer
             timer = new Stopwatch();
 
             camera = new GLCamera();
-            camera.SetViewParameters(new Vector3(0.0f, 0.0f, 300.0f), Vector3.Zero);
+            camera.SetViewParameters(new Vector3(0.0f, 0.0f, -300.0f), Vector3.Zero);
             renderer = new GLRenderer();
 
             reader = new LOLDirectoryReader();
