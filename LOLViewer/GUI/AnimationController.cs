@@ -89,7 +89,7 @@ namespace LOLViewer
             if (isFirstTime == true)
             {
                 MessageBox.Show("Animation is still an 'in progress' feature.  Currently, most models should animate properly.  " +
-                "However, a few do not.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                "However, a few do not.", "Beta Feature", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 isFirstTime = false;
             }
 
