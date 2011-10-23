@@ -201,7 +201,7 @@ namespace LOLViewer
             if (result == false)
             {
                 MessageBox.Show("OpenGL failed to load." +
-                    "  Please install the latest drivers from your GPU manufacturer.", "Error",
+                    "  Please install the latest display drivers from your GPU manufacturer.", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                 this.Close();
@@ -298,7 +298,7 @@ namespace LOLViewer
         void OnSetDirectory(object sender, EventArgs e)
         {
             FolderBrowserDialog dlg = new FolderBrowserDialog();
-            dlg.Description = "Select the 'League of Legends' folder.";
+            dlg.Description = "Select the League of Legends' root installation folder.";
             dlg.ShowNewFolderButton = false;
 
             DialogResult result = dlg.ShowDialog();
@@ -335,7 +335,8 @@ namespace LOLViewer
             {
                 MessageBox.Show("Unable to read models. If you installed League of legends" +
                                  " in a non-default location, change the default directory" +
-                                 " to the 'League of Legends' folder by using the command in the 'Options' menu.", "Error",
+                                 " to the League of Legends' root installation folder by using the command" +
+                                 " in the 'Options' menu.", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
