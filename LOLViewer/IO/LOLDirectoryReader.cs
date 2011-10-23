@@ -107,9 +107,52 @@ namespace LOLViewer.IO
             animationLists.Clear();
             animations.Clear();           
 
-            // Sanity
-            if (root.Contains("League of Legends") == false &&
-                root.Contains("Riot Games") == false)
+            DirectoryInfo rootDir = null;
+            try
+            {
+                rootDir = new DirectoryInfo(root);
+            }
+            catch 
+            {
+                return false;
+            }
+
+            //
+            // Directory Guard.
+            // Assume the user selected the wrong LOL installation directory.
+            //
+            // Possibly correct directories:
+            // - Name contains "Riot Games"  ...\Riot Games\League of Legends\RADS...
+            // - Name contains "League of Legends" ...\League of Legends\RADS...
+            // - Child Directory Contains "League of Legends" ...\Renamed\League of Legends\RADS...
+            // - Child Directory Contains "RADS" ...\Renamed\RADS...
+            //
+            // The only case not really handled is something like
+            // ...\Riot Games\Renamed\RADS... which no one better have!  And, honestly, this case should fail
+            // because someone could have a new Riot game installed but not LOL.
+            //
+
+            bool isRootSelected = false;
+
+            // Deafult directory installations.
+            if (rootDir.Name.Contains("League of Legends") == true ||
+                rootDir.Name.Contains("Riot Games") == true)
+            {
+                isRootSelected = true;
+            }
+            // Selected a renamed "Riot Games" directory.
+            else if (ContainsDirectory(rootDir, "League of Legends") == true)
+            {
+                isRootSelected = true;
+            }
+            // Selected a rename "League of Legends" directory.
+            else if (ContainsDirectory(rootDir, "RADS") == true)
+            {
+                isRootSelected = true;
+            }
+
+            // If we didn't find the root, just bail.
+            if (isRootSelected == false)
             {
                 return false;
             }
@@ -820,6 +863,25 @@ namespace LOLViewer.IO
                         break;
                     }
             };
+        }
+
+        //
+        // Helper Functions
+        //
+        private bool ContainsDirectory(DirectoryInfo parent, String child)
+        {
+            bool result = false;
+
+            foreach (DirectoryInfo d in parent.GetDirectories())
+            {
+                if (d.Name.Contains(child) == true) // contains used for the LOL NA - LOL EU case
+                {
+                    result = true;
+                    break;
+                }
+            }
+
+            return result;
         }
 
         //
