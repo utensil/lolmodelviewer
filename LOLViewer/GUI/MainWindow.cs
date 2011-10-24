@@ -151,7 +151,7 @@ namespace LOLViewer
             // Search Box
             modelSearchBox.TextChanged += new EventHandler(OnModelSearchBoxTextChanged);
             modelSearchBox.KeyPress += new KeyPressEventHandler(OnModelSearchBoxKeyPress);
-            modelSearchBox.PreviewKeyDown += new PreviewKeyDownEventHandler(OnModelSearchBoxPreviewKeyDown);
+            modelSearchBox.KeyDown += new KeyEventHandler(OnModelSearchBoxKeyDown);
         }
 
         //
@@ -392,6 +392,7 @@ namespace LOLViewer
             {
                 // Update model.
                 OnModelListDoubleClick(sender, e);
+                e.Handled = true; // fixes unwanted 'ding' sound
             }
         }
 
@@ -503,11 +504,13 @@ namespace LOLViewer
 
         void OnModelSearchBoxKeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e)
         {
+            // Note: Arrow keys don't get passed through this handler.
+
             // Pass it through to the list box handler.
             OnModelListKeyPress(sender, e);
         }
 
-        void OnModelSearchBoxPreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
+        void OnModelSearchBoxKeyDown(object sender, KeyEventArgs e)
         {
             //
             // The default windows forms behavior will intercept the arrow key messages
@@ -517,7 +520,7 @@ namespace LOLViewer
             //
 
             // Handle the arrow keys at this point.
-            if (e.KeyCode == Keys.Down )
+            if (e.KeyCode == Keys.Down)
             {
                 // Not doing a wrap around on this.  Just increment it if we can.
                 if (modelListBox.Items.Count > 0 && modelListBox.SelectedIndex + 1 < modelListBox.Items.Count)
@@ -525,7 +528,8 @@ namespace LOLViewer
                     modelListBox.SelectedIndex++;
                 }
 
-                e.IsInputKey = true;
+                // Flag the key as handled so the text box doesn't move the cursor.
+                e.Handled = true;
             }
             else if (e.KeyCode == Keys.Up)
             {
@@ -535,7 +539,8 @@ namespace LOLViewer
                     modelListBox.SelectedIndex--;
                 }
 
-                e.IsInputKey = true;
+                // Flag the key as handled so the text box doesn't move the cursor.
+                e.Handled = true;
             }
         }
         
