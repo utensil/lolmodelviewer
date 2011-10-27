@@ -174,17 +174,8 @@ namespace LOLViewer.IO
                 result = false;
             }
 
-            //
-            // We need to generate models based on most recent .inibin files first.
-            // This way when old and out dated model information is read in, it will be
-            // discarded since there already exists a key for that model/skin.
-            //
-
-            // Generate model difinitions from the *.inibin files.
-            for (int i = inibins.Count - 1; i > -1; --i)
+            foreach( RAFFileListEntry f in inibins )
             {
-                RAFFileListEntry f = inibins[i];
-
                 InibinFile iniFile = new InibinFile();
                 bool readResult = InibinReader.ReadCharacterInibin(f, ref iniFile);
 
@@ -290,7 +281,7 @@ namespace LOLViewer.IO
             // Sanity
             if (animationLists.ContainsKey(model.animationList) == true)
             {
-                result = ANMListReader.ReadAnimationList(model.skinNumber,
+                result = ANMListReader.ReadAnimationList(model.skinNumber - 1, // indexing in animations.list assumes the original skin to be -1
                     animationLists[model.animationList], ref animationStrings);
             }
 
@@ -452,10 +443,13 @@ namespace LOLViewer.IO
             try
             {
                 DirectoryInfo di = new DirectoryInfo(dir.FullName);
-                foreach (DirectoryInfo d in di.GetDirectories())
+
+                // Read directories in reverse order to prioritize newer files.
+                DirectoryInfo[] children = di.GetDirectories();
+                for (int i = 1; i <= children.Length; ++i)
                 {
-                    result = OpenGameClientVersion(d);
-                    if (result == false) 
+                    result = OpenGameClientVersion(children[children.Length - i]);
+                    if (result == false)
                         break;
                 }
             }
@@ -579,6 +573,28 @@ namespace LOLViewer.IO
 
                 // Get the texture files.
                 List<RAFFileListEntry> files = fileList.SearchFileEntries(".dds");
+                foreach (RAFFileListEntry e in files)
+                {
+                    // Try to parse out unwanted textures.
+                    if (e.FileName.Contains("LoadScreen") == false &&
+                        e.FileName.Contains("Loadscreen") == false &&
+                        e.FileName.Contains("loadscreen") == false &&
+                        e.FileName.Contains("circle") == false &&
+                        e.FileName.Contains("square") == false &&
+                        e.FileName.Contains("DATA") == true &&
+                        e.FileName.Contains("Characters") == true)
+                    {
+                        String name = e.FileName;
+                        int pos = name.LastIndexOf("/");
+                        name = name.Substring(pos + 1);
+                        name = name.ToLower();
+
+                        if (textures.ContainsKey(name) == false)
+                            textures.Add(name, e);
+                    }
+                }
+
+                files = fileList.SearchFileEntries(".DDS");
                 foreach (RAFFileListEntry e in files)
                 {
                     // Try to parse out unwanted textures.
