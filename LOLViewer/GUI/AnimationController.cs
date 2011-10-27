@@ -130,6 +130,13 @@ namespace LOLViewer
             glControlMain.Invalidate();
         }
 
+        //
+        // Technically this function should only be called once when the app enters an idle state.
+        // However, since I invalidate the GL window, I think that flags the app as non idle 
+        // momentarily. Therefore, as long as we're animating and invalidating the GL window, this function
+        // should be called repeatedly.  This works on .NET.  However, on Mono, it's only called once.
+        //
+
         public void OnApplicationIdle(object sender, EventArgs e)
         {
             if (isAnimating == true)
