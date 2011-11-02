@@ -459,12 +459,17 @@ namespace LOLViewer.IO
             Debug.WriteLine("Skin #6 Name: " + file.properties[(long) InibinHashID.SKIN_SIX_NAME]);
             Debug.WriteLine("Skin #6 SKN: " + file.properties[(long) InibinHashID.SKIN_SIX_SKN]);
             Debug.WriteLine("Skin #6 SKL: " + file.properties[(long) InibinHashID.SKIN_SIX_SKL]);
-            Debug.WriteLine("Skin #6 DDS: " + file.properties[(long) InibinHashID.SKIN_SIX_TEXTURE]); 
+            Debug.WriteLine("Skin #6 DDS: " + file.properties[(long) InibinHashID.SKIN_SIX_TEXTURE]);
 
-            Debug.WriteLine("Skin #7 Name: " + file.properties[(long) InibinHashID.SKIN_SEVEN_NAME]);
-            Debug.WriteLine("Skin #7 SKN: " + file.properties[(long) InibinHashID.SKIN_SEVEN_SKN]);
-            Debug.WriteLine("Skin #7 SKL: " + file.properties[(long) InibinHashID.SKIN_SEVEN_SKL]);
-            Debug.WriteLine("Skin #7 DDS: " + file.properties[(long) InibinHashID.SKIN_SEVEN_TEXTURE]); 
+            Debug.WriteLine("Skin #7 Name: " + file.properties[(long)InibinHashID.SKIN_SEVEN_NAME]);
+            Debug.WriteLine("Skin #7 SKN: " + file.properties[(long)InibinHashID.SKIN_SEVEN_SKN]);
+            Debug.WriteLine("Skin #7 SKL: " + file.properties[(long)InibinHashID.SKIN_SEVEN_SKL]);
+            Debug.WriteLine("Skin #7 DDS: " + file.properties[(long)InibinHashID.SKIN_SEVEN_TEXTURE]);
+
+            Debug.WriteLine("Skin #8 Name: " + file.properties[(long)InibinHashID.SKIN_EIGHT_NAME]);
+            Debug.WriteLine("Skin #8 SKN: " + file.properties[(long)InibinHashID.SKIN_EIGHT_SKN]);
+            Debug.WriteLine("Skin #8 SKL: " + file.properties[(long)InibinHashID.SKIN_EIGHT_SKL]);
+            Debug.WriteLine("Skin #8 DDS: " + file.properties[(long)InibinHashID.SKIN_EIGHT_TEXTURE]); 
 #endif
             return result;
         }
