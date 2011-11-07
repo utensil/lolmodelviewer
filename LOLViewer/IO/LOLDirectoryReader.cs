@@ -129,7 +129,7 @@ namespace LOLViewer.IO
             //
             // The only case not really handled is something like
             // ...\Riot Games\Renamed\RADS... which no one better have!  And, honestly, this case should fail
-            // because someone could have a new Riot game installed but not LOL.
+            // because someone could have a new Riot game installed which is not LOL.
             //
 
             bool isRootSelected = false;
