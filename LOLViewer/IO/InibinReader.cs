@@ -179,7 +179,6 @@ namespace LOLViewer.IO
 	        DebugOut("format", format);
 #endif
 
-
             if ((format & 0x0001) == 0) 
             {
 #if VERBOSE
@@ -342,7 +341,7 @@ namespace LOLViewer.IO
                             long key = booleanKeys[index];
                             int val = 0x1 & bits;
 #if VERBOSE
-                        DebugOut("Boolean prop(" + key + ")", val);
+                            DebugOut("Boolean prop(" + key + ")", val);
 #endif
 
                             file.AddProperty(key, val);
@@ -384,6 +383,47 @@ namespace LOLViewer.IO
                 }
             }
 
+            // Newer section.
+            // I don't know what exactly these values represent.
+            // I think it's related to champions with the new rage mechanic.
+            // I'm just using it to increment the stream.
+            // So, when I get to the part to read in strings, the pointer is at the
+            // correct location.
+            if ((format & 0x0080) == 0)
+            {
+#if VERBOSE
+                DebugOut("No offsets segment", "skipping");
+#endif
+            }
+            else
+            {
+#if VERBOSE
+                DebugOut("Rage values start position", stream.Position);
+#endif
+                long[] rageKeys = ReadSegmentKeys(ref stream);
+                if (rageKeys != null)
+                {
+#if VERBOSE
+                    DebugOut("Rage keys found", rageKeys.Length);
+#endif
+                    foreach (long key in rageKeys)
+                    {
+                        float val1 = ReadFloat(ref stream);
+                        float val2 = ReadFloat(ref stream);
+                        float val3 = ReadFloat(ref stream);
+#if VERBOSE
+                        DebugOut("Rage prop 1(" + key + ")", val1);
+                        DebugOut("Rage prop 2(" + key + ")", val2);
+                        DebugOut("Rage prop 3(" + key + ")", val3);
+#endif
+                        // If you actually need these values, figure out what 12 byte
+                        // structure they represent and add that property.  
+                        // It's probably a Vector3.
+                        // file.AddProperty(key, MyRageKeyStructure);
+                    }
+                }
+            }
+
             // Old-style offsets to strings
             if ((format & 0x1000) == 0)
             {
@@ -401,10 +441,10 @@ namespace LOLViewer.IO
 
                 //
                 // New method to read the newer .inibins.
-                // Why compute offset by reading in data from the file
-                // when we can just compute it?  This seems to fix the problem
-                // with newer .inibins.  I'm not sure what the actual value is used for
-                // in the file header though.
+                // Why determine the offset by reading in data from the file header
+                // when we can just compute it here?  This seems to fix the problem
+                // with newer .inibins.  I'm not sure what the value in the header
+                // is used for though.
                 //
                 oldStyleOffset = (int)stream.Position + keys.Length * 2;
 
