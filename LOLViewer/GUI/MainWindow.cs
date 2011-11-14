@@ -37,6 +37,8 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
+using System.IO;
+
 using OpenTK;
 using LOLViewer.IO;
 
@@ -44,6 +46,8 @@ namespace LOLViewer
 {
     public partial class MainWindow : Form
     {
+        private const String DEFAULT_DIRECTORY_FILE = "root.dat";
+
         // Windowing variables
         private bool isGLLoaded;
         private Stopwatch timer;
@@ -80,10 +84,46 @@ namespace LOLViewer
             camera.SetViewParameters(new Vector3(0.0f, 0.0f, 300.0f), Vector3.Zero);
             renderer = new GLRenderer();
 
-            reader = new LOLDirectoryReader();
+            // Set up the reader and initialize its root to the value in 'root.dat' if
+            // the file exists.
+            {
+                reader = new LOLDirectoryReader();
+
+                bool isFileOpen = false;
+                FileStream file = null;
+                try
+                {
+                    FileInfo fileInfo = new FileInfo(DEFAULT_DIRECTORY_FILE);
+                    if (fileInfo.Exists == true)
+                    {
+                        file = new FileStream(fileInfo.FullName, FileMode.Open);
+                        isFileOpen = true;
+                    }
+                }
+                catch {}
+
+                if (isFileOpen == true)
+                {
+                    BinaryReader fileReader = null;
+                    if (file != null)
+                    {
+                        try
+                        {
+                            fileReader = new BinaryReader(file);
+                            reader.root = fileReader.ReadString();
+                            fileReader.Close();
+                        }
+                        catch
+                        {
+                            file.Close();
+                        }
+                    }
+                }
+            }
 
             InitializeComponent();
-            modelScaleTrackbar.Value = (int) (GLRenderer.DEFAULT_MODEL_SCALE * DEFAULT_SCALE_TRACKBAR);
+
+            modelScaleTrackbar.Value = (int)(GLRenderer.DEFAULT_MODEL_SCALE * DEFAULT_SCALE_TRACKBAR);
             yOffsetTrackbar.Value = -GLRenderer.DEFAULT_MODEL_YOFFSET;
 
             lastSearch = String.Empty;
@@ -109,7 +149,7 @@ namespace LOLViewer
             glControlMain.KeyUp += new KeyEventHandler(GLControlMainOnKeyUp);
 
             // Menu Callbacks
-            closeToolStripMenuItem.Click += new EventHandler(OnClose);
+            exitToolStripMenuItem.Click += new EventHandler(OnExit);
             setDirectoryToolStripMenuItem.Click += new EventHandler(OnSetDirectory);
             aboutToolStripMenuItem.Click += new EventHandler(OnAbout);
             readDefaultDirectoryToolStrip.Click += new EventHandler(OnReadModels);
@@ -314,7 +354,7 @@ namespace LOLViewer
             }
         }
 
-        void OnClose(object sender, EventArgs e)
+        void OnExit(object sender, EventArgs e)
         {
             this.Close();
         }
@@ -343,6 +383,29 @@ namespace LOLViewer
             else if (result == DialogResult.Cancel)
             {
                 return;
+            }
+
+            // On successful read, write the root directory to file.
+            FileStream file = null;
+            try
+            {
+                file = new FileStream(DEFAULT_DIRECTORY_FILE, FileMode.OpenOrCreate);
+            }
+            catch {}
+
+            BinaryWriter writer = null;
+            if (file != null)
+            {
+                try
+                {
+                    writer = new BinaryWriter(file);
+                    writer.Write(reader.root);
+                    writer.Close();
+                }
+                catch
+                {
+                    file.Close();
+                }
             }
 
             // Populate the model list box.

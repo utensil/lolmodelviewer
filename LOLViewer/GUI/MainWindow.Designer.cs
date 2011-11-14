@@ -59,7 +59,7 @@ namespace LOLViewer
             this.readToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.readDefaultDirectoryToolStrip = new System.Windows.Forms.ToolStripMenuItem();
             this.fileToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
-            this.closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.optionsMainWindowMenuStrip = new System.Windows.Forms.ToolStripMenuItem();
             this.setDirectoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutMainWindowMenuStrip = new System.Windows.Forms.ToolStripMenuItem();
@@ -133,7 +133,7 @@ namespace LOLViewer
             this.fileMainWindowMenuStrip.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.readToolStripMenuItem,
             this.fileToolStripSeparator,
-            this.closeToolStripMenuItem});
+            this.exitToolStripMenuItem});
             this.fileMainWindowMenuStrip.Name = "fileMainWindowMenuStrip";
             this.fileMainWindowMenuStrip.Size = new System.Drawing.Size(37, 20);
             this.fileMainWindowMenuStrip.Text = "File";
@@ -143,7 +143,7 @@ namespace LOLViewer
             this.readToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.readDefaultDirectoryToolStrip});
             this.readToolStripMenuItem.Name = "readToolStripMenuItem";
-            this.readToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
+            this.readToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.readToolStripMenuItem.Text = "Read...";
             // 
             // readDefaultDirectoryToolStrip
@@ -155,13 +155,13 @@ namespace LOLViewer
             // fileToolStripSeparator
             // 
             this.fileToolStripSeparator.Name = "fileToolStripSeparator";
-            this.fileToolStripSeparator.Size = new System.Drawing.Size(106, 6);
+            this.fileToolStripSeparator.Size = new System.Drawing.Size(149, 6);
             // 
-            // closeToolStripMenuItem
+            // exitToolStripMenuItem
             // 
-            this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
-            this.closeToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
-            this.closeToolStripMenuItem.Text = "Close";
+            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem.Text = "Exit";
             // 
             // optionsMainWindowMenuStrip
             // 
@@ -475,7 +475,7 @@ namespace LOLViewer
             this.MinimumSize = new System.Drawing.Size(640, 480);
             this.Name = "MainWindow";
             this.Padding = new System.Windows.Forms.Padding(10);
-            this.Text = "LOLViewer 1.12";
+            this.Text = "LOLViewer 1.13";
             this.mainWindowMenuStrip.ResumeLayout(false);
             this.mainWindowMenuStrip.PerformLayout();
             this.mainWindowStatusStrip.ResumeLayout(false);
@@ -506,7 +506,7 @@ namespace LOLViewer
         private OpenTK.GLControl glControlMain;
         private System.Windows.Forms.MenuStrip mainWindowMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem fileMainWindowMenuStrip;
-        private System.Windows.Forms.ToolStripMenuItem closeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem optionsMainWindowMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem setDirectoryToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutMainWindowMenuStrip;

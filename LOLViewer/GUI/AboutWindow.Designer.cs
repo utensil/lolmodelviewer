@@ -68,7 +68,7 @@ namespace LOLViewer
             this.titleLabel.Name = "titleLabel";
             this.titleLabel.Size = new System.Drawing.Size(121, 13);
             this.titleLabel.TabIndex = 0;
-            this.titleLabel.Text = "LOLViewer Version 1.12";
+            this.titleLabel.Text = "LOLViewer Version 1.13";
             // 
             // descriptionTextBox
             // 
