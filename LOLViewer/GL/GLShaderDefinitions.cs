@@ -202,8 +202,8 @@ namespace LOLViewer
    	                vec3 L = v_VertexToLight;  
 
 	                // we are in camera space, so camera position is (0,0,0).
-	                // Therefore, camera position - v_ViewSpaceVertex
-	                // = -v_ViewSpaceVertex
+	                // Therefore, camera position - v_ViewSpacePosition
+	                // = -v_ViewSpacePosition
    	                vec3 E = normalize(-v_ViewSpacePosition);
 
    	                vec3 R = normalize(reflect(L,v_Normal));  
@@ -217,7 +217,7 @@ namespace LOLViewer
    
    	                // Specular
    	                vec4 specular = vec4(1.0f, 1.0f, 1.0f, 1.0f) * 
-		                max( pow(-dot(R,E), u_SExponent), 0.0 );
+		                pow( max(-dot(R,E), 0.0f ), u_SExponent );
    	                specular = clamp(specular, 0.0, 1.0); 
 
    	                // Finalize  
