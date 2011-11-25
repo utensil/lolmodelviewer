@@ -136,7 +136,9 @@ namespace LOLViewer.IO
 
             // Deafult directory installations.
             if (rootDir.Name.Contains("League of Legends") == true ||
-                rootDir.Name.Contains("Riot Games") == true)
+                rootDir.Name.Contains("Riot Games") == true ||
+                rootDir.Name.Contains("RADS") == true ||
+                rootDir.Name.Contains("rads") == true )
             {
                 isRootSelected = true;
             }
@@ -146,7 +148,8 @@ namespace LOLViewer.IO
                 isRootSelected = true;
             }
             // Selected a rename "League of Legends" directory.
-            else if (ContainsDirectory(rootDir, "RADS") == true)
+            else if (ContainsDirectory(rootDir, "RADS") == true || 
+                     ContainsDirectory(rootDir, "rads") == true )
             {
                 isRootSelected = true;
             }
@@ -372,6 +375,7 @@ namespace LOLViewer.IO
 
                 switch (dir.Name)
                 {
+                    case "rads":
                     case "RADS":
                         {
                             result = OpenDirectory(dir);
@@ -888,13 +892,22 @@ namespace LOLViewer.IO
         {
             bool result = false;
 
-            foreach (DirectoryInfo d in parent.GetDirectories())
+            // Sanity.
+            if (parent.Exists == true)
             {
-                if (d.Name.Contains(child) == true) // contains used for the LOL NA - LOL EU case
+                try
                 {
-                    result = true;
-                    break;
+                    foreach (DirectoryInfo d in parent.GetDirectories())
+                    {
+                        if (d.Name.Contains(child) == true) // contains used for the LOL NA - LOL EU case
+                        {
+                            result = true;
+                            break;
+                        }
+                    }
                 }
+                catch { }
+
             }
 
             return result;
