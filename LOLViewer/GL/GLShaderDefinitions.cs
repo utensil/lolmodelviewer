@@ -146,7 +146,7 @@ namespace LOLViewer
 
                     void main(void) 
                     {
-    	                    gl_Position = u_WorldViewProjection * vec4(in_Position, 1.0);
+    	                gl_Position = u_WorldViewProjection * vec4(in_Position, 1.0);
 
 	                    v_TexCoords = in_TexCoords;
                     }";
@@ -217,7 +217,7 @@ namespace LOLViewer
    
    	                // Specular
    	                vec4 specular = vec4(1.0f, 1.0f, 1.0f, 1.0f) * 
-		                pow( max(-dot(R,E), 0.0f ), u_SExponent );
+                        pow( max(-dot(R,E), 0.0f ), u_SExponent );
    	                specular = clamp(specular, 0.0, 1.0); 
 
    	                // Finalize  
