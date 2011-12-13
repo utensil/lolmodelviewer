@@ -268,7 +268,13 @@ namespace LOLViewer
 
             float percentageAnimated = renderer.GetCurrentAnimationPercentageAnimated();
             int timelineValue = (int)Math.Floor(percentageAnimated * 100.0f); // Move the decimal into integer range.
-            timelineTrackBar.Value = timelineValue;
+
+            // Try to cut down on the amount of time we change the track bar value.
+            // This way we don't spam update it.
+            if (timelineValue != timelineTrackBar.Value)
+            {
+                timelineTrackBar.Value = timelineValue;
+            }
         }
     }
 }
