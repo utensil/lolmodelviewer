@@ -166,7 +166,12 @@ namespace LOLViewer
             resetCameraButton.Click += new EventHandler(OnResetCameraButtonClick);
             backgroundColorButton.Click += new EventHandler(OnBackgroundColorButtonClick);
 
+            //
             // Animation Controller
+            //
+
+            // TODO: Pass the references and callbacks into constructor instead of doing them out here.
+            // Kind of ugly code. :(
             animationController = new AnimationController();
 
             // Set references
@@ -176,6 +181,7 @@ namespace LOLViewer
             animationController.playAnimationButton = playAnimationButton;
             animationController.previousKeyFrameButton = previousKeyFrameButton;
             animationController.glControlMain = glControlMain;
+            animationController.timelineTrackBar = timelineTrackBar;
 
             animationController.renderer = renderer;
 
@@ -185,8 +191,13 @@ namespace LOLViewer
             nextKeyFrameButton.Click += new EventHandler(animationController.OnNextKeyFrameButtonClick);
             playAnimationButton.Click += new EventHandler(animationController.OnPlayAnimationButtonClick);
             currentAnimationComboBox.SelectedIndexChanged += new EventHandler(animationController.OnCurrentAnimationComboBoxSelectedIndexChanged);
+            timelineTrackBar.Scroll += new EventHandler(animationController.OnTimelineTrackBar);
 
             animationController.DisableAnimation();
+
+            //
+            // End Animation Controller
+            //
 
             // Search Box
             modelSearchBox.TextChanged += new EventHandler(OnModelSearchBoxTextChanged);
