@@ -221,7 +221,9 @@ namespace LOLViewer
    	                specular = clamp(specular, 0.0, 1.0); 
 
    	                // Finalize  
-	                gl_FragColor = u_KA * ambient + u_KD * diffuse + u_KS * specular;
+	                gl_FragColor = u_KA * ambient;
+                    gl_FragColor += u_KD * diffuse;
+                    gl_FragColor += u_KS * specular;
                 }";
 
         public const String TextureSamplerFragment
