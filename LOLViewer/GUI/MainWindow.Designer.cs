@@ -85,11 +85,11 @@ namespace LOLViewer
             this.currentAnimationComboBox = new System.Windows.Forms.ComboBox();
             this.currentAnimationLabel = new System.Windows.Forms.Label();
             this.enableAnimationCheckBox = new System.Windows.Forms.CheckBox();
+            this.timelineTrackBar = new System.Windows.Forms.TrackBar();
             this.glTabModelListBoxSplitContainer = new System.Windows.Forms.SplitContainer();
             this.modelListBox = new System.Windows.Forms.ListBox();
             this.modelSearchBox = new System.Windows.Forms.TextBox();
             this.modelSearchLabel = new System.Windows.Forms.Label();
-            this.timelineTrackBar = new System.Windows.Forms.TrackBar();
             this.mainWindowMenuStrip.SuspendLayout();
             this.mainWindowStatusStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.glControlTabControlSplitContainer)).BeginInit();
@@ -101,11 +101,11 @@ namespace LOLViewer
             ((System.ComponentModel.ISupportInitialize)(this.modelScaleTrackbar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.yOffsetTrackbar)).BeginInit();
             this.animationOptionsTab.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.timelineTrackBar)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.glTabModelListBoxSplitContainer)).BeginInit();
             this.glTabModelListBoxSplitContainer.Panel1.SuspendLayout();
             this.glTabModelListBoxSplitContainer.Panel2.SuspendLayout();
             this.glTabModelListBoxSplitContainer.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.timelineTrackBar)).BeginInit();
             this.SuspendLayout();
             // 
             // glControlMain
@@ -224,7 +224,7 @@ namespace LOLViewer
             // glControlTabControlSplitContainer.Panel2
             // 
             this.glControlTabControlSplitContainer.Panel2.Controls.Add(this.optionsTabControl);
-            this.glControlTabControlSplitContainer.Panel2MinSize = 135;
+            this.glControlTabControlSplitContainer.Panel2MinSize = 140;
             this.glControlTabControlSplitContainer.Size = new System.Drawing.Size(450, 378);
             this.glControlTabControlSplitContainer.SplitterDistance = 218;
             this.glControlTabControlSplitContainer.TabIndex = 9;
@@ -415,6 +415,17 @@ namespace LOLViewer
             this.enableAnimationCheckBox.Text = "Enable Animation";
             this.enableAnimationCheckBox.UseVisualStyleBackColor = true;
             // 
+            // timelineTrackBar
+            // 
+            this.timelineTrackBar.LargeChange = 10;
+            this.timelineTrackBar.Location = new System.Drawing.Point(7, 53);
+            this.timelineTrackBar.Maximum = 100;
+            this.timelineTrackBar.Name = "timelineTrackBar";
+            this.timelineTrackBar.Size = new System.Drawing.Size(237, 45);
+            this.timelineTrackBar.TabIndex = 7;
+            this.timelineTrackBar.TabStop = false;
+            this.timelineTrackBar.TickStyle = System.Windows.Forms.TickStyle.None;
+            // 
             // glTabModelListBoxSplitContainer
             // 
             this.glTabModelListBoxSplitContainer.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -466,17 +477,6 @@ namespace LOLViewer
             this.modelSearchLabel.TabIndex = 15;
             this.modelSearchLabel.Text = "Search";
             // 
-            // timelineTrackBar
-            // 
-            this.timelineTrackBar.LargeChange = 10;
-            this.timelineTrackBar.Location = new System.Drawing.Point(7, 53);
-            this.timelineTrackBar.Maximum = 100;
-            this.timelineTrackBar.Name = "timelineTrackBar";
-            this.timelineTrackBar.Size = new System.Drawing.Size(237, 45);
-            this.timelineTrackBar.TabIndex = 7;
-            this.timelineTrackBar.TabStop = false;
-            this.timelineTrackBar.TickStyle = System.Windows.Forms.TickStyle.None;
-            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -489,7 +489,7 @@ namespace LOLViewer
             this.MinimumSize = new System.Drawing.Size(640, 480);
             this.Name = "MainWindow";
             this.Padding = new System.Windows.Forms.Padding(10);
-            this.Text = "LOLViewer 1.13";
+            this.Text = "LOLViewer 1.14";
             this.mainWindowMenuStrip.ResumeLayout(false);
             this.mainWindowMenuStrip.PerformLayout();
             this.mainWindowStatusStrip.ResumeLayout(false);
@@ -505,12 +505,12 @@ namespace LOLViewer
             ((System.ComponentModel.ISupportInitialize)(this.yOffsetTrackbar)).EndInit();
             this.animationOptionsTab.ResumeLayout(false);
             this.animationOptionsTab.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.timelineTrackBar)).EndInit();
             this.glTabModelListBoxSplitContainer.Panel1.ResumeLayout(false);
             this.glTabModelListBoxSplitContainer.Panel2.ResumeLayout(false);
             this.glTabModelListBoxSplitContainer.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.glTabModelListBoxSplitContainer)).EndInit();
             this.glTabModelListBoxSplitContainer.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.timelineTrackBar)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

@@ -533,6 +533,14 @@ namespace LOLViewer
             }
         }
 
+        /// <summary>
+        /// Returns a decimal representing the percent
+        /// of the current animation already animated.
+        /// 
+        /// I.E. If the currentFrame = 5 with an animation containing 10 frames, this
+        /// function will return .5.
+        /// </summary>
+        /// <returns></returns>
         public float GetPercentageAnimated()
         {
             float result = 0.0f;
