@@ -343,6 +343,7 @@ namespace LOLViewer
         void OnAbout(object sender, EventArgs e)
         {
             AboutWindow aboutDlg = new AboutWindow();
+            aboutDlg.StartPosition = FormStartPosition.CenterParent;
             aboutDlg.ShowDialog();
         }
 
@@ -379,6 +380,7 @@ namespace LOLViewer
 
             LoadingModelsWindow loader = new LoadingModelsWindow();
             loader.reader = reader;
+            loader.StartPosition = FormStartPosition.CenterParent;
             loader.ShowDialog();
 
             DialogResult result = loader.result;
