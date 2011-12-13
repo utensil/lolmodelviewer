@@ -493,6 +493,18 @@ namespace LOLViewer
             return rig.GetBoneTransformations( currentFrameTime / animations[currentAnimation].timePerFrame );
         }
 
+        public uint GetNumberOfFramesInCurrentAnimation()
+        {
+            uint result = 0;
+
+            if (animations.ContainsKey(currentAnimation) == true)
+            {
+                result = animations[currentAnimation].numberOfFrames;
+            }
+
+            return result;
+        }
+
         public void IncrementCurrentAnimation()
         {
             currentFrame = (currentFrame + 1) % (int)animations[currentAnimation].numberOfFrames;
@@ -507,6 +519,31 @@ namespace LOLViewer
                 currentFrame = (int)animations[currentAnimation].numberOfFrames - 1;
             }
             currentFrameTime = 0; ;
+        }
+
+        public void SetCurrentFrame( int frame, float percentTowardsNextFrame )
+        {
+            // Set frame.
+            currentFrame = frame % (int)animations[currentAnimation].numberOfFrames;
+
+            // Set elapsed time towards the next frame.
+            if (animations.ContainsKey(currentAnimation) == true)
+            {
+                currentFrameTime = percentTowardsNextFrame * animations[currentAnimation].timePerFrame;
+            }
+        }
+
+        public float GetPercentageAnimated()
+        {
+            float result = 0.0f;
+
+            if (animations.ContainsKey(currentAnimation) == true)
+            {
+                float absoluteFrame = (float)currentFrame + (currentFrameTime / animations[currentAnimation].timePerFrame);
+                result = absoluteFrame / (float)animations[currentAnimation].numberOfFrames;
+            }
+
+            return result;
         }
 
         public void Destroy()

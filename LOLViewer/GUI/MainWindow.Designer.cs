@@ -89,6 +89,7 @@ namespace LOLViewer
             this.modelListBox = new System.Windows.Forms.ListBox();
             this.modelSearchBox = new System.Windows.Forms.TextBox();
             this.modelSearchLabel = new System.Windows.Forms.Label();
+            this.timelineTrackBar = new System.Windows.Forms.TrackBar();
             this.mainWindowMenuStrip.SuspendLayout();
             this.mainWindowStatusStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.glControlTabControlSplitContainer)).BeginInit();
@@ -104,6 +105,7 @@ namespace LOLViewer
             this.glTabModelListBoxSplitContainer.Panel1.SuspendLayout();
             this.glTabModelListBoxSplitContainer.Panel2.SuspendLayout();
             this.glTabModelListBoxSplitContainer.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.timelineTrackBar)).BeginInit();
             this.SuspendLayout();
             // 
             // glControlMain
@@ -143,7 +145,7 @@ namespace LOLViewer
             this.readToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.readDefaultDirectoryToolStrip});
             this.readToolStripMenuItem.Name = "readToolStripMenuItem";
-            this.readToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.readToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
             this.readToolStripMenuItem.Text = "Read...";
             // 
             // readDefaultDirectoryToolStrip
@@ -155,12 +157,12 @@ namespace LOLViewer
             // fileToolStripSeparator
             // 
             this.fileToolStripSeparator.Name = "fileToolStripSeparator";
-            this.fileToolStripSeparator.Size = new System.Drawing.Size(149, 6);
+            this.fileToolStripSeparator.Size = new System.Drawing.Size(106, 6);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             // 
             // optionsMainWindowMenuStrip
@@ -258,7 +260,7 @@ namespace LOLViewer
             // 
             // backgroundColorButton
             // 
-            this.backgroundColorButton.Location = new System.Drawing.Point(143, 79);
+            this.backgroundColorButton.Location = new System.Drawing.Point(143, 85);
             this.backgroundColorButton.Name = "backgroundColorButton";
             this.backgroundColorButton.Size = new System.Drawing.Size(75, 23);
             this.backgroundColorButton.TabIndex = 7;
@@ -268,7 +270,7 @@ namespace LOLViewer
             // backgroundLabel
             // 
             this.backgroundLabel.AutoSize = true;
-            this.backgroundLabel.Location = new System.Drawing.Point(148, 60);
+            this.backgroundLabel.Location = new System.Drawing.Point(148, 66);
             this.backgroundLabel.Name = "backgroundLabel";
             this.backgroundLabel.Size = new System.Drawing.Size(65, 13);
             this.backgroundLabel.TabIndex = 6;
@@ -277,7 +279,7 @@ namespace LOLViewer
             // cameraLabel
             // 
             this.cameraLabel.AutoSize = true;
-            this.cameraLabel.Location = new System.Drawing.Point(159, 3);
+            this.cameraLabel.Location = new System.Drawing.Point(159, 9);
             this.cameraLabel.Name = "cameraLabel";
             this.cameraLabel.Size = new System.Drawing.Size(43, 13);
             this.cameraLabel.TabIndex = 5;
@@ -285,7 +287,7 @@ namespace LOLViewer
             // 
             // resetCameraButton
             // 
-            this.resetCameraButton.Location = new System.Drawing.Point(143, 19);
+            this.resetCameraButton.Location = new System.Drawing.Point(143, 25);
             this.resetCameraButton.Name = "resetCameraButton";
             this.resetCameraButton.Size = new System.Drawing.Size(75, 23);
             this.resetCameraButton.TabIndex = 4;
@@ -295,7 +297,7 @@ namespace LOLViewer
             // modelScaleLabel
             // 
             this.modelScaleLabel.AutoSize = true;
-            this.modelScaleLabel.Location = new System.Drawing.Point(30, 60);
+            this.modelScaleLabel.Location = new System.Drawing.Point(30, 66);
             this.modelScaleLabel.Name = "modelScaleLabel";
             this.modelScaleLabel.Size = new System.Drawing.Size(66, 13);
             this.modelScaleLabel.TabIndex = 3;
@@ -304,7 +306,7 @@ namespace LOLViewer
             // modelScaleTrackbar
             // 
             this.modelScaleTrackbar.LargeChange = 50;
-            this.modelScaleTrackbar.Location = new System.Drawing.Point(6, 79);
+            this.modelScaleTrackbar.Location = new System.Drawing.Point(6, 85);
             this.modelScaleTrackbar.Maximum = 210;
             this.modelScaleTrackbar.Minimum = 10;
             this.modelScaleTrackbar.Name = "modelScaleTrackbar";
@@ -316,7 +318,7 @@ namespace LOLViewer
             // yOffsetTrackbar
             // 
             this.yOffsetTrackbar.LargeChange = 25;
-            this.yOffsetTrackbar.Location = new System.Drawing.Point(6, 19);
+            this.yOffsetTrackbar.Location = new System.Drawing.Point(6, 25);
             this.yOffsetTrackbar.Maximum = 100;
             this.yOffsetTrackbar.Name = "yOffsetTrackbar";
             this.yOffsetTrackbar.Size = new System.Drawing.Size(131, 45);
@@ -326,7 +328,7 @@ namespace LOLViewer
             // VerticalOffsetLabel
             // 
             this.VerticalOffsetLabel.AutoSize = true;
-            this.VerticalOffsetLabel.Location = new System.Drawing.Point(26, 3);
+            this.VerticalOffsetLabel.Location = new System.Drawing.Point(26, 9);
             this.VerticalOffsetLabel.Name = "VerticalOffsetLabel";
             this.VerticalOffsetLabel.Size = new System.Drawing.Size(77, 13);
             this.VerticalOffsetLabel.TabIndex = 0;
@@ -342,6 +344,7 @@ namespace LOLViewer
             this.animationOptionsTab.Controls.Add(this.currentAnimationComboBox);
             this.animationOptionsTab.Controls.Add(this.currentAnimationLabel);
             this.animationOptionsTab.Controls.Add(this.enableAnimationCheckBox);
+            this.animationOptionsTab.Controls.Add(this.timelineTrackBar);
             this.animationOptionsTab.Location = new System.Drawing.Point(4, 22);
             this.animationOptionsTab.Name = "animationOptionsTab";
             this.animationOptionsTab.Padding = new System.Windows.Forms.Padding(3);
@@ -351,7 +354,7 @@ namespace LOLViewer
             // 
             // playAnimationButton
             // 
-            this.playAnimationButton.Location = new System.Drawing.Point(27, 84);
+            this.playAnimationButton.Location = new System.Drawing.Point(7, 79);
             this.playAnimationButton.Name = "playAnimationButton";
             this.playAnimationButton.Size = new System.Drawing.Size(75, 23);
             this.playAnimationButton.TabIndex = 6;
@@ -360,7 +363,7 @@ namespace LOLViewer
             // 
             // nextKeyFrameButton
             // 
-            this.nextKeyFrameButton.Location = new System.Drawing.Point(238, 25);
+            this.nextKeyFrameButton.Location = new System.Drawing.Point(169, 79);
             this.nextKeyFrameButton.Name = "nextKeyFrameButton";
             this.nextKeyFrameButton.Size = new System.Drawing.Size(75, 23);
             this.nextKeyFrameButton.TabIndex = 5;
@@ -369,7 +372,7 @@ namespace LOLViewer
             // 
             // previousKeyFrameButton
             // 
-            this.previousKeyFrameButton.Location = new System.Drawing.Point(157, 25);
+            this.previousKeyFrameButton.Location = new System.Drawing.Point(88, 79);
             this.previousKeyFrameButton.Name = "previousKeyFrameButton";
             this.previousKeyFrameButton.Size = new System.Drawing.Size(75, 23);
             this.previousKeyFrameButton.TabIndex = 4;
@@ -379,7 +382,7 @@ namespace LOLViewer
             // keyFrameControlLabel
             // 
             this.keyFrameControlLabel.AutoSize = true;
-            this.keyFrameControlLabel.Location = new System.Drawing.Point(189, 7);
+            this.keyFrameControlLabel.Location = new System.Drawing.Point(76, 37);
             this.keyFrameControlLabel.Name = "keyFrameControlLabel";
             this.keyFrameControlLabel.Size = new System.Drawing.Size(98, 13);
             this.keyFrameControlLabel.TabIndex = 3;
@@ -388,7 +391,7 @@ namespace LOLViewer
             // currentAnimationComboBox
             // 
             this.currentAnimationComboBox.FormattingEnabled = true;
-            this.currentAnimationComboBox.Location = new System.Drawing.Point(6, 57);
+            this.currentAnimationComboBox.Location = new System.Drawing.Point(270, 25);
             this.currentAnimationComboBox.Name = "currentAnimationComboBox";
             this.currentAnimationComboBox.Size = new System.Drawing.Size(121, 21);
             this.currentAnimationComboBox.TabIndex = 2;
@@ -396,7 +399,7 @@ namespace LOLViewer
             // currentAnimationLabel
             // 
             this.currentAnimationLabel.AutoSize = true;
-            this.currentAnimationLabel.Location = new System.Drawing.Point(20, 41);
+            this.currentAnimationLabel.Location = new System.Drawing.Point(284, 9);
             this.currentAnimationLabel.Name = "currentAnimationLabel";
             this.currentAnimationLabel.Size = new System.Drawing.Size(90, 13);
             this.currentAnimationLabel.TabIndex = 1;
@@ -405,7 +408,7 @@ namespace LOLViewer
             // enableAnimationCheckBox
             // 
             this.enableAnimationCheckBox.AutoSize = true;
-            this.enableAnimationCheckBox.Location = new System.Drawing.Point(7, 6);
+            this.enableAnimationCheckBox.Location = new System.Drawing.Point(9, 9);
             this.enableAnimationCheckBox.Name = "enableAnimationCheckBox";
             this.enableAnimationCheckBox.Size = new System.Drawing.Size(108, 17);
             this.enableAnimationCheckBox.TabIndex = 0;
@@ -463,6 +466,17 @@ namespace LOLViewer
             this.modelSearchLabel.TabIndex = 15;
             this.modelSearchLabel.Text = "Search";
             // 
+            // timelineTrackBar
+            // 
+            this.timelineTrackBar.LargeChange = 10;
+            this.timelineTrackBar.Location = new System.Drawing.Point(7, 53);
+            this.timelineTrackBar.Maximum = 100;
+            this.timelineTrackBar.Name = "timelineTrackBar";
+            this.timelineTrackBar.Size = new System.Drawing.Size(237, 45);
+            this.timelineTrackBar.TabIndex = 7;
+            this.timelineTrackBar.TabStop = false;
+            this.timelineTrackBar.TickStyle = System.Windows.Forms.TickStyle.None;
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -496,6 +510,7 @@ namespace LOLViewer
             this.glTabModelListBoxSplitContainer.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.glTabModelListBoxSplitContainer)).EndInit();
             this.glTabModelListBoxSplitContainer.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.timelineTrackBar)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -539,6 +554,7 @@ namespace LOLViewer
         private System.Windows.Forms.ListBox modelListBox;
         private System.Windows.Forms.TextBox modelSearchBox;
         private System.Windows.Forms.Label modelSearchLabel;
+        private System.Windows.Forms.TrackBar timelineTrackBar;
     }
 }
 

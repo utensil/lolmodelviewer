@@ -569,6 +569,30 @@ namespace LOLViewer
             }
         }
 
+        // TODO: Doesn't support multiple models.
+        public void SetCurrentFrameInCurrentAnimation(int frame, float percentTowardsNextFrame)
+        {
+            foreach (var m in rModels)
+            {
+                m.Value.SetCurrentFrame( frame, percentTowardsNextFrame );
+                break;
+            }
+        }
+
+        // TODO: Doesn't support multiple models.
+        public float GetCurrentAnimationPercentageAnimated()
+        {
+            float result = 0.0f;
+
+            foreach (var m in rModels)
+            {
+                result = m.Value.GetPercentageAnimated();
+                break;
+            }
+
+            return result;
+        }
+
         // Unlike decrement and increment, this function doesn't directly
         // translate to multiple models.  Need to pass a model ID or something.
         // But for now, who cares.  Only one model should be available at a time anyways.
@@ -578,6 +602,20 @@ namespace LOLViewer
             {
                 m.Value.SetCurrentAnimation(animation);
             }
+        }
+
+        // TODO: Doesn't support multiple models.
+        public uint GetNumberOfFramesInCurrentAnimation()
+        {
+            uint result = 0;
+
+            foreach (var m in rModels)
+            {
+                result = m.Value.GetNumberOfFramesInCurrentAnimation();
+                break;
+            }
+
+            return result;
         }
 
         public void OnUpdate(float elapsedTime)
