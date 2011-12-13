@@ -392,9 +392,9 @@ namespace LOLViewer
                 program.UpdateUniform("u_LightDirection", new Vector3(0.0f, 0.0f, 1.0f));
                 program.UpdateUniform("u_LightDiffuse",
                     new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-                program.UpdateUniform("u_KA", 0.8f);
+                program.UpdateUniform("u_KA", 0.85f);
                 program.UpdateUniform("u_KD", 0.1f);
-                program.UpdateUniform("u_KS", 0.1f);
+                program.UpdateUniform("u_KS", 0.05f);
                 program.UpdateUniform("u_SExponent", 8.0f);
             }
 
@@ -431,9 +431,9 @@ namespace LOLViewer
                 program.UpdateUniform("u_LightDirection", new Vector3(0.0f, 0.0f, 1.0f));
                 program.UpdateUniform("u_LightDiffuse",
                     new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-                program.UpdateUniform("u_KA", 0.8f);
+                program.UpdateUniform("u_KA", 0.85f);
                 program.UpdateUniform("u_KD", 0.1f);
-                program.UpdateUniform("u_KS", 0.1f);
+                program.UpdateUniform("u_KS", 0.05f);
                 program.UpdateUniform("u_SExponent", 8.0f);
             }
 
