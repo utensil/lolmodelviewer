@@ -190,7 +190,6 @@ namespace LOLViewer
                 uniforms.Add("u_SExponent");
                 uniforms.Add("u_Texture");
 
-                // Unused atm.
                 result = CreateProgram("phong", "phong.vert", "phong.frag",
                     attributes, uniforms);
             }
@@ -206,6 +205,7 @@ namespace LOLViewer
                 uniforms.Add("u_WorldViewProjection");
                 uniforms.Add("u_Texture");
 
+                // Unused atm.
                 result = CreateProgram("phongTexOnly", "phong.vert", "phongTexOnly.frag",
                     attributes, uniforms);
             }
