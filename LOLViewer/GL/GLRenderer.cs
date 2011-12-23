@@ -2,7 +2,7 @@
 
 /*
 LOLViewer
-Copyright 2011 James Lammlein 
+Copyright 2011-2012 James Lammlein 
 
  
 
@@ -510,7 +510,7 @@ namespace LOLViewer
                 else
                 {
                     // Account for the skinning scale if we're not skinning.
-                    Matrix4 scale = Matrix4.Scale( 1.0f / rModels.First().Value.rig.bindingJoints[0].scale); //hacky
+                    Matrix4 scale = Matrix4.Scale(rModels.First().Value.rig.bindingJoints[0].scale); //hacky
                     worldView = scale * world * camera.view;
                 }
 

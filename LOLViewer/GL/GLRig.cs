@@ -2,7 +2,7 @@
 
 /*
 LOLViewer
-Copyright 2011 James Lammlein 
+Copyright 2011-2012 James Lammlein 
 
  
 
@@ -123,7 +123,7 @@ namespace LOLViewer
                 joint.parent = bParent[i];
 
                 joint.worldPosition = bPosition[i];
-                joint.scale = bScale[i];
+                joint.scale = 1.0f / bScale[i];
                 joint.worldOrientation = bOrientation[i];
 
                 Matrix4 transform = Matrix4.Rotate(joint.worldOrientation);
@@ -163,12 +163,9 @@ namespace LOLViewer
             {
                 // No parent bone for root bones.
                 // So, just calculate directly.
-
-                Matrix4 worldTransform = Matrix4.Rotate(orientation);
-                worldTransform.M41 = position.X * ( 1.0f / poseBone.scale );
-                worldTransform.M42 = position.Y * ( 1.0f / poseBone.scale );
-                worldTransform.M43 = position.Z * ( 1.0f / poseBone.scale );
-                poseBone.worldTransform = worldTransform;
+                poseBone.worldPosition.X = position.X * poseBone.scale;
+                poseBone.worldPosition.Y = position.Y * poseBone.scale;
+                poseBone.worldPosition.Z = position.Z * poseBone.scale;
                 
                 poseBone.worldOrientation = orientation;
             }
@@ -185,18 +182,16 @@ namespace LOLViewer
                     parentBone = nextFrame[poseBone.parent];
                 }
 
-                Matrix4 localTransform = Matrix4.Rotate(orientation);
-                localTransform.M41 = position.X * ( 1.0f / poseBone.scale );
-                localTransform.M42 = position.Y * ( 1.0f / poseBone.scale );
-                localTransform.M43 = position.Z * ( 1.0f / poseBone.scale );
-
-                // Create the final transform based off the parent.
-                poseBone.worldTransform = localTransform *
-                    parentBone.worldTransform;
-
-                // Append matrices for position transform A * B
                 // Append quaternions for rotation transform B * A
                 poseBone.worldOrientation = parentBone.worldOrientation * orientation;
+
+                Vector3 localPosition = Vector3.Zero;
+                localPosition.X = position.X * poseBone.scale;
+                localPosition.Y = position.Y * poseBone.scale;
+                localPosition.Z = position.Z * poseBone.scale;
+
+                poseBone.worldPosition = parentBone.worldPosition + 
+                    Vector3.Transform(localPosition, parentBone.worldOrientation);
             }
         }
 
@@ -221,24 +216,13 @@ namespace LOLViewer
                 // and the next frame.
                 //
 
-                // Interpolate
+                // Interpolate Orientations
                 Quaternion finalOrientation = Quaternion.Slerp(currentFrame[i].worldOrientation,
                     nextFrame[i].worldOrientation, blend);
 
-                // Get the position vectors from final matrix transforms.
-                Vector3 currentPosition = Vector3.Zero;
-                currentPosition.X = currentFrame[i].worldTransform.M41;
-                currentPosition.Y = currentFrame[i].worldTransform.M42;
-                currentPosition.Z = currentFrame[i].worldTransform.M43;
-
-                Vector3 nextPosition = Vector3.Zero;
-                nextPosition.X = nextFrame[i].worldTransform.M41;
-                nextPosition.Y = nextFrame[i].worldTransform.M42;
-                nextPosition.Z = nextFrame[i].worldTransform.M43;
-
-                // Interpolate
-                Vector3 finalPosition = Vector3.Lerp(currentPosition, 
-                    nextPosition, blend);
+                // Interpolate Positions
+                Vector3 finalPosition = Vector3.Lerp(currentFrame[i].worldPosition,
+                    nextFrame[i].worldPosition, blend);
 
                 // Store
                 Matrix4 finalTransform = Matrix4.Rotate(finalOrientation);
@@ -248,7 +232,7 @@ namespace LOLViewer
 
                 // Update to form final transform.
                 transforms[i] = inv *                                           // invert of default/binding pose
-                    Matrix4.Scale(1.0f / bindingJoints[i].scale) *              // invert the bone scale
+                    Matrix4.Scale(bindingJoints[i].scale) *                     // invert the bone scale
                     finalTransform;                                             // transform by the current key frame's pose
             }
             
