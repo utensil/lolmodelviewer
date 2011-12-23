@@ -2,7 +2,7 @@
 
 /*
 LOLViewer
-Copyright 2011 James Lammlein 
+Copyright 2011-2012 James Lammlein 
 
  
 
@@ -68,7 +68,7 @@ namespace LOLViewer
             this.titleLabel.Name = "titleLabel";
             this.titleLabel.Size = new System.Drawing.Size(121, 13);
             this.titleLabel.TabIndex = 0;
-            this.titleLabel.Text = "LOLViewer Version 1.14";
+            this.titleLabel.Text = "LOLViewer Version 1.15";
             // 
             // descriptionTextBox
             // 

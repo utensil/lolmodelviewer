@@ -1,7 +1,7 @@
 ﻿
 /*
 LOLViewer
-Copyright 2011 James Lammlein 
+Copyright 2011-2012 James Lammlein 
 
  
 
@@ -40,16 +40,16 @@ namespace LOLViewer
     {
         public int parent;
         public float scale;
-        public Matrix4 worldTransform;
         public Quaternion worldOrientation;
+        public Vector3 worldPosition;
 
         public GLBone()
         {
             // -1 reserved for root
             parent = -2;
             scale = 0.0f;
-            worldTransform = Matrix4.Identity;
             worldOrientation = Quaternion.Identity;
+            worldPosition = Vector3.Zero;
         }
     }
 }

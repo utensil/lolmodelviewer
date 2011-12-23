@@ -1,6 +1,6 @@
 LOLViewer license
 
-Copyright (c) 2011 James Lammlein
+Copyright (c) 2011-2012 James Lammlein
 
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007

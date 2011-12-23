@@ -2,7 +2,7 @@
 
 /*
 LOLViewer
-Copyright 2011 James Lammlein 
+Copyright 2011-2012 James Lammlein 
 
  
 
@@ -31,11 +31,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("LOLViewer")]
-[assembly: AssemblyDescription("A tool to view League of Legends models.")]
+[assembly: AssemblyDescription("A tool to view League of Legends' models.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("LOLViewer")]
-[assembly: AssemblyCopyright("Copyright ©  2011 James Lammlein")]
+[assembly: AssemblyCopyright("Copyright ©  2011-2012 James Lammlein")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
