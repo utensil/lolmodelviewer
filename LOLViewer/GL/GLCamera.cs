@@ -43,7 +43,7 @@ using OpenTK;
 
 namespace LOLViewer
 {
-    class GLCamera
+    public class GLCamera
     {
         // Keybinding
         public enum CameraKeyValues
