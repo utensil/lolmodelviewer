@@ -36,9 +36,9 @@ using System.Text;
 using System.Windows.Forms;
 using System.Diagnostics;
 
-namespace LOLViewer
+namespace LOLViewer.GUI
 {
-    class AnimationController
+    public class AnimationController
     {
         public bool isEnabled;
         public bool isAnimating;

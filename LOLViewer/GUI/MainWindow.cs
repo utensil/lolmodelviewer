@@ -41,6 +41,7 @@ using System.IO;
 
 using OpenTK;
 using LOLViewer.IO;
+using LOLViewer.GUI;
 
 namespace LOLViewer
 {
@@ -62,7 +63,7 @@ namespace LOLViewer
         private GLCamera camera;
 
         // IO Variables
-        public LOLDirectoryReader reader;
+        private LOLDirectoryReader reader;
 
         // Model Name Search Variables
         public String lastSearch;
@@ -166,6 +167,9 @@ namespace LOLViewer
             resetCameraButton.Click += new EventHandler(OnResetCameraButtonClick);
             backgroundColorButton.Click += new EventHandler(OnBackgroundColorButtonClick);
 
+            // Checkboxes
+            fullScreenCheckBox.Click += new EventHandler(OnFullScreenCheckBoxClick);
+
             //
             // Animation Controller
             //
@@ -209,7 +213,7 @@ namespace LOLViewer
         // Main Window Handlers
         //
 
-        void OnMainWindowShown(object sender, EventArgs e)
+        private void OnMainWindowShown(object sender, EventArgs e)
         {
             // Read model files.
             OnReadModels(sender, e);
@@ -224,7 +228,7 @@ namespace LOLViewer
             if (isGLLoaded == false)
                 return;
 
-            renderer.OnRender(camera);
+            renderer.OnRender(ref camera);
 
             glControlMain.SwapBuffers();
         }
@@ -281,7 +285,7 @@ namespace LOLViewer
             }
         }
 
-        void GLControlMainOnDispose(object sender, EventArgs e)
+        private void GLControlMainOnDispose(object sender, EventArgs e)
         {
             renderer.ShutDown();
         }
@@ -318,13 +322,13 @@ namespace LOLViewer
         // Keyboard Handlers
         //
 
-        void GLControlMainOnKeyUp(object sender, KeyEventArgs e)
+        private void GLControlMainOnKeyUp(object sender, KeyEventArgs e)
         {
             camera.OnKeyUp(e);
             GLControlMainOnUpdateFrame(sender, e);
         }
 
-        void GLControlMainOnKeyDown(object sender, KeyEventArgs e)
+        private void GLControlMainOnKeyDown(object sender, KeyEventArgs e)
         {
             camera.OnKeyDown(e);
             GLControlMainOnUpdateFrame(sender, e);
@@ -340,14 +344,14 @@ namespace LOLViewer
         // Menu Strip Handlers
         //
 
-        void OnAbout(object sender, EventArgs e)
+        private void OnAbout(object sender, EventArgs e)
         {
             AboutWindow aboutDlg = new AboutWindow();
             aboutDlg.StartPosition = FormStartPosition.CenterParent;
             aboutDlg.ShowDialog();
         }
 
-        void OnSetDirectory(object sender, EventArgs e)
+        private void OnSetDirectory(object sender, EventArgs e)
         {
             FolderBrowserDialog dlg = new FolderBrowserDialog();
             dlg.Description = "Select the League of Legends' root installation folder.";
@@ -366,12 +370,12 @@ namespace LOLViewer
             }
         }
 
-        void OnExit(object sender, EventArgs e)
+        private void OnExit(object sender, EventArgs e)
         {
             this.Close();
         }
 
-        void OnReadModels(object sender, EventArgs e)
+        private void OnReadModels(object sender, EventArgs e)
         {
             // Clear old data.
             modelListBox.Items.Clear();
@@ -433,7 +437,7 @@ namespace LOLViewer
         // Model List Box Handlers
         //
 
-        void OnModelListDoubleClick(object sender, EventArgs e)
+        private void OnModelListDoubleClick(object sender, EventArgs e)
         {
             String modelName = (String) modelListBox.SelectedItem;
 
@@ -461,7 +465,7 @@ namespace LOLViewer
             GLControlMainOnUpdateFrame(sender, e);
         }
 
-        void OnModelListKeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e)
+        private void OnModelListKeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e)
         {
             // When enter is pressed
             if (e.KeyChar == '\r')
@@ -475,7 +479,7 @@ namespace LOLViewer
         //
         // Trackbar Handlers
         //
-        void YOffsetTrackbarOnScroll(object sender, EventArgs e)
+        private void YOffsetTrackbarOnScroll(object sender, EventArgs e)
         {
             Matrix4 world = Matrix4.Scale(modelScaleTrackbar.Value / DEFAULT_SCALE_TRACKBAR);
             world.M42 = (float)-yOffsetTrackbar.Value;
@@ -485,7 +489,7 @@ namespace LOLViewer
             GLControlMainOnPaint(sender, null);
         }
 
-        void ModelScaleTrackbarOnScroll(object sender, EventArgs e)
+        private void ModelScaleTrackbarOnScroll(object sender, EventArgs e)
         {
             Matrix4 world = Matrix4.Scale(modelScaleTrackbar.Value / DEFAULT_SCALE_TRACKBAR);
             world.M42 = (float)-yOffsetTrackbar.Value;
@@ -496,7 +500,7 @@ namespace LOLViewer
         }
 
         // Button Handlers
-        void OnResetCameraButtonClick(object sender, EventArgs e)
+        private void OnResetCameraButtonClick(object sender, EventArgs e)
         {
             camera.Reset();
 
@@ -504,7 +508,7 @@ namespace LOLViewer
             glControlMain.Invalidate();
         }
 
-        void OnBackgroundColorButtonClick(object sender, EventArgs e)
+        private void OnBackgroundColorButtonClick(object sender, EventArgs e)
         {
             ColorDialog colorDlg = new ColorDialog();
 
@@ -526,7 +530,7 @@ namespace LOLViewer
         // Search Box Handlers
         //
 
-        void OnModelSearchBoxTextChanged(object sender, EventArgs e)
+        private void OnModelSearchBoxTextChanged(object sender, EventArgs e)
         {
             String search = modelSearchBox.Text;
             search = search.ToLower();
@@ -578,7 +582,7 @@ namespace LOLViewer
             modelListBox.Invalidate();
         }
 
-        void OnModelSearchBoxKeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e)
+        private void OnModelSearchBoxKeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e)
         {
             // Note: Arrow keys don't get passed through this handler.
 
@@ -586,7 +590,7 @@ namespace LOLViewer
             OnModelListKeyPress(sender, e);
         }
 
-        void OnModelSearchBoxKeyDown(object sender, KeyEventArgs e)
+        private void OnModelSearchBoxKeyDown(object sender, KeyEventArgs e)
         {
             //
             // The default windows forms behavior will intercept the arrow key messages
@@ -618,6 +622,40 @@ namespace LOLViewer
                 // Flag the key as handled so the text box doesn't move the cursor.
                 e.Handled = true;
             }
+        }
+
+        //
+        // Checkbox Handlers
+        //
+
+        private void OnFullScreenCheckBoxClick(object sender, EventArgs e)
+        {
+            // Query resolution
+            Size resolution = SystemInformation.PrimaryMonitorSize;
+
+            // Create a full screen window.
+            FullScreenWindow fullScreenWindow = new
+                FullScreenWindow(ref renderer, ref camera, 
+                ref animationController, ref timer,
+                ref glControlMain,
+                FIELD_OF_VIEW, NEAR_PLANE, FAR_PLANE);
+
+            // Display it.
+            fullScreenWindow.ShowDialog(this);
+
+            // The full screen context makes itself the current context
+            // for OpenGL.  So, when it's done being shown, we need to make
+            // the original form the current context and redraw it.
+            glControlMain.Context.MakeCurrent(glControlMain.WindowInfo);
+
+            // Send a resize message to update the camera and renderer.
+            GLControlMainOnResize(null, null);
+
+            // Redraw
+            glControlMain.Invalidate();
+
+            // Uncheck the GUI on close. (Maybe should just make this a normal button?)
+            fullScreenCheckBox.Checked = false;
         }
         
         //

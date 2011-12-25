@@ -95,6 +95,12 @@
       <DependentUpon>AboutWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="GUI\AnimationController.cs" />
+    <Compile Include="GUI\FullScreenWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="GUI\FullScreenWindow.Designer.cs">
+      <DependentUpon>FullScreenWindow.cs</DependentUpon>
+    </Compile>
     <Compile Include="GUI\LoadingModelsWindow.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -131,6 +137,9 @@
     <Compile Include="GL\OpenTKExtras.cs" />
     <EmbeddedResource Include="GUI\AboutWindow.resx">
       <DependentUpon>AboutWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="GUI\FullScreenWindow.resx">
+      <DependentUpon>FullScreenWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="GUI\LoadingModelsWindow.resx">
       <DependentUpon>LoadingModelsWindow.cs</DependentUpon>

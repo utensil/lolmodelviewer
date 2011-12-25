@@ -69,6 +69,7 @@ namespace LOLViewer
             this.glControlTabControlSplitContainer = new System.Windows.Forms.SplitContainer();
             this.optionsTabControl = new System.Windows.Forms.TabControl();
             this.renderOptionsTab = new System.Windows.Forms.TabPage();
+            this.fullScreenCheckBox = new System.Windows.Forms.CheckBox();
             this.backgroundColorButton = new System.Windows.Forms.Button();
             this.backgroundLabel = new System.Windows.Forms.Label();
             this.cameraLabel = new System.Windows.Forms.Label();
@@ -243,6 +244,7 @@ namespace LOLViewer
             // renderOptionsTab
             // 
             this.renderOptionsTab.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.renderOptionsTab.Controls.Add(this.fullScreenCheckBox);
             this.renderOptionsTab.Controls.Add(this.backgroundColorButton);
             this.renderOptionsTab.Controls.Add(this.backgroundLabel);
             this.renderOptionsTab.Controls.Add(this.cameraLabel);
@@ -257,6 +259,16 @@ namespace LOLViewer
             this.renderOptionsTab.Size = new System.Drawing.Size(442, 130);
             this.renderOptionsTab.TabIndex = 0;
             this.renderOptionsTab.Text = "Rendering Options";
+            // 
+            // fullScreenCheckBox
+            // 
+            this.fullScreenCheckBox.AutoSize = true;
+            this.fullScreenCheckBox.Location = new System.Drawing.Point(233, 11);
+            this.fullScreenCheckBox.Name = "fullScreenCheckBox";
+            this.fullScreenCheckBox.Size = new System.Drawing.Size(79, 17);
+            this.fullScreenCheckBox.TabIndex = 8;
+            this.fullScreenCheckBox.Text = "Full Screen";
+            this.fullScreenCheckBox.UseVisualStyleBackColor = true;
             // 
             // backgroundColorButton
             // 
@@ -485,6 +497,7 @@ namespace LOLViewer
             this.Controls.Add(this.glTabModelListBoxSplitContainer);
             this.Controls.Add(this.mainWindowStatusStrip);
             this.Controls.Add(this.mainWindowMenuStrip);
+            this.DoubleBuffered = true;
             this.MainMenuStrip = this.mainWindowMenuStrip;
             this.MinimumSize = new System.Drawing.Size(640, 480);
             this.Name = "MainWindow";
@@ -555,6 +568,7 @@ namespace LOLViewer
         private System.Windows.Forms.TextBox modelSearchBox;
         private System.Windows.Forms.Label modelSearchLabel;
         private System.Windows.Forms.TrackBar timelineTrackBar;
+        private System.Windows.Forms.CheckBox fullScreenCheckBox;
     }
 }
 

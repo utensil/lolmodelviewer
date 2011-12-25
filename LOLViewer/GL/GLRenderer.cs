@@ -40,7 +40,7 @@ using OpenTK.Graphics.OpenGL;
 
 namespace LOLViewer
 {
-    class GLRenderer
+    public class GLRenderer
     {
         // Renderer Variables
         public OpenTK.Graphics.Color4 clearColor;
@@ -350,7 +350,7 @@ namespace LOLViewer
             GL.Viewport(x, y, width, height);
         }
 
-        public void OnRender(GLCamera camera)
+        public void OnRender(ref GLCamera camera)
         {
             //
             // TODO: Refactor/clean up this render loop.
