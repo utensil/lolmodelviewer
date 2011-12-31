@@ -108,6 +108,12 @@ namespace LOLViewer
                     ShaderType.VertexShader);
             }
 
+            if (result == true)
+            {
+                result = CreateShaderFromMemory("cellRigged.vert", GLShaderDefinitions.CellShadedRiggedVertex,
+                    ShaderType.VertexShader);
+            }
+
             // Create fragment shaders.
             if (result == true)
             {
@@ -133,6 +139,12 @@ namespace LOLViewer
                 // Unused atm.
                 result = CreateShaderFromMemory("phongTexOnly.frag", 
                     GLShaderDefinitions.PhongTexOnlyFragment, ShaderType.FragmentShader);
+            }
+
+            if (result == true)
+            {
+                result = CreateShaderFromMemory("cell.frag", GLShaderDefinitions.CellShadedFragment,
+                    ShaderType.FragmentShader);
             }
 
             //
@@ -233,6 +245,27 @@ namespace LOLViewer
                 uniforms.Add("u_Texture");
 
                 result = CreateProgram("phongRigged", "phongRigged.vert", "phong.frag",
+                    attributes, uniforms);
+            }
+
+            // Cell Shading with Skeletal Animation
+            if (result == true)
+            {
+                List<String> attributes = new List<String>();
+                attributes.Add("in_Position");
+                attributes.Add("in_Normal");
+                attributes.Add("in_TexCoords");
+                attributes.Add("in_BoneID");
+                attributes.Add("in_Weights");
+
+                List<String> uniforms = new List<String>();
+                uniforms.Add("u_WorldView");
+                uniforms.Add("u_WorldViewProjection");
+                uniforms.Add("u_LightDirection");
+                uniforms.Add("u_BoneTransform");
+                uniforms.Add("u_Texture");
+
+                result = CreateProgram("cellRigged", "cellRigged.vert", "cell.frag",
                     attributes, uniforms);
             }
 
@@ -418,7 +451,7 @@ namespace LOLViewer
             // Load shaders for Phong lit rigged models.
             //
 
-            if (rModels.Count > 0 || true)
+            if (rModels.Count > 0)
             {
                 program = programs["phongRigged"];
                 program.Load();

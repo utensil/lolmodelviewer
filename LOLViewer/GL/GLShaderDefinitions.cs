@@ -122,7 +122,60 @@ namespace LOLViewer
 	                v_ViewSpacePosition = ( u_WorldView * vec4(in_Position, 1.0) ).xyz;
 
 	                // Only take to view space
-	                v_Normal = ( normalize( u_WorldView * vec4(normal, 0.0) ) ).xyz;
+	                v_Normal = ( u_WorldView * vec4(normal, 0.0) ).xyz;
+                    v_Normal = normalize( v_Normal );
+
+	                v_TexCoords = in_TexCoords;
+                }";
+
+        public const String CellShadedRiggedVertex
+            = @"#version 150
+
+                //
+                // Vertex Shader for Skeletal Animation and Cell-Shading.
+                // Supports 4 bones per vertex.
+                // - James Lammlein
+                //
+
+                uniform mat4  u_WorldView;		// we need vector from vertex to eye
+                uniform mat4  u_WorldViewProjection;	// normal transform for vertex
+                uniform vec3  u_LightDirection; 
+                uniform float u_BoneScale[128];
+                uniform mat4  u_BoneTransform[128];
+
+                in  vec3  in_Position;
+                in  vec3  in_Normal;
+                in  vec2  in_TexCoords;
+                in  vec4  in_BoneID;
+                in  vec4  in_Weights;
+
+                out vec3 v_VertexToLight;
+                out vec3 v_Normal;
+                out vec2 v_TexCoords;
+
+                void main(void) 
+                {
+                    // Transform the vertex information based on bones.
+                    vec3 position = (in_Weights[0] * (u_BoneTransform[ int(in_BoneID[0]) ] * vec4(in_Position, 1.0)).xyz) +
+                                    (in_Weights[1] * (u_BoneTransform[ int(in_BoneID[1]) ] * vec4(in_Position, 1.0)).xyz) +
+                                    (in_Weights[2] * (u_BoneTransform[ int(in_BoneID[2]) ] * vec4(in_Position, 1.0)).xyz) +
+                                    (in_Weights[3] * (u_BoneTransform[ int(in_BoneID[3]) ] * vec4(in_Position, 1.0)).xyz); 
+
+                    vec3 normal =   (in_Weights[0] * (u_BoneTransform[ int(in_BoneID[0]) ] * vec4(in_Normal, 0.0)).xyz) +
+                                    (in_Weights[1] * (u_BoneTransform[ int(in_BoneID[1]) ] * vec4(in_Normal, 0.0)).xyz) +
+                                    (in_Weights[2] * (u_BoneTransform[ int(in_BoneID[2]) ] * vec4(in_Normal, 0.0)).xyz) +
+                                    (in_Weights[3] * (u_BoneTransform[ int(in_BoneID[3]) ] * vec4(in_Normal, 0.0)).xyz);
+
+	                // The normal graphic's pipeline transform.
+    	            gl_Position = u_WorldViewProjection * vec4( position, 1.0 );
+
+	                // Required for phong lighting
+	                vec3 viewLightDirection = ( u_WorldView * vec4(u_LightDirection, 0.0) ).xyz;
+	                v_VertexToLight = normalize( viewLightDirection );
+
+	                // Only take to view space
+	                v_Normal = ( u_WorldView * vec4(normal, 0.0) ).xyz;
+                    v_Normal = normalize( v_Normal );
 
 	                v_TexCoords = in_TexCoords;
                 }";
@@ -174,7 +227,7 @@ namespace LOLViewer
    	                    gl_FragColor = texture2D( u_Texture, v_TexCoords );
                     }";
 
-        public const String PhongFragment 
+        public const String PhongFragment
              = @"
                 #version 150
 
@@ -224,6 +277,55 @@ namespace LOLViewer
 	                gl_FragColor = u_KA * ambient;
                     gl_FragColor += u_KD * diffuse;
                     gl_FragColor += u_KS * specular;
+                }";
+
+        public const String CellShadedFragment
+             = @"
+                #version 150
+
+                //
+                // Implements a cell-shaded lighting model. - James Lammlein
+                //
+
+                precision highp float;
+
+                uniform sampler2D 	u_Texture;
+
+                in vec3 v_VertexToLight;
+                in vec3 v_Normal;
+                in vec2 v_TexCoords;
+                out vec4 gl_FragColor;
+ 
+                void main(void) 
+                {
+                    // Use the texture as the default color.
+   	                gl_FragColor = texture2D( u_Texture, v_TexCoords );
+
+                    // Compute the intensity of light at this pixel.
+                    vec3 L = v_VertexToLight;
+                    float intensity = dot( vec3( L ), v_Normal );
+                    intensity = clamp(intensity, 0.0, 1.0);
+
+                    // Quantize based on the intensity to four possible values.
+                    if (intensity > 0.8)
+                    {
+                        intensity = 1.0;
+                    }
+                    else if (intensity > 0.35)
+                    {
+                        intensity = 0.90;
+                    }
+                    else if (intensity > 0.2)
+                    {
+                        intensity = 0.75;
+                    }
+                    else
+                    {
+                        intensity = 0.5;
+                    }
+                    
+                    // Modify the color based on the intensity.
+                    gl_FragColor *= intensity;
                 }";
 
         public const String TextureSamplerFragment
