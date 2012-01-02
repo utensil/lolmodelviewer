@@ -264,6 +264,13 @@ namespace LOLViewer
                 uniforms.Add("u_LightDirection");
                 uniforms.Add("u_BoneTransform");
                 uniforms.Add("u_Texture");
+                uniforms.Add("u_QOne");
+                uniforms.Add("u_QTwo");
+                uniforms.Add("u_QThree");
+                uniforms.Add("u_ValueOne");
+                uniforms.Add("u_ValueTwo");
+                uniforms.Add("u_ValueThree");
+                uniforms.Add("u_ValueFour");
 
                 result = CreateProgram("cellRigged", "cellRigged.vert", "cell.frag",
                     attributes, uniforms);
@@ -469,6 +476,27 @@ namespace LOLViewer
                 program.UpdateUniform("u_KS", 0.05f);
                 program.UpdateUniform("u_SExponent", 8.0f);
             }
+
+            // Cell Shading Test
+            //if (rModels.Count > 0)
+            //{
+            //    program = programs["cellRigged"];
+            //    program.Load();
+
+            //    //
+            //    // Update parameters for cell shading.
+            //    //
+
+            //    // Fragment Shader Uniforms
+            //    program.UpdateUniform("u_LightDirection", new Vector3(0.0f, 0.0f, 1.0f));
+            //    program.UpdateUniform("u_QOne", 0.9f);
+            //    program.UpdateUniform("u_QTwo", 0.5f);
+            //    program.UpdateUniform("u_QThree", 0.3f);
+            //    program.UpdateUniform("u_ValueOne", 1.1f);
+            //    program.UpdateUniform("u_ValueTwo", 1.0f);
+            //    program.UpdateUniform("u_ValueThree", 0.9f);
+            //    program.UpdateUniform("u_ValueFour", 0.8f);
+            //}
 
             // Draw Model
             foreach (var r in rModels)

@@ -291,6 +291,17 @@ namespace LOLViewer
 
                 uniform sampler2D 	u_Texture;
 
+                // Quantization levels.
+                uniform float       u_QOne;
+                uniform float       u_QTwo;
+                uniform float       u_QThree;
+
+                // Quantization values.
+                uniform float       u_ValueOne;
+                uniform float       u_ValueTwo;
+                uniform float       u_ValueThree;
+                uniform float       u_ValueFour;
+
                 in vec3 v_VertexToLight;
                 in vec3 v_Normal;
                 in vec2 v_TexCoords;
@@ -299,7 +310,7 @@ namespace LOLViewer
                 void main(void) 
                 {
                     // Use the texture as the default color.
-   	                gl_FragColor = texture2D( u_Texture, v_TexCoords );
+   	                gl_FragColor = texture2D( u_Texture, v_TexCoords );                  
 
                     // Compute the intensity of light at this pixel.
                     vec3 L = v_VertexToLight;
@@ -307,21 +318,21 @@ namespace LOLViewer
                     intensity = clamp(intensity, 0.0, 1.0);
 
                     // Quantize based on the intensity to four possible values.
-                    if (intensity > 0.8)
+                    if (intensity > u_QOne)
                     {
-                        intensity = 1.0;
+                        intensity = u_ValueOne;
                     }
-                    else if (intensity > 0.35)
+                    else if (intensity > u_QTwo)
                     {
-                        intensity = 0.90;
+                        intensity = u_ValueTwo;
                     }
-                    else if (intensity > 0.2)
+                    else if (intensity > u_QThree)
                     {
-                        intensity = 0.75;
+                        intensity = u_ValueThree;
                     }
                     else
                     {
-                        intensity = 0.5;
+                        intensity = u_ValueFour;
                     }
                     
                     // Modify the color based on the intensity.
