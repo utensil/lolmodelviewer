@@ -426,11 +426,15 @@ namespace LOLViewer
             }
 
             // Populate the model list box.
+            modelListBox.BeginUpdate();
+
             List<String> modelNames = reader.GetModelNames();
             foreach (String name in modelNames)
             {
                 modelListBox.Items.Add(name);
             }
+
+            modelListBox.EndUpdate();
         }
 
         //
@@ -548,6 +552,8 @@ namespace LOLViewer
             //else
             // We can search off of the last subset of strings.
 
+            modelListBox.BeginUpdate();
+
             lastSearch = search;
             modelListBox.Items.Clear();
 
@@ -578,8 +584,7 @@ namespace LOLViewer
             if (modelListBox.Items.Count > 0)
                 modelListBox.SelectedIndex = 0;
 
-            // Redraw the list box.
-            modelListBox.Invalidate();
+            modelListBox.EndUpdate();
         }
 
         private void OnModelSearchBoxKeyPress(object sender, System.Windows.Forms.KeyPressEventArgs e)
