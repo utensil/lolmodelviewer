@@ -522,13 +522,13 @@ namespace LOLViewer
         }
 
         public void SetCurrentFrame( int frame, float percentTowardsNextFrame )
-        {
-            // Set frame.
-            currentFrame = frame % (int)animations[currentAnimation].numberOfFrames;
-
-            // Set elapsed time towards the next frame.
+        {  
             if (animations.ContainsKey(currentAnimation) == true)
             {
+                // Set frame.
+                currentFrame = frame % (int)animations[currentAnimation].numberOfFrames;
+
+                // Set elapsed time towards the next frame.
                 currentFrameTime = percentTowardsNextFrame * animations[currentAnimation].timePerFrame;
             }
         }
