@@ -47,7 +47,7 @@ namespace LOLViewer
         public UInt32 numberOfFrames;
 
         // I think this is the play back FPS for the animation.
-        public UInt32 magicFour;
+        public UInt32 playbackFPS;
 
         public List<ANMBone> bones;
 
@@ -63,14 +63,14 @@ namespace LOLViewer
             numberOfBones = 0;
             numberOfFrames = 0;
 
-            magicFour = 0;
+            playbackFPS = 0;
 
             bones = new List<ANMBone>();
         }
 
         public void ToGLAnimation( ref GLAnimation animation )
         {
-            animation.playbackFPS = magicFour;
+            animation.playbackFPS = playbackFPS;
             animation.numberOfBones = numberOfBones;
             animation.numberOfFrames = numberOfFrames;
             animation.bones = bones;

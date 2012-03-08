@@ -679,6 +679,23 @@ namespace LOLViewer
             return result;
         }
 
+        // TODO: Doesn't support multiple models.
+        public List<String> GetAnimationsInCurrentModel()
+        {
+            List<String> result = new List<String>();
+
+            foreach (var m in rModels)
+            {
+                foreach (var animation in m.Value.animations)
+                {
+                    result.Add(animation.Key);
+                }
+                break;
+            }
+
+            return result;
+        }
+
         public void OnUpdate(float elapsedTime)
         {
             foreach (var m in rModels)
