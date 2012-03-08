@@ -453,9 +453,9 @@ namespace LOLViewer
                 bool result = renderer.LoadModel(model);
 
                 currentAnimationComboBox.Items.Clear();
-                foreach (var a in model.animations)
+                foreach (String name in renderer.GetAnimationsInCurrentModel())
                 {
-                    currentAnimationComboBox.Items.Add(a.Key);
+                    currentAnimationComboBox.Items.Add(name);
                 }
 
                 currentAnimationComboBox.Text = "";
