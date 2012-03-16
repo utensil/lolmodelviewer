@@ -73,7 +73,7 @@ namespace LOLViewer
 
         public Dictionary<MouseButtons, bool> mouseState;
         public int wheelDelta;
-        private const float WHEEL_SCALE = 0.001f;
+        private const float WHEEL_SCALE = 0.0005f;
 
         private bool wasDraggedSinceLastUpdate;
         private const float RADIUS_SCALE = 0.0125f;
