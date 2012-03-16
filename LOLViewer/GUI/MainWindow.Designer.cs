@@ -69,7 +69,6 @@ namespace LOLViewer
             this.glControlTabControlSplitContainer = new System.Windows.Forms.SplitContainer();
             this.optionsTabControl = new System.Windows.Forms.TabControl();
             this.renderOptionsTab = new System.Windows.Forms.TabPage();
-            this.fullScreenCheckBox = new System.Windows.Forms.CheckBox();
             this.backgroundColorButton = new System.Windows.Forms.Button();
             this.backgroundLabel = new System.Windows.Forms.Label();
             this.cameraLabel = new System.Windows.Forms.Label();
@@ -91,6 +90,7 @@ namespace LOLViewer
             this.modelListBox = new System.Windows.Forms.ListBox();
             this.modelSearchBox = new System.Windows.Forms.TextBox();
             this.modelSearchLabel = new System.Windows.Forms.Label();
+            this.fullscreenButton = new System.Windows.Forms.Button();
             this.mainWindowMenuStrip.SuspendLayout();
             this.mainWindowStatusStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.glControlTabControlSplitContainer)).BeginInit();
@@ -244,7 +244,7 @@ namespace LOLViewer
             // renderOptionsTab
             // 
             this.renderOptionsTab.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.renderOptionsTab.Controls.Add(this.fullScreenCheckBox);
+            this.renderOptionsTab.Controls.Add(this.fullscreenButton);
             this.renderOptionsTab.Controls.Add(this.backgroundColorButton);
             this.renderOptionsTab.Controls.Add(this.backgroundLabel);
             this.renderOptionsTab.Controls.Add(this.cameraLabel);
@@ -260,19 +260,9 @@ namespace LOLViewer
             this.renderOptionsTab.TabIndex = 0;
             this.renderOptionsTab.Text = "Rendering Options";
             // 
-            // fullScreenCheckBox
-            // 
-            this.fullScreenCheckBox.AutoSize = true;
-            this.fullScreenCheckBox.Location = new System.Drawing.Point(233, 11);
-            this.fullScreenCheckBox.Name = "fullScreenCheckBox";
-            this.fullScreenCheckBox.Size = new System.Drawing.Size(79, 17);
-            this.fullScreenCheckBox.TabIndex = 8;
-            this.fullScreenCheckBox.Text = "Full Screen";
-            this.fullScreenCheckBox.UseVisualStyleBackColor = true;
-            // 
             // backgroundColorButton
             // 
-            this.backgroundColorButton.Location = new System.Drawing.Point(143, 85);
+            this.backgroundColorButton.Location = new System.Drawing.Point(231, 25);
             this.backgroundColorButton.Name = "backgroundColorButton";
             this.backgroundColorButton.Size = new System.Drawing.Size(75, 23);
             this.backgroundColorButton.TabIndex = 7;
@@ -282,7 +272,7 @@ namespace LOLViewer
             // backgroundLabel
             // 
             this.backgroundLabel.AutoSize = true;
-            this.backgroundLabel.Location = new System.Drawing.Point(148, 66);
+            this.backgroundLabel.Location = new System.Drawing.Point(236, 9);
             this.backgroundLabel.Name = "backgroundLabel";
             this.backgroundLabel.Size = new System.Drawing.Size(65, 13);
             this.backgroundLabel.TabIndex = 6;
@@ -309,7 +299,7 @@ namespace LOLViewer
             // modelScaleLabel
             // 
             this.modelScaleLabel.AutoSize = true;
-            this.modelScaleLabel.Location = new System.Drawing.Point(30, 66);
+            this.modelScaleLabel.Location = new System.Drawing.Point(38, 65);
             this.modelScaleLabel.Name = "modelScaleLabel";
             this.modelScaleLabel.Size = new System.Drawing.Size(66, 13);
             this.modelScaleLabel.TabIndex = 3;
@@ -318,29 +308,31 @@ namespace LOLViewer
             // modelScaleTrackbar
             // 
             this.modelScaleTrackbar.LargeChange = 50;
-            this.modelScaleTrackbar.Location = new System.Drawing.Point(6, 85);
+            this.modelScaleTrackbar.Location = new System.Drawing.Point(6, 84);
             this.modelScaleTrackbar.Maximum = 210;
             this.modelScaleTrackbar.Minimum = 10;
             this.modelScaleTrackbar.Name = "modelScaleTrackbar";
             this.modelScaleTrackbar.Size = new System.Drawing.Size(131, 45);
             this.modelScaleTrackbar.TabIndex = 2;
             this.modelScaleTrackbar.TickFrequency = 50;
+            this.modelScaleTrackbar.TickStyle = System.Windows.Forms.TickStyle.None;
             this.modelScaleTrackbar.Value = 110;
             // 
             // yOffsetTrackbar
             // 
             this.yOffsetTrackbar.LargeChange = 25;
-            this.yOffsetTrackbar.Location = new System.Drawing.Point(6, 25);
+            this.yOffsetTrackbar.Location = new System.Drawing.Point(6, 31);
             this.yOffsetTrackbar.Maximum = 100;
             this.yOffsetTrackbar.Name = "yOffsetTrackbar";
             this.yOffsetTrackbar.Size = new System.Drawing.Size(131, 45);
             this.yOffsetTrackbar.TabIndex = 1;
             this.yOffsetTrackbar.TickFrequency = 25;
+            this.yOffsetTrackbar.TickStyle = System.Windows.Forms.TickStyle.None;
             // 
             // VerticalOffsetLabel
             // 
             this.VerticalOffsetLabel.AutoSize = true;
-            this.VerticalOffsetLabel.Location = new System.Drawing.Point(26, 9);
+            this.VerticalOffsetLabel.Location = new System.Drawing.Point(33, 15);
             this.VerticalOffsetLabel.Name = "VerticalOffsetLabel";
             this.VerticalOffsetLabel.Size = new System.Drawing.Size(77, 13);
             this.VerticalOffsetLabel.TabIndex = 0;
@@ -403,7 +395,7 @@ namespace LOLViewer
             // currentAnimationComboBox
             // 
             this.currentAnimationComboBox.FormattingEnabled = true;
-            this.currentAnimationComboBox.Location = new System.Drawing.Point(270, 25);
+            this.currentAnimationComboBox.Location = new System.Drawing.Point(270, 28);
             this.currentAnimationComboBox.Name = "currentAnimationComboBox";
             this.currentAnimationComboBox.Size = new System.Drawing.Size(121, 21);
             this.currentAnimationComboBox.TabIndex = 2;
@@ -411,7 +403,7 @@ namespace LOLViewer
             // currentAnimationLabel
             // 
             this.currentAnimationLabel.AutoSize = true;
-            this.currentAnimationLabel.Location = new System.Drawing.Point(284, 9);
+            this.currentAnimationLabel.Location = new System.Drawing.Point(284, 12);
             this.currentAnimationLabel.Name = "currentAnimationLabel";
             this.currentAnimationLabel.Size = new System.Drawing.Size(90, 13);
             this.currentAnimationLabel.TabIndex = 1;
@@ -420,7 +412,7 @@ namespace LOLViewer
             // enableAnimationCheckBox
             // 
             this.enableAnimationCheckBox.AutoSize = true;
-            this.enableAnimationCheckBox.Location = new System.Drawing.Point(9, 9);
+            this.enableAnimationCheckBox.Location = new System.Drawing.Point(14, 11);
             this.enableAnimationCheckBox.Name = "enableAnimationCheckBox";
             this.enableAnimationCheckBox.Size = new System.Drawing.Size(108, 17);
             this.enableAnimationCheckBox.TabIndex = 0;
@@ -488,6 +480,15 @@ namespace LOLViewer
             this.modelSearchLabel.Size = new System.Drawing.Size(41, 13);
             this.modelSearchLabel.TabIndex = 15;
             this.modelSearchLabel.Text = "Search";
+            // 
+            // fullscreenButton
+            // 
+            this.fullscreenButton.Location = new System.Drawing.Point(143, 66);
+            this.fullscreenButton.Name = "fullscreenButton";
+            this.fullscreenButton.Size = new System.Drawing.Size(75, 23);
+            this.fullscreenButton.TabIndex = 8;
+            this.fullscreenButton.Text = "Fullscreen";
+            this.fullscreenButton.UseVisualStyleBackColor = true;
             // 
             // MainWindow
             // 
@@ -568,7 +569,7 @@ namespace LOLViewer
         private System.Windows.Forms.TextBox modelSearchBox;
         private System.Windows.Forms.Label modelSearchLabel;
         private System.Windows.Forms.TrackBar timelineTrackBar;
-        private System.Windows.Forms.CheckBox fullScreenCheckBox;
+        private System.Windows.Forms.Button fullscreenButton;
     }
 }
 

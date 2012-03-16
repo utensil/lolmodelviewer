@@ -166,9 +166,7 @@ namespace LOLViewer
             // Buttons
             resetCameraButton.Click += new EventHandler(OnResetCameraButtonClick);
             backgroundColorButton.Click += new EventHandler(OnBackgroundColorButtonClick);
-
-            // Checkboxes
-            fullScreenCheckBox.Click += new EventHandler(OnFullScreenCheckBoxClick);
+            fullscreenButton.Click += new EventHandler(OnFullscreenButtonClick);
 
             //
             // Animation Controller
@@ -528,6 +526,30 @@ namespace LOLViewer
             }
         }
 
+        private void OnFullscreenButtonClick(object sender, EventArgs e)
+        {
+            // Create a full screen window.
+            FullScreenWindow fullScreenWindow = new
+                FullScreenWindow(ref renderer, ref camera,
+                ref animationController,
+                ref glControlMain,
+                FIELD_OF_VIEW, NEAR_PLANE, FAR_PLANE);
+
+            // Display it.
+            fullScreenWindow.ShowDialog(this);
+
+            // The full screen context makes itself the current context
+            // for OpenGL.  So, when it's done being shown, we need to make
+            // the original form the current context and redraw it.
+            glControlMain.Context.MakeCurrent(glControlMain.WindowInfo);
+
+            // Send a resize message to update the camera and renderer.
+            GLControlMainOnResize(null, null);
+
+            // Redraw
+            glControlMain.Invalidate();
+        }
+
         //
         // Search Box Handlers
         //
@@ -625,40 +647,6 @@ namespace LOLViewer
                 // Flag the key as handled so the text box doesn't move the cursor.
                 e.Handled = true;
             }
-        }
-
-        //
-        // Checkbox Handlers
-        //
-
-        private void OnFullScreenCheckBoxClick(object sender, EventArgs e)
-        {
-            // Query resolution
-            Size resolution = SystemInformation.PrimaryMonitorSize;
-
-            // Create a full screen window.
-            FullScreenWindow fullScreenWindow = new
-                FullScreenWindow(ref renderer, ref camera, 
-                ref animationController,
-                ref glControlMain,
-                FIELD_OF_VIEW, NEAR_PLANE, FAR_PLANE);
-
-            // Display it.
-            fullScreenWindow.ShowDialog(this);
-
-            // The full screen context makes itself the current context
-            // for OpenGL.  So, when it's done being shown, we need to make
-            // the original form the current context and redraw it.
-            glControlMain.Context.MakeCurrent(glControlMain.WindowInfo);
-
-            // Send a resize message to update the camera and renderer.
-            GLControlMainOnResize(null, null);
-
-            // Redraw
-            glControlMain.Invalidate();
-
-            // Uncheck the GUI on close. (Maybe should just make this a normal button?)
-            fullScreenCheckBox.Checked = false;
         }
     }
 }
