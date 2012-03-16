@@ -73,11 +73,13 @@ namespace LOLViewer
 
         public Dictionary<MouseButtons, bool> mouseState;
         public int wheelDelta;
-        private const float WHEEL_SCALE = 0.1f;
+        private const float WHEEL_SCALE = 0.001f;
 
         private bool wasDraggedSinceLastUpdate;
         private const float RADIUS_SCALE = 0.0125f;
-        private float radius, defaultRadius, minRadius, maxRadius;
+        private float radius, defaultRadius;
+        private const float MINIMUM_RADIUS = 35.0f;
+        private const float MAXIMUM_RADIUS = 800.0f;
         private GLArcBall viewArcBall;
         private Matrix4 lastRotation;
         private bool updateLastRotation;
@@ -114,13 +116,10 @@ namespace LOLViewer
             mouseState.Add(MouseButtons.Right, false);
             mouseState.Add(MouseButtons.Middle, false);
 
-
             viewArcBall = new GLArcBall();
 
             wasDraggedSinceLastUpdate = false;
             radius = defaultRadius = 300.0f;
-            minRadius = 20.0f;
-            maxRadius = 1000.0f;
 
             viewArcBall.SetRadius(radius * RADIUS_SCALE);
 
@@ -216,10 +215,10 @@ namespace LOLViewer
             // Update radius from mouse wheel.
             if (wheelDelta != 0)
             {
-                radius -= wheelDelta * WHEEL_SCALE;
+                radius -= wheelDelta * radius * WHEEL_SCALE;
             }
-            radius = Math.Min(radius, maxRadius);
-            radius = Math.Max(radius, minRadius);
+            radius = Math.Min(radius, MAXIMUM_RADIUS);
+            radius = Math.Max(radius, MINIMUM_RADIUS);
             viewArcBall.SetRadius(radius * RADIUS_SCALE);
             wheelDelta = 0;
 
@@ -235,7 +234,7 @@ namespace LOLViewer
                         invCamRotation);
 
             // Update the camera's eye.
-            eye = (target - worldAhead) * radius;
+            eye = target - (worldAhead * radius);
 
             // Update view.
             view = Matrix4.LookAt(eye, target, worldUp);
