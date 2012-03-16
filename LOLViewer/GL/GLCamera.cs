@@ -70,14 +70,12 @@ namespace LOLViewer
         public Matrix4 handConverter;
 
         public Dictionary<CameraKeyValues, bool> keyState;
-        public const float MOVEMENT_SCALE = 100.0f;
 
         public Dictionary<MouseButtons, bool> mouseState;
         public int wheelDelta;
         private const float WHEEL_SCALE = 0.1f;
 
         private bool wasDraggedSinceLastUpdate;
-        private Vector3 center;
         private const float RADIUS_SCALE = 0.0125f;
         private float radius, defaultRadius, minRadius, maxRadius;
         private GLArcBall viewArcBall;
@@ -120,7 +118,6 @@ namespace LOLViewer
             viewArcBall = new GLArcBall();
 
             wasDraggedSinceLastUpdate = false;
-            center = Vector3.Zero;
             radius = defaultRadius = 300.0f;
             minRadius = 20.0f;
             maxRadius = 1000.0f;
@@ -279,7 +276,9 @@ namespace LOLViewer
             radius = eyeToPoint.Length;
             viewArcBall.SetRadius(radius * RADIUS_SCALE);
 
+            // Force camera to update.
             wasDraggedSinceLastUpdate = true;
+            OnUpdate();
         }
 
         /// <summary>
@@ -304,6 +303,10 @@ namespace LOLViewer
 
             // Update arc ball.
             viewArcBall.SetWindow(width, height);
+
+            // Force camera to update.
+            wasDraggedSinceLastUpdate = true;
+            OnUpdate();
         }
 
         public void Reset()
@@ -315,14 +318,13 @@ namespace LOLViewer
             viewArcBall.Reset();
             viewArcBall.SetRadius(radius * RADIUS_SCALE);
 
-            wasDraggedSinceLastUpdate = true;
-
             lastRotation = Matrix4.Identity;
             updateLastRotation = false;
 
             keyState[CameraKeyValues.Reset] = false;
 
-            // Force camera to update it's view params.
+            // Force camera to update.
+            wasDraggedSinceLastUpdate = true;
             OnUpdate();
         }
     }
