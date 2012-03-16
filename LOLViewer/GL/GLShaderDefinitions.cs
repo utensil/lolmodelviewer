@@ -37,7 +37,8 @@ namespace LOLViewer
     class GLShaderDefinitions
     {
         public const String PhongVertex
-            = @"#version 150
+            = @"
+                #version 150
 
                 //
                 // Vertex Shader for Phong Lighting. - James Lammlein
@@ -74,7 +75,8 @@ namespace LOLViewer
                 }";
 
         public const String PhongRiggedVertex
-            = @"#version 150
+            = @"
+                #version 150
 
                 //
                 // Vertex Shader for Skeletal Animation and Phong Lighting.
@@ -129,7 +131,8 @@ namespace LOLViewer
                 }";
 
         public const String CellShadedRiggedVertex
-            = @"#version 150
+            = @"
+                #version 150
 
                 //
                 // Vertex Shader for Skeletal Animation and Cell-Shading.
@@ -182,7 +185,6 @@ namespace LOLViewer
 
         public const String TransformTexturedVertex
                  = @"
-
                     #version 150
 
                     //
@@ -205,7 +207,8 @@ namespace LOLViewer
                     }";
 
         public const String PhongTexOnlyFragment
-                 = @"#version 150
+                 = @"
+                    #version 150
 
                     //
                     // This shader doesn't actually implement phong lighting.

@@ -272,10 +272,8 @@ namespace LOLViewer
 
         public void GLControlMainOnUpdateFrame(object sender, EventArgs e)
         {
-            double elapsedTime = ComputeElapsedTime();
-
             // Update camera and animation controller.
-            camera.OnUpdate((float) elapsedTime);
+            camera.OnUpdate();
             animationController.OnApplicationIdle(sender, e);
 
             // Hacky, prevents double invalidation.
@@ -641,7 +639,7 @@ namespace LOLViewer
             // Create a full screen window.
             FullScreenWindow fullScreenWindow = new
                 FullScreenWindow(ref renderer, ref camera, 
-                ref animationController, ref timer,
+                ref animationController,
                 ref glControlMain,
                 FIELD_OF_VIEW, NEAR_PLANE, FAR_PLANE);
 
@@ -661,19 +659,6 @@ namespace LOLViewer
 
             // Uncheck the GUI on close. (Maybe should just make this a normal button?)
             fullScreenCheckBox.Checked = false;
-        }
-        
-        //
-        // Helper Functions
-        //
-
-        public double ComputeElapsedTime()
-        {
-            timer.Stop();
-            double elapsedTime = timer.Elapsed.TotalSeconds;
-            timer.Reset();
-            timer.Start();
-            return elapsedTime;
         }
     }
 }
