@@ -47,7 +47,6 @@ namespace LOLViewer.GUI
     {
         // Windowing variables
         private bool isGLLoaded;
-        private Stopwatch timer;
 
         // Main OpenGL Control
         private GLControl mainGLControl;
@@ -62,7 +61,7 @@ namespace LOLViewer.GUI
         private AnimationController animationController;
 
         public FullScreenWindow(ref GLRenderer renderer, ref GLCamera camera,
-            ref AnimationController animationController, ref Stopwatch timer,
+            ref AnimationController animationController,
             ref GLControl control,
             float fieldOfView, float nearPlane, float farPlane)
         {
@@ -70,7 +69,6 @@ namespace LOLViewer.GUI
             this.renderer = renderer;
             this.camera = camera;
             this.animationController = animationController;
-            this.timer = timer;
             this.fieldOfView = fieldOfView;
             this.nearPlane = nearPlane;
             this.farPlane = farPlane;
@@ -142,17 +140,12 @@ namespace LOLViewer.GUI
 
             // Call an initial resize to get some camera and renderer parameters set up.
             GLControlMainOnResize(sender, e);
-
-            timer.Reset();
-            timer.Start();
         }
 
         public void GLControlMainOnUpdateFrame(object sender, EventArgs e)
         {
-            double elapsedTime = ComputeElapsedTime();
-
             // Update camera and animation controller.
-            camera.OnUpdate((float)elapsedTime);
+            camera.OnUpdate();
             animationController.OnApplicationIdle(sender, e);
 
             // Hacky, prevents double invalidation.
@@ -211,19 +204,6 @@ namespace LOLViewer.GUI
                 this.Close();
                 return;
             }
-        }
-
-        //
-        // Helper Functions
-        //
-
-        public double ComputeElapsedTime()
-        {
-            timer.Stop();
-            double elapsedTime = timer.Elapsed.TotalSeconds;
-            timer.Reset();
-            timer.Start();
-            return elapsedTime;
         }
     }
 }

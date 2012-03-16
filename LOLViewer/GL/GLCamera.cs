@@ -71,7 +71,6 @@ namespace LOLViewer
 
         public Dictionary<CameraKeyValues, bool> keyState;
         public const float MOVEMENT_SCALE = 100.0f;
-        public Vector3 velocity;
 
         public Dictionary<MouseButtons, bool> mouseState;
         public int wheelDelta;
@@ -105,7 +104,6 @@ namespace LOLViewer
             bindings.Add(Keys.S, CameraKeyValues.Backward  );
             bindings.Add(Keys.R, CameraKeyValues.Reset     );
             
-            velocity = Vector3.Zero;
             keyState = new Dictionary<CameraKeyValues, bool>();
             for (CameraKeyValues i = 0; i < CameraKeyValues.Size; ++i)
             {
@@ -196,52 +194,27 @@ namespace LOLViewer
             }
         }
 
-        public void OnUpdate(float elapsedTime)
+        public void OnUpdate()
         {
             if (keyState[CameraKeyValues.Reset] == true)
             {
                 Reset();
             }
 
+            //
+            // If the camera hasn't been dragged, we don't need to update its values.
+            //
             if (wasDraggedSinceLastUpdate == false)
+            {
                 return;
+            }
+
+            // We're updating it now.  So, toggle the flag.
             wasDraggedSinceLastUpdate = false;
 
-            // Not doing translation at the moment.
-            /*
-            if (keyState[CameraKeyValues.Left] == true)
-            {
-                keyboardDirection.X += -1.0f;
-            }
-
-            if (keyState[CameraKeyValues.Right] == true)
-            {
-                keyboardDirection.X += 1.0f;
-            }
-
-            if (keyState[CameraKeyValues.Backward] == true)
-            {
-                keyboardDirection.X += 1.0f;
-            }
-
-            if (keyState[CameraKeyValues.Forward] == true)
-            {
-                keyboardDirection.X += -1.0f;
-            }
-            */
-
             //
-            // Calculate rotation and translation vectors.
+            // Calculate rotation.
             //
-
-            if (velocity.Length > 0.0f)
-            {
-                velocity.Normalize();
-            }
-            velocity *= MOVEMENT_SCALE;
-
-            // Integrate
-            Vector3 positionDelta = velocity * elapsedTime;
 
             // Update radius from mouse wheel.
             if (wheelDelta != 0)
@@ -264,16 +237,10 @@ namespace LOLViewer
             Vector3 worldAhead = Vector3.Transform( new Vector3(0.0f, 0.0f, 1.0f),
                         invCamRotation);
 
-            // Transform delta position
-            Vector3 posDeltaWorld = Vector3.Transform(positionDelta, invCamRotation);
-            
-            // Move position
-            target += posDeltaWorld;
+            // Update the camera's eye.
+            eye = (target - worldAhead) * radius;
 
-            // Update eye
-            eye = target - worldAhead * radius;
-
-            // Update view
+            // Update view.
             view = Matrix4.LookAt(eye, target, worldUp);
             view = handConverter * view;
 
@@ -290,19 +257,21 @@ namespace LOLViewer
         /// <summary>
         /// Set up the view parameters for the camera.
         /// </summary>
-        /// <param name="eye">We the eye of the camera is located.</param>
-        /// <param name="target">We the eye of the camera is looking.</param>
+        /// <param name="eye">The location of the eye of the camera.</param>
+        /// <param name="target">The direction of the camera.</param>
         public void SetViewParameters(Vector3 eye, Vector3 target)
         {
+            // Store parameters
             this.eye = this.defaultEye = eye;
             this.target = this.defaultTarget = target;
 
-            view = Matrix4.LookAt(eye, target, new Vector3(0.0f, 1.0f, 0.0f));
+            // Update view matrix.
+            Matrix4 rotation = Matrix4.LookAt(eye, target, new Vector3(0.0f, 1.0f, 0.0f));
+            view = rotation;
             view = handConverter * view;
 
-            // Update arc ball
-            Matrix4 rotation = Matrix4.LookAt(eye, target, new Vector3(0.0f, 1.0f, 0.0f));
-            Quaternion quat = OpenTKExtras.Matrix4.CreateQuatFromMatrix( rotation );
+            // Update arc ball.
+            Quaternion quat = OpenTKExtras.Matrix4.CreateQuatFromMatrix(rotation);
             viewArcBall.SetNowQuat(quat);
 
             // Update radius
@@ -316,21 +285,24 @@ namespace LOLViewer
         /// <summary>
         /// Set up the projection matrix for the camera.
         /// </summary>
-        /// <param name="fov">In radians.</param>
-        /// <param name="width">Width of window.</param>
-        /// <param name="height">Height of window.</param>
-        /// <param name="near">Near clipping plane.</param>
-        /// <param name="far">Far clipping plane.</param>
+        /// <param name="fov">The field of view. (in radians)</param>
+        /// <param name="width">The width of window.</param>
+        /// <param name="height">The height of window.</param>
+        /// <param name="near">The near clipping plane.</param>
+        /// <param name="far">The far clipping plane.</param>
         public void SetProjectionParameters(float fov, float width, float height, 
             float near, float far)
         {
+            // Store parameters.
             this.fov = fov;
             this.aspect = width / height;
             this.near = near;
             this.far = far;
 
+            // Update projection matrix.
             projection = Matrix4.CreatePerspectiveFieldOfView(fov, aspect, near, far);
 
+            // Update arc ball.
             viewArcBall.SetWindow(width, height);
         }
 
@@ -351,7 +323,7 @@ namespace LOLViewer
             keyState[CameraKeyValues.Reset] = false;
 
             // Force camera to update it's view params.
-            OnUpdate(0.1f);
+            OnUpdate();
         }
     }
 }
