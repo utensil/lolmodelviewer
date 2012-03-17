@@ -42,32 +42,19 @@ namespace LOLViewer
     {
         private bool isBeingDragged;
 
-        private Vector2 offset;
-
         private Vector3 downPoint;
         private Vector3 currentPoint;
 
         private Quaternion down;
         private Quaternion now;
 
-        private Matrix4 rotation;
-        private Matrix4 translation;
-        private Matrix4 translationDelta;
-
-        private const float DEFAULT_RADIUS = 2.0f;
-        private float radius;
-
         private float width, height;
-        private Vector2 center;
 
         public GLArcBall()
         {
             Reset();
 
-            offset = Vector2.Zero;
-
             width = height = 0.0f;
-            center = Vector2.Zero;
         }
 
         public void Reset()
@@ -79,37 +66,17 @@ namespace LOLViewer
 
             down = Quaternion.Identity;
             now = Quaternion.Identity;
-
-            rotation = Matrix4.Identity;
-            translation = Matrix4.Identity;
-            translationDelta = Matrix4.Identity;
-
-            radius = DEFAULT_RADIUS;
         }
 
         public void SetWindow(float width, float height)
         {
             this.width = width;
             this.height = height;
-            this.radius = DEFAULT_RADIUS;
-
-            center = new Vector2(width / 2.0f, height / 2.0f);
-        }
-
-        public void SetOffset(float x, float y)
-        {
-            offset.X = x;
-            offset.Y = y;
         }
 
         public void SetNowQuat(Quaternion q)
         {
             now = q;
-        }
-
-        public void SetRadius(float r)
-        {
-            radius = r;
         }
 
         /// <summary>
@@ -119,15 +86,9 @@ namespace LOLViewer
         /// <param name="y">Acutal position. Not delta.</param>
         public void OnBeginDrag(float x, float y)
         {
-            if( x >= offset.X &&
-                x < offset.X + width &&
-                y >= offset.Y &&
-                y < offset.Y + height )
-            {
-                isBeingDragged = true;
-                down = now;
-                downPoint = ScreenToVector(x, y);
-            }
+            isBeingDragged = true;
+            down = now;
+            downPoint = ScreenToVector(x, y);
         }
 
         /// <summary>
@@ -160,12 +121,13 @@ namespace LOLViewer
 
         private Vector3 ScreenToVector(float screentPointX, float screenPointY)
         {
-            float x =  (screentPointX - offset.X - width / 2.0f) / (radius * width / 2.0f );
-            float y =  -(screenPointY - offset.Y - height / 2.0f) / (radius * height / 2.0f);
+            float x =  (screentPointX - width * 0.5f) / (width * 0.5f );
+            float y =  -(screenPointY - height * 0.5f) / (height * 0.5f);
             float z = 0.0f;
 
             float mag = x * x + y * y;
 
+            // Selection is "outside" the arc ball.
             if (mag > 1.0f)
             {
                 float scale = 1.0f / (float)Math.Sqrt(mag);
@@ -173,6 +135,7 @@ namespace LOLViewer
                 x *= scale;
                 y *= scale;
             }
+            // Normal arc ball case.
             else
             {
                 z = (float)Math.Sqrt(1.0f - mag);

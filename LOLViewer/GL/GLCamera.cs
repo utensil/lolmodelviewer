@@ -75,11 +75,12 @@ namespace LOLViewer
         public int wheelDelta;
         private const float WHEEL_SCALE = 0.0005f;
 
-        private bool wasDraggedSinceLastUpdate;
-        private const float RADIUS_SCALE = 0.0125f;
-        private float radius, defaultRadius;
         private const float MINIMUM_RADIUS = 35.0f;
         private const float MAXIMUM_RADIUS = 800.0f;
+        private const float STARTING_DEFAULT_RADIUS = 300.0f;
+        private float radius, defaultRadius;
+
+        private bool wasDraggedSinceLastUpdate;
         private GLArcBall viewArcBall;
         private Matrix4 lastRotation;
         private bool updateLastRotation;
@@ -119,9 +120,7 @@ namespace LOLViewer
             viewArcBall = new GLArcBall();
 
             wasDraggedSinceLastUpdate = false;
-            radius = defaultRadius = 300.0f;
-
-            viewArcBall.SetRadius(radius * RADIUS_SCALE);
+            radius = defaultRadius = STARTING_DEFAULT_RADIUS;
 
             Reset();
         }
@@ -219,7 +218,6 @@ namespace LOLViewer
             }
             radius = Math.Min(radius, MAXIMUM_RADIUS);
             radius = Math.Max(radius, MINIMUM_RADIUS);
-            viewArcBall.SetRadius(radius * RADIUS_SCALE);
             wheelDelta = 0;
 
             // Get inverse of arc ball rotation matrix.
@@ -270,11 +268,6 @@ namespace LOLViewer
             Quaternion quat = OpenTKExtras.Matrix4.CreateQuatFromMatrix(rotation);
             viewArcBall.SetNowQuat(quat);
 
-            // Update radius
-            Vector3 eyeToPoint = target - eye;
-            radius = eyeToPoint.Length;
-            viewArcBall.SetRadius(radius * RADIUS_SCALE);
-
             // Force camera to update.
             wasDraggedSinceLastUpdate = true;
             OnUpdate();
@@ -315,7 +308,6 @@ namespace LOLViewer
 
             radius = defaultRadius;
             viewArcBall.Reset();
-            viewArcBall.SetRadius(radius * RADIUS_SCALE);
 
             lastRotation = Matrix4.Identity;
             updateLastRotation = false;
