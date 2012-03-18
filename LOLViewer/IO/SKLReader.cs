@@ -33,6 +33,7 @@ using System.Linq;
 using System.Text;
 
 using System.IO;
+using System.Windows.Forms;
 using OpenTK;
 using RAFLib;
 
@@ -152,7 +153,7 @@ namespace LOLViewer
                 data.version = file.ReadUInt32();
                 data.designerID = file.ReadUInt32();
 
-                if (data.version > 0)
+                if (data.version == 1 || data.version == 2)
                 {
                     // Read in the bones.
                     data.numBones = file.ReadUInt32();
@@ -205,6 +206,16 @@ namespace LOLViewer
                     {
                         data.boneIDs.Add(file.ReadUInt32());
                     }
+                }
+
+                // Unknown Version
+                if (data.version > 2)
+                {
+#if DEBUG
+                    MessageBox.Show("New .skl version.", "Error",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+#endif
+                    result = false;
                 }
             }
             catch
