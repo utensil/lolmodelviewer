@@ -28,10 +28,7 @@ along with LOLViewer.  If not, see <http://www.gnu.org/licenses/>.
 // Parses the text file containing a list of animations for 
 // a character.
 //
-// This code is a hacky disaster.  Even worse, Riot now distributes Animation.list files
-// as binary. So, this class ends up parsing binary sometimes.  
-// It's not a really big though as the higher abstraction will just throw out non-existing files
-// the binary lists will create.
+// This code is a hacky disaster.
 //
 
 

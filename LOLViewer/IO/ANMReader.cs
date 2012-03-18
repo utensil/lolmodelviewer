@@ -36,6 +36,8 @@ using System.Linq;
 using System.Text;
 
 using System.IO;
+using System.Windows.Forms;
+
 using OpenTK;
 using RAFLib;
 
@@ -208,7 +210,7 @@ namespace LOLViewer.IO
                     }
                 }
                 // Version 4 Code
-                else
+                else if (data.version == 4)
                 {
                     //
                     // TODO: Still working on reverse engineering this.
@@ -216,6 +218,15 @@ namespace LOLViewer.IO
                     //
 
                     result = false;
+                }
+                // Unknown version
+                else
+                {
+#if DEBUG 
+                    MessageBox.Show("New .anm version.", "Error",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+#endif
+                    result = false; 
                 }
             }
             catch
@@ -228,3 +239,4 @@ namespace LOLViewer.IO
 
     }
 }
+

@@ -38,6 +38,7 @@ using System.Linq;
 using System.Text;
 
 using System.IO;
+using System.Windows.Forms;
 using OpenTK;
 using RAFLib;
 
@@ -167,7 +168,7 @@ namespace LOLViewer
                 data.version     = file.ReadInt16();
                 data.numObjects  = file.ReadInt16();
 
-                if (data.version > 0)
+                if (data.version == 1 || data.version == 2)
                 {
                     // Contains material headers.
                     data.numMaterialHeaders = file.ReadInt32();
@@ -184,44 +185,44 @@ namespace LOLViewer
 
                         data.materialHeaders.Add(header);
                     }
-                }
 
-                // Read in model data.
-                data.numIndices = file.ReadInt32();
-                data.numVertices = file.ReadInt32();
+                    // Read in model data.
+                    data.numIndices = file.ReadInt32();
+                    data.numVertices = file.ReadInt32();
 
-                for (int i = 0; i < data.numIndices; ++i)
-                {
-                    data.indices.Add(file.ReadInt16());
-                }
-
-                for (int i = 0; i < data.numVertices; ++i)
-                {
-                    SKNVertex vertex = new SKNVertex();
-
-                    vertex.position.X = file.ReadSingle();
-                    vertex.position.Y = file.ReadSingle();
-                    vertex.position.Z = file.ReadSingle();
-
-                    for (int j = 0; j < SKNVertex.BONE_INDEX_SIZE; ++j)
+                    for (int i = 0; i < data.numIndices; ++i)
                     {
-                        int bone = (int) file.ReadByte();
-                        vertex.boneIndex[j] = bone;
+                        data.indices.Add(file.ReadInt16());
                     }
 
-                    vertex.weights.X = file.ReadSingle();
-                    vertex.weights.Y = file.ReadSingle();
-                    vertex.weights.Z = file.ReadSingle();
-                    vertex.weights.W = file.ReadSingle();
+                    for (int i = 0; i < data.numVertices; ++i)
+                    {
+                        SKNVertex vertex = new SKNVertex();
 
-                    vertex.normal.X = file.ReadSingle();
-                    vertex.normal.Y = file.ReadSingle();
-                    vertex.normal.Z = file.ReadSingle();
+                        vertex.position.X = file.ReadSingle();
+                        vertex.position.Y = file.ReadSingle();
+                        vertex.position.Z = file.ReadSingle();
 
-                    vertex.texCoords.X = file.ReadSingle();
-                    vertex.texCoords.Y = file.ReadSingle();
+                        for (int j = 0; j < SKNVertex.BONE_INDEX_SIZE; ++j)
+                        {
+                            int bone = (int)file.ReadByte();
+                            vertex.boneIndex[j] = bone;
+                        }
 
-                    data.vertices.Add(vertex);
+                        vertex.weights.X = file.ReadSingle();
+                        vertex.weights.Y = file.ReadSingle();
+                        vertex.weights.Z = file.ReadSingle();
+                        vertex.weights.W = file.ReadSingle();
+
+                        vertex.normal.X = file.ReadSingle();
+                        vertex.normal.Y = file.ReadSingle();
+                        vertex.normal.Z = file.ReadSingle();
+
+                        vertex.texCoords.X = file.ReadSingle();
+                        vertex.texCoords.Y = file.ReadSingle();
+
+                        data.vertices.Add(vertex);
+                    }
                 }
 
                 // Data exclusive to version two.
@@ -230,6 +231,16 @@ namespace LOLViewer
                     data.endTab.Add(file.ReadInt32());
                     data.endTab.Add(file.ReadInt32());
                     data.endTab.Add(file.ReadInt32());
+                }
+
+                // Unknown Version
+                if (data.version > 2)
+                {
+#if DEBUG
+                    MessageBox.Show("New .skn version.", "Error",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+#endif
+                    result = false;
                 }
             }
             catch
