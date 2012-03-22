@@ -507,18 +507,24 @@ namespace LOLViewer
 
         public void IncrementCurrentAnimation()
         {
-            currentFrame = (currentFrame + 1) % (int)animations[currentAnimation].numberOfFrames;
-            currentFrameTime = 0; ;
+            if (animations.ContainsKey(currentAnimation) == true)
+            {
+                currentFrame = (currentFrame + 1) % (int)animations[currentAnimation].numberOfFrames;
+                currentFrameTime = 0;
+            }
         }
 
         public void DecrementCurrentAnimation()
         {
-            currentFrame--;
-            if (currentFrame < 0)
+            if (animations.ContainsKey(currentAnimation) == true)
             {
-                currentFrame = (int)animations[currentAnimation].numberOfFrames - 1;
+                currentFrame--;
+                if (currentFrame < 0)
+                {
+                    currentFrame = (int)animations[currentAnimation].numberOfFrames - 1;
+                }
+                currentFrameTime = 0;
             }
-            currentFrameTime = 0; ;
         }
 
         public void SetCurrentFrame( int frame, float percentTowardsNextFrame )
