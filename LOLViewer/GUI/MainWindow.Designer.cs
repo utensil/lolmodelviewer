@@ -69,6 +69,7 @@ namespace LOLViewer
             this.glControlTabControlSplitContainer = new System.Windows.Forms.SplitContainer();
             this.optionsTabControl = new System.Windows.Forms.TabControl();
             this.renderOptionsTab = new System.Windows.Forms.TabPage();
+            this.fullscreenButton = new System.Windows.Forms.Button();
             this.backgroundColorButton = new System.Windows.Forms.Button();
             this.backgroundLabel = new System.Windows.Forms.Label();
             this.cameraLabel = new System.Windows.Forms.Label();
@@ -90,7 +91,6 @@ namespace LOLViewer
             this.modelListBox = new System.Windows.Forms.ListBox();
             this.modelSearchBox = new System.Windows.Forms.TextBox();
             this.modelSearchLabel = new System.Windows.Forms.Label();
-            this.fullscreenButton = new System.Windows.Forms.Button();
             this.mainWindowMenuStrip.SuspendLayout();
             this.mainWindowStatusStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.glControlTabControlSplitContainer)).BeginInit();
@@ -259,6 +259,15 @@ namespace LOLViewer
             this.renderOptionsTab.Size = new System.Drawing.Size(442, 130);
             this.renderOptionsTab.TabIndex = 0;
             this.renderOptionsTab.Text = "Rendering Options";
+            // 
+            // fullscreenButton
+            // 
+            this.fullscreenButton.Location = new System.Drawing.Point(143, 66);
+            this.fullscreenButton.Name = "fullscreenButton";
+            this.fullscreenButton.Size = new System.Drawing.Size(75, 23);
+            this.fullscreenButton.TabIndex = 8;
+            this.fullscreenButton.Text = "Fullscreen";
+            this.fullscreenButton.UseVisualStyleBackColor = true;
             // 
             // backgroundColorButton
             // 
@@ -481,15 +490,6 @@ namespace LOLViewer
             this.modelSearchLabel.TabIndex = 15;
             this.modelSearchLabel.Text = "Search";
             // 
-            // fullscreenButton
-            // 
-            this.fullscreenButton.Location = new System.Drawing.Point(143, 66);
-            this.fullscreenButton.Name = "fullscreenButton";
-            this.fullscreenButton.Size = new System.Drawing.Size(75, 23);
-            this.fullscreenButton.TabIndex = 8;
-            this.fullscreenButton.Text = "Fullscreen";
-            this.fullscreenButton.UseVisualStyleBackColor = true;
-            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -503,7 +503,7 @@ namespace LOLViewer
             this.MinimumSize = new System.Drawing.Size(640, 480);
             this.Name = "MainWindow";
             this.Padding = new System.Windows.Forms.Padding(10);
-            this.Text = "LOLViewer 1.16";
+            this.Text = "LOLViewer 1.17";
             this.mainWindowMenuStrip.ResumeLayout(false);
             this.mainWindowMenuStrip.PerformLayout();
             this.mainWindowStatusStrip.ResumeLayout(false);
