@@ -446,10 +446,11 @@ namespace LOLViewer.IO
                 // with newer .inibins.  I'm not sure what the value in the header
                 // is used for though.
                 //
-                oldStyleOffset = (int)stream.Position + keys.Length * 2;
 
                 if (keys != null)
                 {
+                    oldStyleOffset = (int)stream.Position + keys.Length * 2;
+
                     foreach (long key in keys)
                     {
                         int offset = (int)ReadShort(ref stream);
@@ -549,7 +550,7 @@ namespace LOLViewer.IO
             DebugOut("segment key count", count);
 #endif
             // Sometimes this happens.
-            if (count == -1)
+            if (count < 0)
             {
                 return null;
             }
