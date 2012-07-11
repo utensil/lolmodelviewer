@@ -32,7 +32,7 @@ using System.Linq;
 using System.Text;
 
 using System.IO;
-using RAFLib;
+using RAFlibPlus;
 
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
@@ -291,44 +291,23 @@ namespace LOLViewer
             return result;
         }
 
-        private bool CreateDDSTexture(RAFFileListEntry f, TextureTarget target)
+        private bool CreateDDSTexture(RAFFileListEntry file, TextureTarget target)
         {
             bool result = true;
 
             TextureTarget dimension;
             uint handle = 0;
 
-            // This happens when the file does not actually exist in the RAF archive.
-            if (f.IsMemoryEntry == true)
-            {
-                String directoryName = f.RAFArchive.RAFFilePath;
-                directoryName = directoryName.Replace("\\", "/");
-                int pos = directoryName.LastIndexOf("/");
-                directoryName = directoryName.Remove(pos);
-
-                String fileName = directoryName + f.FileName;
-
-                // Read it from the disk.
-                return CreateDDSTexture(new FileInfo(fileName), target);
-            }
-
-            // Create a new archive
-            RAFArchive rafArchive = new RAFArchive(f.RAFArchive.RAFFilePath);
-
             try
             {
                 // Get the data from the archive
-                TextureLoaders.ImageDDS.LoadFromMemory(rafArchive.GetDirectoryFile().GetFileList().GetFileEntry(f.FileName).GetContent(), 
-                    out handle, out dimension);
+                TextureLoaders.ImageDDS.LoadFromMemory(file.GetContent(), out handle, out dimension);
             }
             catch
             {
                 // The DDS loader can't read all types of DDS files.
                 result = false;
             }
-
-            // Release the archive
-            rafArchive.GetDataFileContentStream().Close();
 
             if (handle > 0)
             {

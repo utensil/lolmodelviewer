@@ -38,7 +38,7 @@ using System.Linq;
 using System.Text;
 
 using System.IO;
-using RAFLib;
+using RAFlibPlus;
 
 namespace LOLViewer.IO
 {
@@ -49,28 +49,10 @@ namespace LOLViewer.IO
         {
             bool result = true;
 
-            // This happens when the file does not actually exist in the RAF archive.
-            if (file.IsMemoryEntry == true)
-            {
-                String directoryName = file.RAFArchive.RAFFilePath;
-                directoryName = directoryName.Replace("\\", "/");
-                int pos = directoryName.LastIndexOf("/");
-                directoryName = directoryName.Remove(pos);
-
-                String fileName = directoryName + file.FileName;
-
-                // Read it from the disk.
-                return ReadAnimationList(skin, new FileInfo(fileName), ref animations);
-            }
-
-            // Create a new archive
-            RAFArchive rafArchive = new RAFArchive(file.RAFArchive.RAFFilePath);
-
             try
             {
                 // Get the data from the archive
-                MemoryStream myInput 
-                    = new MemoryStream(rafArchive.GetDirectoryFile().GetFileList().GetFileEntry(file.FileName).GetContent());
+                MemoryStream myInput = new MemoryStream( file.GetContent() );
                 StreamReader reader = new StreamReader(myInput);
 
                 ParseAnimations(skin, reader, ref animations);
@@ -83,9 +65,6 @@ namespace LOLViewer.IO
                 result = false;
                 animations.Clear();
             }
-
-            // Release the archive
-            rafArchive.GetDataFileContentStream().Close();
 
             return result;
         }

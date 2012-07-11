@@ -36,7 +36,7 @@ using System.Text;
 
 using System.IO;
 
-using RAFLib;
+using RAFlibPlus;
 
 namespace LOLViewer.IO
 {
