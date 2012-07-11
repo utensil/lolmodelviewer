@@ -58,8 +58,8 @@
     <Reference Include="OpenTK.GLControl">
       <HintPath>..\OpenTK\OpenTK.GLControl.dll</HintPath>
     </Reference>
-    <Reference Include="RAFLib">
-      <HintPath>..\RAFManager\RAFLib.dll</HintPath>
+    <Reference Include="RAFlibPlus">
+      <HintPath>..\RAFManagerPlus\RAFlibPlus.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

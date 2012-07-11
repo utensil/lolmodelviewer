@@ -1119,7 +1119,7 @@ namespace LOLViewer
             return result;
         }
 
-        private bool CreateTexture(RAFLib.RAFFileListEntry f, TextureTarget target,
+        private bool CreateTexture(RAFlibPlus.RAFFileListEntry f, TextureTarget target,
             GLTexture.SupportedImageEncodings encoding)
         {
             bool result = true;

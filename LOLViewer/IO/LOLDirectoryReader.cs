@@ -41,7 +41,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Windows.Forms;
 
-using RAFLib;
+using RAFlibPlus;
 
 namespace LOLViewer.IO
 {
@@ -550,12 +550,6 @@ namespace LOLViewer.IO
                 }
             }
 
-            // If the archive was opened, we need to release the file pointer.
-            if (archive != null)
-            {
-                archive.GetDataFileContentStream().Close();
-            }
-
             return result;
         }
 
@@ -568,15 +562,8 @@ namespace LOLViewer.IO
                 // Open the archive
                 archive = new RAFArchive(f.FullName);
 
-
-                // Get directory
-                RAFDirectoryFile directory = archive.GetDirectoryFile();
-
-                // Get the file list.
-                RAFFileList fileList = directory.GetFileList();
-
                 // Get the texture files.
-                List<RAFFileListEntry> files = fileList.SearchFileEntries(".dds");
+                List<RAFFileListEntry> files = archive.SearchFileEntries(".dds", RAFArchive.RAFSearchType.All);
                 foreach (RAFFileListEntry e in files)
                 {
                     // Try to parse out unwanted textures.
@@ -598,7 +585,7 @@ namespace LOLViewer.IO
                     }
                 }
 
-                files = fileList.SearchFileEntries(".DDS");
+                files = archive.SearchFileEntries(".DDS", RAFArchive.RAFSearchType.All);
                 foreach (RAFFileListEntry e in files)
                 {
                     // Try to parse out unwanted textures.
@@ -621,7 +608,7 @@ namespace LOLViewer.IO
                 }
 
                 // Get the .skn files
-                files = fileList.SearchFileEntries(".skn");
+                files = archive.SearchFileEntries(".skn", RAFArchive.RAFSearchType.All);
                 foreach (RAFFileListEntry e in files)
                 {
                     String name = e.FileName;
@@ -634,7 +621,7 @@ namespace LOLViewer.IO
                 }
 
                 // Get the .skl files.
-                files = fileList.SearchFileEntries(".skl");
+                files = archive.SearchFileEntries(".skl", RAFArchive.RAFSearchType.All);
                 foreach (RAFFileListEntry e in files)
                 {
                     String name = e.FileName;
@@ -647,7 +634,7 @@ namespace LOLViewer.IO
                 }
 
                 // There's .inibin files in here too.
-                files = fileList.SearchFileEntries(".inibin");
+                files = archive.SearchFileEntries(".inibin", RAFArchive.RAFSearchType.All);
                 foreach (RAFFileListEntry e in files)
                 {
                     String name = e.FileName;
@@ -659,7 +646,7 @@ namespace LOLViewer.IO
                 }
 
                 // Read in animation lists
-                files = fileList.SearchFileEntries("Animations.list");
+                files = archive.SearchFileEntries("Animations.list", RAFArchive.RAFSearchType.All);
                 foreach (RAFFileListEntry e in files)
                 {
                     String name = e.FileName;
@@ -679,7 +666,7 @@ namespace LOLViewer.IO
                 }
 
                 // Read in animations
-                files = fileList.SearchFileEntries(".anm");
+                files = archive.SearchFileEntries(".anm", RAFArchive.RAFSearchType.All);
                 foreach (RAFFileListEntry e in files)
                 {
                     String name = e.FileName;
@@ -761,9 +748,7 @@ namespace LOLViewer.IO
                         bool result = archive.InsertFile(filePath, File.ReadAllBytes(f.FullName), null);
                         if (result == true)
                         {
-                            RAFDirectoryFile dir = archive.GetDirectoryFile();
-                            RAFFileList list = dir.GetFileList();
-                            RAFFileListEntry fileEntry = list.GetFileEntry(filePath);
+                            RAFFileListEntry fileEntry = archive.GetFileEntry(filePath);
 
                             String name = f.Name;
                             name = name.ToLower();
@@ -778,9 +763,7 @@ namespace LOLViewer.IO
                         bool result = archive.InsertFile(filePath, File.ReadAllBytes(f.FullName), null);
                         if (result == true)
                         {
-                            RAFDirectoryFile dir = archive.GetDirectoryFile();
-                            RAFFileList list = dir.GetFileList();
-                            RAFFileListEntry fileEntry = list.GetFileEntry(filePath);
+                            RAFFileListEntry fileEntry = archive.GetFileEntry(filePath);
 
                             String name = f.Name;
                             name = name.ToLower();
@@ -805,9 +788,7 @@ namespace LOLViewer.IO
                             bool result = archive.InsertFile(filePath, File.ReadAllBytes(f.FullName), null);
                             if (result == true)
                             {
-                                RAFDirectoryFile dir = archive.GetDirectoryFile();
-                                RAFFileList list = dir.GetFileList();
-                                RAFFileListEntry fileEntry = list.GetFileEntry(filePath);
+                                RAFFileListEntry fileEntry = archive.GetFileEntry(filePath);
 
                                 String name = f.Name;
                                 name = name.ToLower();
@@ -823,9 +804,7 @@ namespace LOLViewer.IO
                         bool result = archive.InsertFile(filePath, File.ReadAllBytes(f.FullName), null);
                         if (result == true)
                         {
-                            RAFDirectoryFile dir = archive.GetDirectoryFile();
-                            RAFFileList list = dir.GetFileList();
-                            RAFFileListEntry fileEntry = list.GetFileEntry(filePath);
+                            RAFFileListEntry fileEntry = archive.GetFileEntry(filePath);
 
                             inibins.Add(fileEntry);
                         }
@@ -836,9 +815,7 @@ namespace LOLViewer.IO
                         bool result = archive.InsertFile(filePath, File.ReadAllBytes(f.FullName), null);
                         if (result == true)
                         {
-                            RAFDirectoryFile dir = archive.GetDirectoryFile();
-                            RAFFileList list = dir.GetFileList();
-                            RAFFileListEntry fileEntry = list.GetFileEntry(filePath);
+                            RAFFileListEntry fileEntry = archive.GetFileEntry(filePath);
 
                             String name = fileEntry.FileName;
 
@@ -861,9 +838,7 @@ namespace LOLViewer.IO
                         bool result = archive.InsertFile(filePath, File.ReadAllBytes(f.FullName), null);
                         if (result == true)
                         {
-                            RAFDirectoryFile dir = archive.GetDirectoryFile();
-                            RAFFileList list = dir.GetFileList();
-                            RAFFileListEntry fileEntry = list.GetFileEntry(filePath);
+                            RAFFileListEntry fileEntry = archive.GetFileEntry(filePath);
 
                             String name = f.Name;
                             name = name.ToLower();
@@ -879,7 +854,9 @@ namespace LOLViewer.IO
                     }
                 default:
                     {
-                        //Debug.WriteLine("Excluding File: " + f.Name);
+#if VERBOSE
+                        Debug.WriteLine("Excluding File: " + f.Name);
+#endif
                         break;
                     }
             };
@@ -907,7 +884,6 @@ namespace LOLViewer.IO
                     }
                 }
                 catch { }
-
             }
 
             return result;
