@@ -436,7 +436,7 @@ namespace LOLViewer.IO
 #if VERBOSE
                         DebugOut("String offset(" + key + ")", offset);
 #endif
-                        String val = ReadNulTerminatedString(ref stream,
+                        String val = ReadNullTerminatedString(ref stream,
                             oldStyleOffset + offset);
 #if VERBOSE
                         DebugOut("String prop(" + key + ")", val);
@@ -546,7 +546,7 @@ namespace LOLViewer.IO
             return result;
         }
 
-        public static String ReadNulTerminatedString(ref MemoryStream s, int atOffset)
+        public static String ReadNullTerminatedString(ref MemoryStream s, int atOffset)
         {
             long oldPos = s.Position;
             s.Seek(atOffset, SeekOrigin.Begin);
