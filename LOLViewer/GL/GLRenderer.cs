@@ -477,27 +477,6 @@ namespace LOLViewer
                 program.UpdateUniform("u_SExponent", 8.0f);
             }
 
-            // Cell Shading Test
-            //if (rModels.Count > 0)
-            //{
-            //    program = programs["cellRigged"];
-            //    program.Load();
-
-            //    //
-            //    // Update parameters for cell shading.
-            //    //
-
-            //    // Fragment Shader Uniforms
-            //    program.UpdateUniform("u_LightDirection", new Vector3(0.0f, 0.0f, 1.0f));
-            //    program.UpdateUniform("u_QOne", 0.9f);
-            //    program.UpdateUniform("u_QTwo", 0.5f);
-            //    program.UpdateUniform("u_QThree", 0.3f);
-            //    program.UpdateUniform("u_ValueOne", 1.1f);
-            //    program.UpdateUniform("u_ValueTwo", 1.0f);
-            //    program.UpdateUniform("u_ValueThree", 0.9f);
-            //    program.UpdateUniform("u_ValueFour", 0.8f);
-            //}
-
             // Draw Model
             foreach (var r in rModels)
             {
@@ -582,32 +561,6 @@ namespace LOLViewer
                     worldView * camera.projection);
 
                 r.Value.Draw();
-
-
-                // Old code to test billboarding shaders.
-                // Possibly role it into a ground model later.
-                // I was using this to debug bone and joint transformations.
-
-                //// Load shaders.
-                //program = programs["default"];
-                //program.Load();
-
-                //// Load the texture for the shader.
-                //GL.ActiveTexture(TextureUnit.Texture0);
-                //program.UpdateUniform("u_Texture", 0);
-                //if (r.Value.textureName != String.Empty)
-                //{
-                //    textures[r.Value.textureName].Bind(); // not checking return value        
-                //}
-
-                //// Draw Geometry
-                //Matrix4[] debuggingTransforms = r.Value.GetBoneTransformations();
-                //foreach (Matrix4 transform in debuggingTransforms)
-                //{
-                //    program.UpdateUniform("u_WorldViewProjection",
-                //        transform * camera.view * camera.projection);
-                //    billboards["default"].Draw();
-                //}
             }
           
             // Unload shaders.
