@@ -503,7 +503,7 @@ namespace LOLViewer
             this.MinimumSize = new System.Drawing.Size(640, 480);
             this.Name = "MainWindow";
             this.Padding = new System.Windows.Forms.Padding(10);
-            this.Text = "LOLViewer 1.17";
+            this.Text = "LOLViewer 1.18";
             this.mainWindowMenuStrip.ResumeLayout(false);
             this.mainWindowMenuStrip.PerformLayout();
             this.mainWindowStatusStrip.ResumeLayout(false);
