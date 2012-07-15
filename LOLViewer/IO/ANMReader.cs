@@ -149,8 +149,11 @@ namespace LOLViewer.IO
 
                 data.magicThree = file.ReadUInt32();
 
-                // Version <= 3 Code
-                if (data.version <= 3)
+                // Version 0, 1, 2, 3 Code
+                if (data.version == 0 ||
+                    data.version == 1 ||
+                    data.version == 2 ||
+                    data.version == 3)
                 {
                     data.numberOfBones = file.ReadUInt32();
                     data.numberOfFrames = file.ReadUInt32();
@@ -162,6 +165,9 @@ namespace LOLViewer.IO
                     {
                         ANMBone bone = new ANMBone();
                         bone.name = new String(file.ReadChars(ANMBone.BONE_NAME_LENGTH));
+                        bone.name = RemoveAnimationNamePadding(bone.name);
+                        bone.name = bone.name.ToLower();
+
                         bone.flag = file.ReadUInt32();
 
                         // For each bone, read in its value at each frame in the animation.
@@ -216,6 +222,20 @@ namespace LOLViewer.IO
             return result;
         }
 
+        //
+        // Helper Functions
+        //
+
+        private static String RemoveAnimationNamePadding(String s)
+        {
+            int position = s.IndexOf('\0');
+            if (position >= 0)
+            {
+                s = s.Remove(position);
+            }
+
+            return s;
+        }
     }
 }
 

@@ -41,6 +41,7 @@ namespace LOLViewer
     {
         public String       name;
         public const int    BONE_NAME_SIZE = 32;
+        public int          ID;
         public int          parentID;
         public float        scale;
         public Vector3      position;
@@ -50,6 +51,7 @@ namespace LOLViewer
         public SKLBone()
         {
             name = String.Empty;
+            ID = 0;
             parentID = 0;
             scale = 0.0f;
             position = Vector3.Zero;

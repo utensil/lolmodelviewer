@@ -202,18 +202,17 @@ namespace LOLViewer
 
                         data.vertices.Add(vertex);
                     }
-                }
 
-                // Data exclusive to version two.
-                if (data.version == 2)
-                {
-                    data.endTab.Add(file.ReadInt32());
-                    data.endTab.Add(file.ReadInt32());
-                    data.endTab.Add(file.ReadInt32());
+                    // Data exclusive to version two.
+                    if (data.version == 2)
+                    {
+                        data.endTab.Add(file.ReadInt32());
+                        data.endTab.Add(file.ReadInt32());
+                        data.endTab.Add(file.ReadInt32());
+                    }
                 }
-
                 // Unknown Version
-                if (data.version > 2)
+                else           
                 {
 #if DEBUG
                     MessageBox.Show("New .skn version.", "Error",

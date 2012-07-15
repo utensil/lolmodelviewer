@@ -78,14 +78,14 @@ namespace LOLViewer
             animations = new Dictionary<String, GLAnimation>();
         }
 
-        // Version 2 Create
+        // Version 0 and 2
         public bool Create(int version, List<float> vertexData, List<float> normalData,
             List<float> texData, List<float> boneData, List<float> weightData, List<uint> indexData,
             List<Quaternion> bOrientation, List<Vector3> bPosition, List<float> bScale,
             List<String> bName, List<int> bParent , List<uint> boneIDs)
         {
             // Depending on the version of the model, the look ups change.
-            if (version == 2)
+            if (version == 2 || version == 0)
             {
                 for (int i = 0; i < boneData.Count; ++i)
                 {
