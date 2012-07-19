@@ -46,7 +46,6 @@ namespace LOLViewer
         public UInt32 numberOfBones;
         public UInt32 numberOfFrames;
 
-        // I think this is the play back FPS for the animation.
         public UInt32 playbackFPS;
 
         public List<ANMBone> bones;
