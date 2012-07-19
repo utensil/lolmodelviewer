@@ -1025,7 +1025,17 @@ namespace LOLViewer
                     bool anmResult = ANMReader.Read(a.Value, ref anmFile);
                     if (anmResult == true)
                     {
-                        animationFiles.Add(a.Key, anmFile);
+                        //
+                        // Not exactly sure what to do when the number of bones
+                        // do not match between ANM and SKL files.
+                        //
+                        // For now, just ignoring the animation file.
+                        //
+
+                        if (anmFile.numberOfBones == sklFile.numBoneIDs)
+                        {
+                            animationFiles.Add(a.Key, anmFile);
+                        }
                     }
                 }
 
