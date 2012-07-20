@@ -55,6 +55,7 @@ namespace LOLViewer
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LoadingModelsWindow));
             this.loadingLabel = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.loadingBackgroundWorker = new System.ComponentModel.BackgroundWorker();
@@ -101,13 +102,14 @@ namespace LOLViewer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(221, 116);
+            this.ClientSize = new System.Drawing.Size(221, 114);
             this.ControlBox = false;
             this.Controls.Add(this.loadingCancelButton);
             this.Controls.Add(this.loadingProgressBar);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.loadingLabel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MaximumSize = new System.Drawing.Size(227, 142);
             this.MinimizeBox = false;

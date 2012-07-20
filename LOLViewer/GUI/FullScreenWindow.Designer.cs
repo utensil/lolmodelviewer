@@ -53,6 +53,7 @@ namespace LOLViewer.GUI
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FullScreenWindow));
             this.glControlMain = new OpenTK.GLControl();
             this.SuspendLayout();
             // 
@@ -74,8 +75,9 @@ namespace LOLViewer.GUI
             this.Controls.Add(this.glControlMain);
             this.DoubleBuffered = true;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "FullScreenWindow";
-            this.Text = "LOLViewer 1.15";
+            this.Text = "LOLViewer 1.18";
             this.TopMost = true;
             this.ResumeLayout(false);
 

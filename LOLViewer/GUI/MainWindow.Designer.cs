@@ -53,6 +53,7 @@ namespace LOLViewer
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             this.glControlMain = new OpenTK.GLControl();
             this.mainWindowMenuStrip = new System.Windows.Forms.MenuStrip();
             this.fileMainWindowMenuStrip = new System.Windows.Forms.ToolStripMenuItem();
@@ -499,6 +500,7 @@ namespace LOLViewer
             this.Controls.Add(this.mainWindowStatusStrip);
             this.Controls.Add(this.mainWindowMenuStrip);
             this.DoubleBuffered = true;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.mainWindowMenuStrip;
             this.MinimumSize = new System.Drawing.Size(640, 480);
             this.Name = "MainWindow";
