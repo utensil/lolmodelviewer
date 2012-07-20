@@ -45,9 +45,11 @@ namespace LOLViewer.IO
     class ANMListReader
     {
         public static bool ReadAnimationList(int skin, RAFFileListEntry file,
-            ref Dictionary<String, String> animations)
+            ref Dictionary<String, String> animations, EventLogger logger)
         {
             bool result = true;
+
+            logger.LogEvent("Parsing animation list: " + file.FileName );
 
             try
             {
@@ -62,29 +64,8 @@ namespace LOLViewer.IO
             }
             catch
             {
-                result = false;
-                animations.Clear();
-            }
+                logger.LogError("Failed to parse animation list: " + file.FileName);
 
-            return result;
-        }
-
-        public static bool ReadAnimationList(int skin, FileInfo file,
-            ref Dictionary<String, String> animations)
-        {
-            bool result = true;
-
-            // Sanity. Lowers thrown exceptions
-            if (file.Exists == false)
-                return true;
-
-            try
-            {
-                StreamReader myInput = new StreamReader(file.FullName);
-                ParseAnimations(skin, myInput, ref animations);
-            }
-            catch
-            {
                 result = false;
                 animations.Clear();
             }

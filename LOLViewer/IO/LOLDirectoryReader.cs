@@ -194,12 +194,12 @@ namespace LOLViewer.IO
                         try
                         {
                             LOLModel model;
-                            bool storeResult = StoreModel(modelDefs[j], out model);
+                            bool storeResult = StoreModel(modelDefs[j], out model, logger);
 
                             if (storeResult == true)
                             {
                                 // Try to store animations for model as well
-                                storeResult = StoreAnimations(ref model);
+                                storeResult = StoreAnimations(ref model, logger);
                             }
 
                             if (storeResult == true)
@@ -227,10 +227,20 @@ namespace LOLViewer.IO
                                 }
 
                                 if (models.ContainsKey(name) == false)
+                                {
                                     models.Add(name, model);
+                                }
+                                else
+                                {
+                                    logger.LogError("Adding animation: " + name + " to model:" + modelDefs[j].name);
+                                }
                             }
                         }
-                        catch { }
+                        catch(Exception e) 
+                        {
+                            logger.LogError("Unable to store model: " + modelDefs[j].name);
+                            logger.LogError(e.Message);
+                        }
                     }
                 }
             }
@@ -238,7 +248,7 @@ namespace LOLViewer.IO
             return result;
         }
 
-        private bool StoreModel(ModelDefinition def, out LOLModel model)
+        private bool StoreModel(ModelDefinition def, out LOLModel model, EventLogger logger)
         {
             model = new LOLModel();
             model.skinNumber = def.skin;
@@ -251,6 +261,7 @@ namespace LOLViewer.IO
             }
             else
             {
+               logger.LogError("Unable to find skn file: " + skns[def.skn]);
                return false;
             }
 
@@ -261,12 +272,14 @@ namespace LOLViewer.IO
             }
             else
             {
+                logger.LogError("Unable to find skl file: " + skls[def.skl]);
                 return false;
             }
 
             // Find the texture.
             if (textures.ContainsKey(def.tex))
             {
+                logger.LogError("Unable to find texture file: " + textures[def.tex]);
                 model.texture = textures[def.tex];
             }
             else
@@ -277,7 +290,7 @@ namespace LOLViewer.IO
             return true;
         }
 
-        private bool StoreAnimations(ref LOLModel model)
+        private bool StoreAnimations(ref LOLModel model, EventLogger logger)
         {
             bool result = true;
 
@@ -288,7 +301,11 @@ namespace LOLViewer.IO
             if (animationLists.ContainsKey(model.animationList) == true)
             {
                 result = ANMListReader.ReadAnimationList(model.skinNumber - 1, // indexing in animations.list assumes the original skin to be -1
-                    animationLists[model.animationList], ref animationStrings);
+                    animationLists[model.animationList], ref animationStrings, logger);
+            }
+            else
+            {
+                logger.LogError("Unable to find animation list: " + model.animationList);
             }
 
             if (result == true)
@@ -296,10 +313,20 @@ namespace LOLViewer.IO
                 // Store the animations in the model.
                 foreach (var a in animationStrings)
                 {
-                    if (animations.ContainsKey(a.Value) == true &&
-                        model.animations.ContainsKey(a.Key) == false)
+                    if (animations.ContainsKey(a.Value) == true )
                     {
-                        model.animations.Add(a.Key, animations[a.Value]);
+                        if( model.animations.ContainsKey(a.Key) == false )
+                        {
+                            model.animations.Add(a.Key, animations[a.Value]);
+                        }
+                        else
+                        {
+                            logger.LogError("Duplicate animation: " + a.Key);
+                        }
+                    }
+                    else
+                    {
+                        logger.LogError("Unable to find animation: " + a.Value);
                     }
                 }
             }
