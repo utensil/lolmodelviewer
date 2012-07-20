@@ -191,6 +191,28 @@ namespace LOLViewer.IO
                     List<ModelDefinition> modelDefs = iniFile.GetModelStrings();
                     for (int j = 0; j < modelDefs.Count; ++j)
                     {
+                        // Name the model after the parent directory
+                        // of the .inibin plus the name from the .inibin.
+                        // Some things overlap without both.
+                        String name = modelDefs[j].name;
+
+                        String directoryName = f.FileName;
+                        int pos = directoryName.LastIndexOf("/");
+                        directoryName = directoryName.Remove(pos);
+                        pos = directoryName.LastIndexOf("/");
+                        directoryName = directoryName.Substring(pos + 1);
+
+                        // Sometimes the name from the .inibin file is "".
+                        // So, just name it after the directory
+                        if (name == "")
+                        {
+                            name = directoryName + "/" + directoryName;
+                        }
+                        else
+                        {
+                            name = directoryName + "/" + name;
+                        }
+
                         try
                         {
                             LOLModel model;
@@ -204,42 +226,20 @@ namespace LOLViewer.IO
 
                             if (storeResult == true)
                             {
-                                // Name the model after the parent directory
-                                // of the .inibin plus the name from the .inibin.
-                                // Some things overlap without both.
-                                String name = modelDefs[j].name;
-
-                                String directoryName = f.FileName;
-                                int pos = directoryName.LastIndexOf("/");
-                                directoryName = directoryName.Remove(pos);
-                                pos = directoryName.LastIndexOf("/");
-                                directoryName = directoryName.Substring(pos + 1);
-
-                                // Sometimes the name from the .inibin file is "".
-                                // So, just name it after the directory
-                                if (name == "")
-                                {
-                                    name = directoryName + "/" + directoryName;
-                                }
-                                else
-                                {
-                                    name = directoryName + "/" + name;
-                                }
-
                                 if (models.ContainsKey(name) == false)
                                 {
-                                    logger.LogEvent("Adding model definition: " + modelDefs[j].name);
+                                    logger.LogEvent("Adding model definition: " + name);
                                     models.Add(name, model);
                                 }
                                 else
                                 {
-                                    logger.LogError("Duplicate model definition: " + modelDefs[j].name);
+                                    logger.LogWarning("Duplicate model definition: " + name);
                                 }
                             }
                         }
                         catch(Exception e) 
                         {
-                            logger.LogError("Unable to store model definition: " + modelDefs[j].name);
+                            logger.LogError("Unable to store model definition: " + name);
                             logger.LogError(e.Message);
                         }
                     }
@@ -280,11 +280,11 @@ namespace LOLViewer.IO
             // Find the texture.
             if (textures.ContainsKey(def.tex))
             {
-                logger.LogError("Unable to find texture file: " + textures[def.tex]);
                 model.texture = textures[def.tex];
             }
             else
             {
+                logger.LogError("Unable to find texture file: " + textures[def.tex].FileName);
                 return false;
             }
 

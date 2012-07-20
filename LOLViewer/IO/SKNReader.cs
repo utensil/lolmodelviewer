@@ -199,7 +199,6 @@ namespace LOLViewer
             logger.LogEvent("Number of Material Headers: " + data.numMaterialHeaders);
             logger.LogEvent("Number of Vertices: " + data.numVertices);
             logger.LogEvent("Number of Indices: " + data.numIndices);
-            logger.LogEvent("Magic: " + data.magic);
 
             return result;
         }
