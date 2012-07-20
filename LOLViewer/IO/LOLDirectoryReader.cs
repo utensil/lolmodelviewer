@@ -228,17 +228,18 @@ namespace LOLViewer.IO
 
                                 if (models.ContainsKey(name) == false)
                                 {
+                                    logger.LogEvent("Adding model definition: " + modelDefs[j].name);
                                     models.Add(name, model);
                                 }
                                 else
                                 {
-                                    logger.LogError("Adding animation: " + name + " to model:" + modelDefs[j].name);
+                                    logger.LogError("Duplicate model definition: " + modelDefs[j].name);
                                 }
                             }
                         }
                         catch(Exception e) 
                         {
-                            logger.LogError("Unable to store model: " + modelDefs[j].name);
+                            logger.LogError("Unable to store model definition: " + modelDefs[j].name);
                             logger.LogError(e.Message);
                         }
                     }
