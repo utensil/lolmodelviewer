@@ -86,7 +86,7 @@ namespace LOLViewer
             }
         }
 
-        public bool OnLoad()
+        public bool OnLoad(EventLogger logger)
         {
             bool result = true;
 
@@ -94,57 +94,57 @@ namespace LOLViewer
             if (result == true)
             {
                 // Unused atm.
-                result = CreateShaderFromMemory("transform2D_tex.vert", GLShaderDefinitions.TransformTexturedVertex, ShaderType.VertexShader);
+                result = CreateShaderFromMemory("transform2D_tex.vert", GLShaderDefinitions.TransformTexturedVertex, ShaderType.VertexShader, logger);
             }
 
             if (result == true)
             {
-                result = CreateShaderFromMemory("phong.vert", GLShaderDefinitions.PhongVertex, ShaderType.VertexShader);
+                result = CreateShaderFromMemory("phong.vert", GLShaderDefinitions.PhongVertex, ShaderType.VertexShader, logger);
             }
 
             if (result == true)
             {
-                result = CreateShaderFromMemory("phongRigged.vert", GLShaderDefinitions.PhongRiggedVertex, 
-                    ShaderType.VertexShader);
+                result = CreateShaderFromMemory("phongRigged.vert", GLShaderDefinitions.PhongRiggedVertex,
+                    ShaderType.VertexShader, logger);
             }
 
             if (result == true)
             {
                 result = CreateShaderFromMemory("cellRigged.vert", GLShaderDefinitions.CellShadedRiggedVertex,
-                    ShaderType.VertexShader);
+                    ShaderType.VertexShader, logger);
             }
 
             // Create fragment shaders.
             if (result == true)
             {
                 // Unused atm.
-                result = CreateShaderFromMemory("texSampler.frag", 
-                    GLShaderDefinitions.TextureSamplerFragment, ShaderType.FragmentShader);
+                result = CreateShaderFromMemory("texSampler.frag",
+                    GLShaderDefinitions.TextureSamplerFragment, ShaderType.FragmentShader, logger);
             }
 
             if (result == true)
             {
                 // Unused atm.
-                result = CreateShaderFromMemory("texSamplerGreyscale.frag", 
-                    GLShaderDefinitions.TextureSamplerGreyscaleFragment, ShaderType.FragmentShader);
+                result = CreateShaderFromMemory("texSamplerGreyscale.frag",
+                    GLShaderDefinitions.TextureSamplerGreyscaleFragment, ShaderType.FragmentShader, logger);
             }
 
             if (result == true)
             {
-                result = CreateShaderFromMemory("phong.frag", GLShaderDefinitions.PhongFragment, ShaderType.FragmentShader);
+                result = CreateShaderFromMemory("phong.frag", GLShaderDefinitions.PhongFragment, ShaderType.FragmentShader, logger);
             }
 
             if (result == true)
             {
                 // Unused atm.
-                result = CreateShaderFromMemory("phongTexOnly.frag", 
-                    GLShaderDefinitions.PhongTexOnlyFragment, ShaderType.FragmentShader);
+                result = CreateShaderFromMemory("phongTexOnly.frag",
+                    GLShaderDefinitions.PhongTexOnlyFragment, ShaderType.FragmentShader, logger);
             }
 
             if (result == true)
             {
                 result = CreateShaderFromMemory("cell.frag", GLShaderDefinitions.CellShadedFragment,
-                    ShaderType.FragmentShader);
+                    ShaderType.FragmentShader, logger);
             }
 
             //
@@ -164,7 +164,7 @@ namespace LOLViewer
 
                 // Unused atm.
                 result = CreateProgram("default", "transform2D_tex.vert", "texSampler.frag",
-                    attributes, uniforms);
+                    attributes, uniforms, logger);
             }
 
             // Greyscale billboarding program
@@ -180,7 +180,7 @@ namespace LOLViewer
 
                 // Unused atm.
                 result = CreateProgram("greyscale", "transform2D_tex.vert", "texSamplerGreyscale.frag",
-                    attributes, uniforms);
+                    attributes, uniforms, logger);
             }
 
             // Phong lighting program
@@ -203,7 +203,7 @@ namespace LOLViewer
                 uniforms.Add("u_Texture");
 
                 result = CreateProgram("phong", "phong.vert", "phong.frag",
-                    attributes, uniforms);
+                    attributes, uniforms, logger);
             }
 
             // Model w/ Texture Only
@@ -219,7 +219,7 @@ namespace LOLViewer
 
                 // Unused atm.
                 result = CreateProgram("phongTexOnly", "phong.vert", "phongTexOnly.frag",
-                    attributes, uniforms);
+                    attributes, uniforms, logger);
             }
 
             // Phong Lighting with Skeletal Animation
@@ -245,7 +245,7 @@ namespace LOLViewer
                 uniforms.Add("u_Texture");
 
                 result = CreateProgram("phongRigged", "phongRigged.vert", "phong.frag",
-                    attributes, uniforms);
+                    attributes, uniforms, logger);
             }
 
             // Cell Shading with Skeletal Animation
@@ -273,7 +273,7 @@ namespace LOLViewer
                 uniforms.Add("u_ValueFour");
 
                 result = CreateProgram("cellRigged", "cellRigged.vert", "cell.frag",
-                    attributes, uniforms);
+                    attributes, uniforms, logger);
             }
 
             // Create Geometry
@@ -332,7 +332,7 @@ namespace LOLViewer
                 inds.Add( 2 );
                 inds.Add( 3 );
 
-                result = CreateBillboard("default", verts, texs, inds);
+                result = CreateBillboard("default", verts, texs, inds, logger);
             }         
 
             // Misc. OpenGL Parameters.
@@ -359,7 +359,7 @@ namespace LOLViewer
             GL.ClearColor(clearColor);
         }
 
-        public bool LoadModel( LOLModel model)
+        public bool LoadModel(LOLModel model, EventLogger logger)
         {
             bool result = true;
 
@@ -374,12 +374,12 @@ namespace LOLViewer
             if (model.skl == null &&
                 result == true)
             {
-                result = CreateStaticModel(model);
+                result = CreateStaticModel(model, logger);
             }
             // It's a rigged model
             else
             {
-                result = CreateRiggedModel(model);
+                result = CreateRiggedModel(model, logger);
             }
 
             return result;
@@ -732,34 +732,11 @@ namespace LOLViewer
         // TODO: Alot of this code is a mess.
         // It should be refactored into more meaningful sub classes.
 
-        private bool CreateShaderFromFile(String name, String path, ShaderType type)
+        private bool CreateShaderFromMemory(String name, String data, ShaderType type, EventLogger logger)
         {
             bool result = true;
 
-            GLShader shader = new GLShader(type);
-            result = shader.LoadFromFile(path + name);
-
-            if (result == true)
-            {
-                result = shader.Compile();
-            }
-
-            if (result == true)
-            {
-                shaders.Add(name, shader);
-            }
-            else
-            {
-                // We need to clean up this shader since it failed.
-                shader.Destroy();
-            }
-
-            return result;
-        }
-
-        private bool CreateShaderFromMemory(String name, String data, ShaderType type)
-        {
-            bool result = true;
+            logger.LogEvent("Creating shader: " + name);
 
             GLShader shader = new GLShader(type);
             result = shader.LoadFromMemory(data);
@@ -775,6 +752,7 @@ namespace LOLViewer
             }
             else
             {
+                logger.LogError("Failed to create shader: " + name);
                 // We need to clean up this shader since it failed.
                 shader.Destroy();
             }
@@ -783,9 +761,11 @@ namespace LOLViewer
         }
 
         private bool CreateProgram(String progName, String vertName, String fragName,
-            List<String> attributes, List<String> uniforms) 
+            List<String> attributes, List<String> uniforms, EventLogger logger) 
         {
             bool result = true;
+
+            logger.LogEvent("Creating shader program: " + progName);
 
             GLShaderProgram program = new GLShaderProgram();
             if (result == true)
@@ -868,6 +848,7 @@ namespace LOLViewer
             }
             else
             {
+                logger.LogError("Failed to create shader program: " + progName);
                 program.Destroy();
             }
 
@@ -875,9 +856,11 @@ namespace LOLViewer
         }
 
         private bool CreateBillboard( String name, List<float> vertexData,
-            List<float> texData, List<uint> indexData )
+            List<float> texData, List<uint> indexData, EventLogger logger )
         {
             bool result = true;
+
+            logger.LogEvent("Creating billboard: " + name);
 
             GLBillboard billboard = new GLBillboard();
             result = billboard.Create(vertexData, texData, indexData);
@@ -889,22 +872,24 @@ namespace LOLViewer
             }
             else
             {
+                logger.LogError("Failed to create billboard: " + name);
                 billboard.Destory();
             }
 
             return result;
         }
 
-        private bool CreateStaticModel(LOLModel model)
+        private bool CreateStaticModel(LOLModel model, EventLogger logger)
         {
             bool result = true;
+
+            logger.LogEvent("Creating static model.");
 
             SKNFile file = new SKNFile();
             if (result == true)
             {
                 // Model is stored in a RAF.
-                result = SKNReader.Read(model.skn,
-                    ref file);
+                result = SKNReader.Read(model.skn, ref file, logger);
                 
             }
 
@@ -932,7 +917,7 @@ namespace LOLViewer
             {
                 // Texture stored in RAF file.
                 result = CreateTexture(model.texture, TextureTarget.Texture2D,
-                        GLTexture.SupportedImageEncodings.DDS);
+                        GLTexture.SupportedImageEncodings.DDS, logger);
 
                 // Store it in our new model file.
                 if (result == true)
@@ -945,19 +930,25 @@ namespace LOLViewer
                 }
             }
 
+            if (result == false)
+            {
+                logger.LogError("Failed to create static model.");
+            }
+
             return result;
         }
 
-        private bool CreateRiggedModel(LOLModel model)
+        private bool CreateRiggedModel(LOLModel model, EventLogger logger)
         {
             bool result = true;
+
+            logger.LogEvent("Creating rigged model.");
 
             SKNFile sknFile = new SKNFile();
             if (result == true)
             {
                 // Model is stored in a RAF.
-                result = SKNReader.Read(model.skn,
-                    ref sknFile);
+                result = SKNReader.Read(model.skn, ref sknFile, logger);
             }
 
             SKLFile sklFile = new SKLFile();
@@ -990,7 +981,7 @@ namespace LOLViewer
             {
                 // Texture stored in RAF file.
                 result = CreateTexture(model.texture, TextureTarget.Texture2D,
-                        GLTexture.SupportedImageEncodings.DDS);
+                        GLTexture.SupportedImageEncodings.DDS, logger);
                 
                 // Store it in our new model file.
                 if (result == true)
@@ -1057,17 +1048,23 @@ namespace LOLViewer
                 glModel.currentFrame = 0;
             }
 
+            if (result == false)
+            {
+                logger.LogError("Failed to create rigged model.");
+            }
+
             return result;
         }
         
         private bool CreateTexture(FileInfo f, TextureTarget target,
-            GLTexture.SupportedImageEncodings encoding)
+            GLTexture.SupportedImageEncodings encoding, EventLogger logger)
         {
             bool result = true;
 
+            logger.LogEvent("Creating texture: " + f.Name + ": " + f.FullName);
+
             GLTexture texture = new GLTexture();
-            result = texture.Create(f, target,
-                encoding);
+            result = texture.Create(f, target, encoding);
 
             // Store new texture.
             if (result == true)
@@ -1076,6 +1073,7 @@ namespace LOLViewer
             }
             else
             {
+                logger.LogError("Failed to create texture: " + f.Name + ": " + f.FullName);
                 texture.Destroy();
             }
 
@@ -1083,13 +1081,14 @@ namespace LOLViewer
         }
 
         private bool CreateTexture(RAFlibPlus.RAFFileListEntry f, TextureTarget target,
-            GLTexture.SupportedImageEncodings encoding)
+            GLTexture.SupportedImageEncodings encoding, EventLogger logger)
         {
             bool result = true;
 
+            logger.LogEvent("Creating texture: " + f.FileName);
+
             GLTexture texture = new GLTexture();
-            result = texture.Create(f, target,
-                encoding);
+            result = texture.Create(f, target, encoding);
 
             // Store new texture.
             if (result == true)
@@ -1102,6 +1101,7 @@ namespace LOLViewer
             }
             else
             {
+                logger.LogError("Failed to create texture: " + f.FileName);
                 texture.Destroy();
             }
 

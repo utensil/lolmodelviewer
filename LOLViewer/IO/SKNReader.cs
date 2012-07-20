@@ -52,43 +52,23 @@ namespace LOLViewer
         /// <param name="file">The file.</param>
         /// <param name="data">The contents of the file are stored in here.</param>
         /// <returns></returns>
-        public static bool Read(RAFFileListEntry file, ref SKNFile data)
+        public static bool Read(RAFFileListEntry file, ref SKNFile data, EventLogger logger)
         {
             bool result = true;
+
+            logger.LogEvent("Reading skn: " + file.FileName);
 
             try
             {
                 // Get the data from the archive
                 MemoryStream myInput = new MemoryStream( file.GetContent() );
-                result = ReadBinary(myInput, ref data);
+                result = ReadBinary(myInput, ref data, logger);
                 myInput.Close();
             }
-            catch
+            catch(Exception e)
             {
-                result = false;
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Reads in a binary .skn file from disc.
-        /// </summary>
-        /// <param name="file">The file.</param>
-        /// <param name="data">The contents of the file are stored in here.</param>
-        /// <returns></returns>
-        public static bool Read(FileInfo file, ref SKNFile data)
-        {
-            bool result = true;
-
-            try
-            {
-                FileStream myInput = new FileStream(file.FullName, FileMode.Open);
-                result = ReadBinary(myInput, ref data);
-                myInput.Close();
-            }
-            catch
-            {
+                logger.LogError("Unable to open memory stream: " + file.FileName);
+                logger.LogError(e.Message);
                 result = false;
             }
 
@@ -100,43 +80,27 @@ namespace LOLViewer
         // (Because nested Try/Catch looks nasty in one function block.)
         //
 
-        private static bool ReadBinary(FileStream input, ref SKNFile data)
+        private static bool ReadBinary(MemoryStream input, ref SKNFile data, EventLogger logger)
         {
             bool result = true;
 
             try
             {
                 BinaryReader myFile = new BinaryReader(input);
-                result = ReadData(myFile, ref data);
+                result = ReadData(myFile, ref data, logger);
                 myFile.Close();
             }
-            catch
+            catch(Exception e)
             {
+                logger.LogError("Unable to open binary reader.");
+                logger.LogError(e.Message);
                 result = false;
             }
 
             return result;
         }
 
-        private static bool ReadBinary(MemoryStream input, ref SKNFile data)
-        {
-            bool result = true;
-
-            try
-            {
-                BinaryReader myFile = new BinaryReader(input);
-                result = ReadData(myFile, ref data);
-                myFile.Close();
-            }
-            catch
-            {
-                result = false;
-            }
-
-            return result;
-        }
-
-        private static bool ReadData(BinaryReader file, ref SKNFile data)
+        private static bool ReadData(BinaryReader file, ref SKNFile data, EventLogger logger)
         {
             bool result = true;
 
@@ -214,6 +178,7 @@ namespace LOLViewer
                 // Unknown Version
                 else           
                 {
+                    logger.LogError("Unknown skn version: " + data.version);
 #if DEBUG
                     MessageBox.Show("New .skn version.", "Error",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -221,10 +186,20 @@ namespace LOLViewer
                     result = false;
                 }
             }
-            catch
+            catch(Exception e)
             {
+                logger.LogError("Skn reading error.");
+                logger.LogError(e.Message);
                 result = false;
             }
+
+            logger.LogEvent("Magic: " + data.magic);
+            logger.LogEvent("Version: " + data.version);
+            logger.LogEvent("Number of Objects: " + data.numObjects);
+            logger.LogEvent("Number of Material Headers: " + data.numMaterialHeaders);
+            logger.LogEvent("Number of Vertices: " + data.numVertices);
+            logger.LogEvent("Number of Indices: " + data.numIndices);
+            logger.LogEvent("Magic: " + data.magic);
 
             return result;
         }

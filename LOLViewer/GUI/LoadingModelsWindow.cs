@@ -45,6 +45,7 @@ namespace LOLViewer
     {
         public DialogResult result;
         public LOLDirectoryReader reader;
+        public EventLogger logger;
 
         public LoadingModelsWindow()
         {
@@ -58,7 +59,6 @@ namespace LOLViewer
             Shown += new EventHandler(OnLoadingModelsWindowShown);
 
             loadingBackgroundWorker.DoWork += new DoWorkEventHandler(OnWorkerDoWork);
-            loadingBackgroundWorker.ProgressChanged += new ProgressChangedEventHandler(OnWorkerProgressChanged);
             loadingBackgroundWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(OnWorkerWorkCompleted);
 
             loadingCancelButton.Click += new EventHandler(OnLoadingCancelButtonClick);
@@ -83,14 +83,16 @@ namespace LOLViewer
 
         private void OnWorkerDoWork(object sender, DoWorkEventArgs e)
         {
-            bool readResult = reader.Read();
+            bool readResult = reader.Read( logger );
             if (readResult == true)
             {
+                logger.LogEvent("Sorting models.");
                 result = DialogResult.OK;
                 reader.SortModelNames();
             }
             else
             {
+                logger.LogError("Failed to read models.");
                 result = DialogResult.Abort;
             }
         }
@@ -98,11 +100,6 @@ namespace LOLViewer
         private void OnWorkerWorkCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             this.Close();
-        }
-
-        private void OnWorkerProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            throw new NotImplementedException();
         }
 
         //

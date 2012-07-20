@@ -47,7 +47,8 @@ namespace LOLViewer
 {
     public partial class MainWindow : Form
     {
-        private const String DEFAULT_DIRECTORY_FILE = "root.dat";
+        private const String DEFAULT_DIRECTORY_FILE = "lolviewer.dat";
+        private const String DEFAULT_LOG_FILE = "lolviewer.log";
 
         // Windowing variables
         private bool isGLLoaded;
@@ -64,6 +65,7 @@ namespace LOLViewer
 
         // IO Variables
         private LOLDirectoryReader reader;
+        private EventLogger logger;
 
         // Model Name Search Variables
         public String lastSearch;
@@ -78,6 +80,10 @@ namespace LOLViewer
        
         public MainWindow()
         {
+            logger = new EventLogger();
+            bool result = logger.Open(DEFAULT_LOG_FILE); // Not checking result.
+            logger.LogEvent("Program Start.");
+
             isGLLoaded = false;
             timer = new Stopwatch();
 
@@ -85,7 +91,7 @@ namespace LOLViewer
             camera.SetViewParameters(new Vector3(0.0f, 0.0f, 300.0f), Vector3.Zero);
             renderer = new GLRenderer();
 
-            // Set up the reader and initialize its root to the value in 'root.dat' if
+            // Set up the reader and initialize its root to the value in 'lolviewer.dat' if
             // the file exists.
             {
                 reader = new LOLDirectoryReader();
@@ -100,8 +106,15 @@ namespace LOLViewer
                         file = new FileStream(fileInfo.FullName, FileMode.Open);
                         isFileOpen = true;
                     }
+                    else
+                    {
+                        logger.LogWarning("Failed to locate " + DEFAULT_DIRECTORY_FILE + ".");
+                    }
                 }
-                catch {}
+                catch 
+                {
+                    logger.LogWarning("Failed to open " + DEFAULT_DIRECTORY_FILE + ".");
+                }
 
                 if (isFileOpen == true)
                 {
@@ -110,12 +123,15 @@ namespace LOLViewer
                     {
                         try
                         {
+                            logger.LogEvent("Reading " + DEFAULT_DIRECTORY_FILE + ".");
+
                             fileReader = new BinaryReader(file);
                             reader.root = fileReader.ReadString();
                             fileReader.Close();
                         }
                         catch
                         {
+                            logger.LogWarning("Failed to read " + DEFAULT_DIRECTORY_FILE + ".");
                             file.Close();
                         }
                     }
@@ -250,7 +266,7 @@ namespace LOLViewer
         public void GLControlMainOnLoad(object sender, EventArgs e)
         {
             // Set up renderer.
-            bool result = renderer.OnLoad();
+            bool result = renderer.OnLoad(logger);
             if (result == false)
             {
                 MessageBox.Show("OpenGL failed to load." +
@@ -284,6 +300,10 @@ namespace LOLViewer
         private void GLControlMainOnDispose(object sender, EventArgs e)
         {
             renderer.ShutDown();
+
+            // Close logger at this point.
+            logger.LogEvent("Program shutdown.");
+            logger.Close();
         }
 
         //
@@ -380,17 +400,19 @@ namespace LOLViewer
 
             LoadingModelsWindow loader = new LoadingModelsWindow();
             loader.reader = reader;
+            loader.logger = logger;
             loader.StartPosition = FormStartPosition.CenterParent;
             loader.ShowDialog();
 
             DialogResult result = loader.result;
             if (result == DialogResult.Abort)
             {
-                MessageBox.Show("Unable to read models. If you installed League of legends" +
-                                 " in a non-default location, change the default directory" +
-                                 " to the League of Legends' root installation folder by using the command" +
-                                 " in the 'Options' menu.", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, 
+                    "Unable to read models. If you installed League of legends" +
+                    " in a non-default location, change the default directory" +
+                    " to the League of Legends' root installation folder by using the command" +
+                    " in the 'Options' menu.", 
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             else if (result == DialogResult.Cancel)
@@ -399,24 +421,31 @@ namespace LOLViewer
             }
 
             // On successful read, write the root directory to file.
+            logger.LogEvent("Storing League of Legends installation directory path.");
             FileStream file = null;
             try
             {
+                logger.LogEvent("Opening " + DEFAULT_DIRECTORY_FILE + ".");
                 file = new FileStream(DEFAULT_DIRECTORY_FILE, FileMode.OpenOrCreate);
             }
-            catch {}
+            catch 
+            {
+                logger.LogWarning("Failed to open " + DEFAULT_DIRECTORY_FILE + ".");
+            }
 
             BinaryWriter writer = null;
             if (file != null)
             {
                 try
                 {
+                    logger.LogEvent("Writing League of Legends directory path.");
                     writer = new BinaryWriter(file);
                     writer.Write(reader.root);
                     writer.Close();
                 }
                 catch
                 {
+                    logger.LogWarning("Failed to write League of Legends directory path.");
                     file.Close();
                 }
             }
@@ -446,7 +475,7 @@ namespace LOLViewer
             LOLModel model = reader.GetModel(modelName);
             if (model != null)
             {
-                bool result = renderer.LoadModel(model);
+                bool result = renderer.LoadModel(model, logger);
 
                 currentAnimationComboBox.Items.Clear();
                 foreach (String name in renderer.GetAnimationsInCurrentModel())

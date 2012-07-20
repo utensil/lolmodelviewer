@@ -112,6 +112,7 @@
     <Compile Include="IO\ANMFrame.cs" />
     <Compile Include="IO\ANMListReader.cs" />
     <Compile Include="IO\ANMReader.cs" />
+    <Compile Include="IO\EventLogger.cs" />
     <Compile Include="IO\InibinFile.cs" />
     <Compile Include="IO\InibinHashIDs.cs" />
     <Compile Include="IO\InibinReader.cs" />
