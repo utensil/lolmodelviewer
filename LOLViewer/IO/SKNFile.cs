@@ -80,7 +80,7 @@ namespace LOLViewer
         /// this model which were intended to be used with directX, you 
         /// need to invert the V coordinate.</param>
         /// <returns></returns>
-        public bool ToGLStaticModel(ref GLStaticModel model, bool usingDDSTexture)
+        public bool ToGLStaticModel(ref GLStaticModel model, bool usingDDSTexture, EventLogger logger)
         {
             bool result = true;
 
@@ -115,8 +115,7 @@ namespace LOLViewer
                 iData.Add((uint)indices[i]);
             }
 
-
-            result = model.Create(vData, nData, tData, iData);
+            result = model.Create(vData, nData, tData, iData, logger);
 
             return result;
         }

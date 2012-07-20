@@ -51,43 +51,23 @@ namespace LOLViewer.IO
         /// <param name="file">The file.</param>
         /// <param name="data">The contents of the file are stored in here.</param>
         /// <returns></returns>
-        public static bool Read(RAFFileListEntry file, ref ANMFile data)
+        public static bool Read(RAFFileListEntry file, ref ANMFile data, EventLogger logger)
         {
             bool result = true;
+
+            logger.LogEvent("Reading anm: " + file.FileName);
 
             try
             {
                 // Get the data from the archive
                 MemoryStream myInput = new MemoryStream( file.GetContent() );
-                result = ReadBinary(myInput, ref data);
+                result = ReadBinary(myInput, ref data, logger);
                 myInput.Close();
             }
-            catch
+            catch(Exception e)
             {
-                result = false;
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Reads in a binary .anm file from disc.
-        /// </summary>
-        /// <param name="file">The file.</param>
-        /// <param name="data">The contents of the file are stored in here.</param>
-        /// <returns></returns>
-        public static bool Read(FileInfo file, ref ANMFile data)
-        {
-            bool result = true;
-
-            try
-            {
-                FileStream myInput = new FileStream(file.FullName, FileMode.Open);
-                result = ReadBinary(myInput, ref data);
-                myInput.Close();
-            }
-            catch
-            {
+                logger.LogError("Unable to open memory stream: " + file.FileName);
+                logger.LogError(e.Message);
                 result = false;
             }
 
@@ -99,43 +79,27 @@ namespace LOLViewer.IO
         // (Because nested Try/Catch looks nasty in one function block.)
         //
 
-        private static bool ReadBinary(FileStream input, ref ANMFile data)
+        private static bool ReadBinary(MemoryStream input, ref ANMFile data, EventLogger logger)
         {
             bool result = true;
 
             try
             {
                 BinaryReader myFile = new BinaryReader(input);
-                result = ReadData(myFile, ref data);
+                result = ReadData(myFile, ref data, logger);
                 myFile.Close();
             }
-            catch
+            catch(Exception e)
             {
+                logger.LogError("Unable to open binary reader.");
+                logger.LogError(e.Message);
                 result = false;
             }
 
             return result;
         }
 
-        private static bool ReadBinary(MemoryStream input, ref ANMFile data)
-        {
-            bool result = true;
-
-            try
-            {
-                BinaryReader myFile = new BinaryReader(input);
-                result = ReadData(myFile, ref data);
-                myFile.Close();
-            }
-            catch
-            {
-                result = false;
-            }
-
-            return result;
-        }
-
-        private static bool ReadData(BinaryReader file, ref ANMFile data)
+        private static bool ReadData(BinaryReader file, ref ANMFile data, EventLogger logger)
         {
             bool result = true;
 
@@ -207,6 +171,7 @@ namespace LOLViewer.IO
                 // Unknown version
                 else
                 {
+                    logger.LogError("Unknown anm version: " + data.version);
 #if DEBUG 
                     MessageBox.Show("New .anm version.", "Error",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -214,10 +179,20 @@ namespace LOLViewer.IO
                     result = false; 
                 }
             }
-            catch
+            catch(Exception e)
             {
+                logger.LogError("Anm reading error.");
+                logger.LogError(e.Message);
                 result = false;
             }
+
+            logger.LogEvent("Magic One: " + data.magicOne);
+            logger.LogEvent("Magic Two: " + data.magicTwo);
+            logger.LogEvent("Magic Three: " + data.magicThree);
+            logger.LogEvent("Version: " + data.version);
+            logger.LogEvent("Number of Bones: " + data.numberOfBones);
+            logger.LogEvent("Number of Frames: " + data.numberOfFrames);
+            logger.LogEvent("Playback FPS: " + data.playbackFPS);
 
             return result;
         }

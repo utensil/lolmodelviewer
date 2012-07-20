@@ -72,7 +72,7 @@ namespace LOLViewer
         /// this model which were intended to be used with directX, you 
         /// need to invert the V coordinate.</param>
         /// <returns></returns>
-        public bool ToGLRiggedModel(ref GLRiggedModel model, SKNFile skn, bool usingDDSTexture)
+        public bool ToGLRiggedModel(ref GLRiggedModel model, SKNFile skn, bool usingDDSTexture, EventLogger logger)
         {
             bool result = true;
 
@@ -149,13 +149,13 @@ namespace LOLViewer
             {
                 result = model.Create((int)version, vData, nData, tData,
                     bData, wData, iData, boData, bpData,
-                    bsData, bnData, bParentData);
+                    bsData, bnData, bParentData, logger);
             }
             else
             {
                 result = model.Create((int)version, vData, nData, tData,
                     bData, wData, iData, boData, bpData,
-                    bsData, bnData, bParentData, boneIDs);
+                    bsData, bnData, bParentData, boneIDs, logger);
             }
 
             return result;

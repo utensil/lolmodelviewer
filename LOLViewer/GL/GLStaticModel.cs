@@ -51,9 +51,11 @@ namespace LOLViewer
         }
 
         public bool Create(List<float> vertexData, List<float> normalData,
-            List<float> texData, List<uint> indexData)
+            List<float> texData, List<uint> indexData, EventLogger logger)
         {
             bool result = true;
+
+            logger.LogEvent("Creating OpenGL static model.");
 
             numIndices = indexData.Count;
 
@@ -245,6 +247,10 @@ namespace LOLViewer
             if (result == true)
             {
                 GL.BindVertexArray(0);
+            }
+            else
+            {
+                logger.LogError("Failed to create OpenGL static model.");
             }
 
             return result;

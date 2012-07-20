@@ -183,7 +183,7 @@ namespace LOLViewer.IO
             foreach( RAFFileListEntry f in inibins )
             {
                 InibinFile iniFile = new InibinFile();
-                bool readResult = InibinReader.ReadCharacterInibin(f, ref iniFile);
+                bool readResult = InibinReader.ReadCharacterInibin(f, ref iniFile, logger);
 
                 if (readResult == true)
                 {

@@ -41,37 +41,23 @@ namespace LOLViewer
 {
     class SKLReader
     {
-        public static bool Read(RAFFileListEntry file, ref SKLFile data)
+        public static bool Read(RAFFileListEntry file, ref SKLFile data, EventLogger logger)
         {
             bool result = true;
-            
+
+            logger.LogEvent("Reading skl: " + file.FileName);
+
             try
             {
                 // Get the data from the archive
                 MemoryStream myInput = new MemoryStream( file.GetContent() );
-                result = ReadBinary(myInput, ref data);
+                result = ReadBinary(myInput, ref data, logger);
                 myInput.Close();
             }
-            catch
+            catch(Exception e)
             {
-                result = false;
-            }
-
-            return result;
-        }
-
-        public static bool Read(FileInfo file, ref SKLFile data)
-        {
-            bool result = true;
-
-            try
-            {
-                FileStream myInput = new FileStream(file.FullName, FileMode.Open);
-                result = ReadBinary(myInput, ref data);
-                myInput.Close();
-            }
-            catch
-            {
+                logger.LogError("Unable to open memory stream: " + file.FileName);
+                logger.LogError(e.Message);
                 result = false;
             }
 
@@ -83,43 +69,27 @@ namespace LOLViewer
         // (Because nested Try/Catch looks nasty in one function block.)
         //
 
-        private static bool ReadBinary(FileStream input, ref SKLFile data)
+        private static bool ReadBinary(MemoryStream input, ref SKLFile data, EventLogger logger)
         {
             bool result = true;
 
             try
             {
                 BinaryReader myFile = new BinaryReader(input);
-                result = ReadData(myFile, ref data);
+                result = ReadData(myFile, ref data, logger);
                 myFile.Close();
             }
-            catch
+            catch(Exception e)
             {
+                logger.LogError("Unable to open binary reader.");
+                logger.LogError(e.Message);
                 result = false;
             }
 
             return result;
         }
 
-        private static bool ReadBinary(MemoryStream input, ref SKLFile data)
-        {
-            bool result = true;
-
-            try
-            {
-                BinaryReader myFile = new BinaryReader(input);
-                result = ReadData(myFile, ref data);
-                myFile.Close();
-            }
-            catch
-            {
-                result = false;
-            }
-
-            return result;
-        }
-
-        private static bool ReadData(BinaryReader file, ref SKLFile data)
+        private static bool ReadData(BinaryReader file, ref SKLFile data, EventLogger logger)
         {
             bool result = true;
 
@@ -309,6 +279,7 @@ namespace LOLViewer
                 // Unknown Version
                 else
                 {
+                    logger.LogError("Unknown skl version: " + data.version);
 #if DEBUG
                     MessageBox.Show("New .skl version.", "Error",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -316,10 +287,19 @@ namespace LOLViewer
                     result = false;
                 }
             }
-            catch
+            catch(Exception e)
             {
+                logger.LogError("Skl reading error.");
+                logger.LogError(e.Message);
                 result = false;
             }
+
+            logger.LogEvent("Magic One: " + data.magicOne);
+            logger.LogEvent("Magic Two: " + data.magicTwo);
+            logger.LogEvent("Version: " + data.version);
+            logger.LogEvent("Designer ID: " + data.designerID);
+            logger.LogEvent("Number of Bones: " + data.numBones);
+            logger.LogEvent("Number of Bone IDs: " + data.numBoneIDs);
 
             return result;
         }

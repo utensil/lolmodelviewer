@@ -889,14 +889,13 @@ namespace LOLViewer
             if (result == true)
             {
                 // Model is stored in a RAF.
-                result = SKNReader.Read(model.skn, ref file, logger);
-                
+                result = SKNReader.Read(model.skn, ref file, logger);             
             }
 
             GLStaticModel glModel = new GLStaticModel();
             if (result == true)
             {
-                result = file.ToGLStaticModel(ref glModel, true);
+                result = file.ToGLStaticModel(ref glModel, true, logger);
             }
 
             // Store it.
@@ -954,14 +953,13 @@ namespace LOLViewer
             SKLFile sklFile = new SKLFile();
             if (result == true)
             {
-                result = SKLReader.Read(model.skl,
-                    ref sklFile);
+                result = SKLReader.Read(model.skl, ref sklFile, logger);
             }
 
             GLRiggedModel glModel = new GLRiggedModel();
             if (result == true)
             {
-                result = sklFile.ToGLRiggedModel(ref glModel, sknFile, true);
+                result = sklFile.ToGLRiggedModel(ref glModel, sknFile, true, logger);
             }
 
             // Store it.
@@ -1013,20 +1011,10 @@ namespace LOLViewer
                 foreach (var a in model.animations)
                 {
                     ANMFile anmFile = new ANMFile();
-                    bool anmResult = ANMReader.Read(a.Value, ref anmFile);
+                    bool anmResult = ANMReader.Read(a.Value, ref anmFile, logger);
                     if (anmResult == true)
                     {
-                        //
-                        // Not exactly sure what to do when the number of bones
-                        // do not match between ANM and SKL files.
-                        //
-                        // For now, just ignoring the animation file.
-                        //
-
-                        if (anmFile.numberOfBones == sklFile.numBoneIDs)
-                        {
-                            animationFiles.Add(a.Key, anmFile);
-                        }
+                        animationFiles.Add(a.Key, anmFile);
                     }
                 }
 

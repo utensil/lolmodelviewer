@@ -82,7 +82,7 @@ namespace LOLViewer
         public bool Create(int version, List<float> vertexData, List<float> normalData,
             List<float> texData, List<float> boneData, List<float> weightData, List<uint> indexData,
             List<Quaternion> bOrientation, List<Vector3> bPosition, List<float> bScale,
-            List<String> bName, List<int> bParent , List<uint> boneIDs)
+            List<String> bName, List<int> bParent , List<uint> boneIDs, EventLogger logger)
         {
             // Depending on the version of the model, the look ups change.
             if (version == 2 || version == 0)
@@ -105,19 +105,21 @@ namespace LOLViewer
 
             // Call the version 1 create with the remapped bone data.
             return Create(version, vertexData, normalData, texData, boneData, weightData, indexData,
-                bOrientation, bPosition, bScale, bName, bParent);
+                bOrientation, bPosition, bScale, bName, bParent, logger);
         }
 
         // Version 1 Create
         public bool Create(int version, List<float> vertexData, List<float> normalData,
             List<float> texData, List<float> boneData, List<float> weightData, 
             List<uint> indexData, List<Quaternion> bOrientation, List<Vector3> bPosition,
-            List<float> bScale, List<String> bName, List<int> bParent)
+            List<float> bScale, List<String> bName, List<int> bParent, EventLogger logger)
         {
             bool result = true;
 
             this.version = version;
             this.numIndices = indexData.Count;
+
+            logger.LogEvent("Creating GL rigged model.");
 
             // Create the initial binding joints.
             rig.Create(bOrientation, bPosition, bScale, bParent);
@@ -410,6 +412,11 @@ namespace LOLViewer
             if (result == true)
             {
                 GL.BindVertexArray(0);
+            }
+
+            if (result == false)
+            {
+                logger.LogError("Failed to create GL rigged model.");
             }
 
             return result;

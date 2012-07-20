@@ -53,77 +53,39 @@ namespace LOLViewer.IO
 {
     class InibinReader
     {
-        public static bool ReadCharacterInibin(RAFFileListEntry file, ref InibinFile data)
+        public static bool ReadCharacterInibin(RAFFileListEntry file, ref InibinFile data, EventLogger logger)
         {
             bool result = true;
             
+            logger.LogEvent("Reading inibin: " + file.FileName);
+
             try
             {
                 // Get the data from the archive
                 MemoryStream myInput = new MemoryStream( file.GetContent() );
-                result = ReadCharacterInibin(myInput, ref data);
-
+                result = ReadCharacterInibin(myInput, ref data, logger);
+        
                 int end = file.FileName.LastIndexOf("/");
                 String directory = file.FileName.Substring(0, end);
                 String archive = file.RAFArchive.RAFFilePath;
                 archive = archive.Replace("\\", "/");
                 end = archive.LastIndexOf("/");
                 archive = archive.Substring(0, end);
-
+        
                 data.directory = new DirectoryInfo(archive + "/" + directory);
                 myInput.Close();
             }
-            catch
+            catch(Exception e)
             {
+                logger.LogError("Unable to open memory stream: " + file.FileName);
+                logger.LogError(e.Message);
                 result = false;
             }
-
+        
             return result;
         }
 
-        public static bool ReadCharacterInibin(FileInfo f, ref InibinFile data)
-        {
-            bool result = true;
-
-            // Try to open the inibin file.
-            try
-            {
-                FileStream fStream = new FileStream(f.FullName, FileMode.Open, 
-                    FileAccess.Read);
-
-                result = ReadBinary(fStream, ref data);
-                data.directory = f.Directory;
-            }
-            catch
-            {
-                result = false;
-                data = null;
-            }
-
-            return result;
-        }
-
-        private static bool ReadBinary(FileStream input, ref InibinFile data)
-        {
-            bool result = true;
-
-            try
-            {
-                byte[] byteData = new byte[(int)input.Length];
-                input.Read(byteData, 0, (int)input.Length);
-                MemoryStream myFile = new MemoryStream(byteData);
-                result = ReadCharacterInibin(myFile, ref data);
-                myFile.Close();
-            }
-            catch
-            {
-                result = false;
-            }
-
-            return result;
-        }
-
-        public static bool ReadCharacterInibin(MemoryStream stream, ref InibinFile file)
+        public static bool ReadCharacterInibin(MemoryStream stream, ref InibinFile file, EventLogger logger)
         {
  	        bool result = true;
 
@@ -491,6 +453,9 @@ namespace LOLViewer.IO
             Debug.WriteLine("Skin #8 SKL: " + file.properties[(long)InibinHashID.SKIN_EIGHT_SKL]);
             Debug.WriteLine("Skin #8 DDS: " + file.properties[(long)InibinHashID.SKIN_EIGHT_TEXTURE]); 
 #endif
+
+            logger.LogEvent("");
+
             return result;
         }
         
