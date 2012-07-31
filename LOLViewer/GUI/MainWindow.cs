@@ -167,9 +167,7 @@ namespace LOLViewer
 
             // Menu Callbacks
             exitToolStripMenuItem.Click += new EventHandler(OnExit);
-            setDirectoryToolStripMenuItem.Click += new EventHandler(OnSetDirectory);
             aboutToolStripMenuItem.Click += new EventHandler(OnAbout);
-            readDefaultDirectoryToolStrip.Click += new EventHandler(OnReadModels);
 
             // Model View Callbacks
             modelListBox.DoubleClick += new EventHandler(OnModelListDoubleClick);
@@ -367,6 +365,11 @@ namespace LOLViewer
             aboutDlg.ShowDialog();
         }
 
+        private void OnExit(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
         private void OnSetDirectory(object sender, EventArgs e)
         {
             FolderBrowserDialog dlg = new FolderBrowserDialog();
@@ -374,21 +377,16 @@ namespace LOLViewer
             dlg.ShowNewFolderButton = false;
 
             DialogResult result = dlg.ShowDialog();
-            
+
             String selectedDir = String.Empty;
             if (result == DialogResult.OK)
             {
                 // Lets not check and let the directory reader sort it out.
                 reader.SetRoot(dlg.SelectedPath);
-                    
+
                 // Reread the models.
                 OnReadModels(sender, e);
             }
-        }
-
-        private void OnExit(object sender, EventArgs e)
-        {
-            this.Close();
         }
 
         private void OnReadModels(object sender, EventArgs e)
@@ -407,11 +405,11 @@ namespace LOLViewer
             DialogResult result = loader.result;
             if (result == DialogResult.Abort)
             {
-                MessageBox.Show(this, 
-                    "Unable to read models. If you installed League of legends" +
-                    " in a non-default location, change the default directory" +
-                    " to the League of Legends' root installation folder by using the command" +
-                    " in the 'Options' menu.", 
+                MessageBox.Show(this,
+                    "Unable to read the League of Legends' installation directory. " +
+                    "If you installed League of Legends " +
+                    "in a non-default location, use 'File -> Read...' to manually " +
+                    "select the League of Legends' installation directory.",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -428,7 +426,7 @@ namespace LOLViewer
                 logger.LogEvent("Opening " + DEFAULT_DIRECTORY_FILE + ".");
                 file = new FileStream(DEFAULT_DIRECTORY_FILE, FileMode.OpenOrCreate);
             }
-            catch 
+            catch
             {
                 logger.LogWarning("Failed to open " + DEFAULT_DIRECTORY_FILE + ".");
             }
