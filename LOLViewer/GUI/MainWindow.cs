@@ -168,6 +168,8 @@ namespace LOLViewer
             // Menu Callbacks
             exitToolStripMenuItem.Click += new EventHandler(OnExit);
             aboutToolStripMenuItem.Click += new EventHandler(OnAbout);
+            readDirectoryMainMenuStripItem.Click += new EventHandler(OnReadModels);
+            readMainMenuStripItem.Click += new EventHandler(OnSetDirectory);
 
             // Model View Callbacks
             modelListBox.DoubleClick += new EventHandler(OnModelListDoubleClick);
