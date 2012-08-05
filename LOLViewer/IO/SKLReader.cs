@@ -36,12 +36,13 @@ using System.IO;
 using System.Windows.Forms;
 using OpenTK;
 using RAFlibPlus;
+using LOLViewer.IO;
 
 namespace LOLViewer
 {
     class SKLReader
     {
-        public static bool Read(RAFFileListEntry file, ref SKLFile data, EventLogger logger)
+        public static bool Read(IFileEntry file, ref SKLFile data, EventLogger logger)
         {
             bool result = true;
 

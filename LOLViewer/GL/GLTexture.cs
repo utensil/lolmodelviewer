@@ -39,6 +39,7 @@ using OpenTK.Graphics.OpenGL;
 
 using System.Drawing;
 using System.Drawing.Imaging;
+using LOLViewer.IO;
 
 namespace LOLViewer
 {
@@ -133,7 +134,7 @@ namespace LOLViewer
         /// <param name="target">Only supports 2D.</param>
         /// <param name="encoding">Only supports DDS.</param>
         /// <returns></returns>
-        public bool Create( RAFFileListEntry f, TextureTarget target, SupportedImageEncodings encoding)
+        public bool Create( IFileEntry f, TextureTarget target, SupportedImageEncodings encoding)
         {
             bool result = true;
 
@@ -291,7 +292,7 @@ namespace LOLViewer
             return result;
         }
 
-        private bool CreateDDSTexture(RAFFileListEntry file, TextureTarget target)
+        private bool CreateDDSTexture(IFileEntry file, TextureTarget target)
         {
             bool result = true;
 

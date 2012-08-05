@@ -40,6 +40,7 @@ using System.Diagnostics;
 using System.Windows.Forms;
 
 using RAFlibPlus;
+using Ionic.Zip;
 
 namespace LOLViewer.IO
 {
@@ -53,13 +54,13 @@ namespace LOLViewer.IO
         public const String DEFAULT_EXTRACTED_TEXTURES_ROOT = "content/textures/";
         public String root;
 
-        public Dictionary<String, RAFFileListEntry> skls;
-        public Dictionary<String, RAFFileListEntry> skns;
-        public Dictionary<String, RAFFileListEntry> textures;
+        public Dictionary<String, IFileEntry> skls;
+        public Dictionary<String, IFileEntry> skns;
+        public Dictionary<String, IFileEntry> textures;
 
-        public List<RAFFileListEntry> inibins;
-        public Dictionary<String, RAFFileListEntry> animationLists;
-        public Dictionary<String, RAFFileListEntry> animations;
+        public List<IFileEntry> inibins;
+        public Dictionary<String, IFileEntry> animationLists;
+        public Dictionary<String, IFileEntry> animations;
 
 
         public Dictionary<String, LOLModel> models;
@@ -68,14 +69,14 @@ namespace LOLViewer.IO
         {
             root = DEFAULT_ROOT;
 
-            inibins = new List<RAFFileListEntry>();
+            inibins = new List<IFileEntry>();
 
-            animationLists = new Dictionary<String, RAFFileListEntry>();
-            animations = new Dictionary<String, RAFFileListEntry>();
+            animationLists = new Dictionary<String, IFileEntry>();
+            animations = new Dictionary<String, IFileEntry>();
             
-            skls = new Dictionary<String, RAFFileListEntry>();
-            skns = new Dictionary<String, RAFFileListEntry>();
-            textures = new Dictionary<String, RAFFileListEntry>();
+            skls = new Dictionary<String, IFileEntry>();
+            skns = new Dictionary<String, IFileEntry>();
+            textures = new Dictionary<String, IFileEntry>();
 
             models = new Dictionary<String,LOLModel>();
         }
@@ -138,7 +139,8 @@ namespace LOLViewer.IO
             if (rootDir.Name.Contains("League of Legends") == true ||
                 rootDir.Name.Contains("Riot Games") == true ||
                 rootDir.Name.Contains("RADS") == true ||
-                rootDir.Name.Contains("rads") == true )
+                rootDir.Name.Contains("rads") == true ||
+                rootDir.Name.Contains("英雄联盟") == true)
             {
                 isRootSelected = true;
             }
@@ -180,7 +182,7 @@ namespace LOLViewer.IO
                 result = false;
             }
 
-            foreach( RAFFileListEntry f in inibins )
+            foreach( IFileEntry f in inibins )
             {
                 InibinFile iniFile = new InibinFile();
                 bool readResult = InibinReader.ReadCharacterInibin(f, ref iniFile, logger);
@@ -240,7 +242,7 @@ namespace LOLViewer.IO
                         catch(Exception e) 
                         {
                             logger.LogError("Unable to store model definition: " + name);
-                            logger.LogError(e.Message);
+                            logger.LogError(e.Message + e.StackTrace);
                         }
                     }
                 }
@@ -262,7 +264,7 @@ namespace LOLViewer.IO
             }
             else
             {
-               logger.LogError("Unable to find skn file: " + skns[def.skn]);
+               logger.LogError("Unable to find skn file: " + def.skn);
                return false;
             }
 
@@ -273,7 +275,7 @@ namespace LOLViewer.IO
             }
             else
             {
-                logger.LogError("Unable to find skl file: " + skls[def.skl]);
+                logger.LogError("Unable to find skl file: " + def.skl);
                 return false;
             }
 
@@ -284,7 +286,7 @@ namespace LOLViewer.IO
             }
             else
             {
-                logger.LogError("Unable to find texture file: " + textures[def.tex].FileName);
+                logger.LogError("Unable to find texture file: " + def.tex);
                 return false;
             }
 
@@ -426,6 +428,11 @@ namespace LOLViewer.IO
                             result = OpenModelsRoot(dir, logger);
                             break;
                         };
+                    case "Game":
+                        {
+                            result = OpenGameClientVersion(dir, logger);
+                            break;
+                        };                    
                     default:
                         {
                             // Just ignore this directory.
@@ -496,17 +503,19 @@ namespace LOLViewer.IO
             bool result = true;
 
             // Read in .raf files and look for model information in them.
-            RAFArchive archive = null;
+            IArchive archive = null;
             try
             {
                 foreach(FileInfo f in dir.GetFiles())
                 {
                     // Ignore non RAF files.
-                    if (f.Extension != ".raf")
+                    if (f.Extension != ".raf" && f.Name != "HeroPak_client.zip")
                         continue;
+
+                    logger.LogError(f.Name);
                     
-                    // ReadRAF() opens the archive.
-                    result = ReadRAF(f, ref archive, logger);
+                    // ReadArch() opens the archive.
+                    result = ReadArch(f, ref archive, logger);
                     if (result == false)
                     {
                         break;
@@ -523,20 +532,37 @@ namespace LOLViewer.IO
             return result;
         }
 
-        private bool ReadRAF(FileInfo f, ref RAFArchive archive, EventLogger logger)
+        private IArchive openArchive(FileInfo f)
+        {
+            if(f.Extension == ".raf")
+            {
+                return new RAFArchiveWrapper(new RAFArchive(f.FullName));
+            }
+            else if (f.Extension == ".zip")
+            {
+                return new ZIPArchiveWrapper(new ZipFile(f.FullName));
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private bool ReadArch(FileInfo f, ref IArchive archive, EventLogger logger)
         {
             bool result = true;
 
             try
             {
-                logger.LogEvent("Opening RAF file: " + f.FullName);
+                logger.LogEvent("Opening archive file: " + f.FullName);
 
                 // Open the archive
-                archive = new RAFArchive(f.FullName);
+                archive = openArchive(f);
 
                 // Get the texture files.
-                List<RAFFileListEntry> files = archive.SearchFileEntries(".dds", RAFArchive.RAFSearchType.All);
-                foreach (RAFFileListEntry e in files)
+                List<IFileEntry> files = archive.SearchFileEntries(".dds");
+
+                foreach (IFileEntry e in files)
                 {
                     // Try to parse out unwanted textures.
                     if (e.FileName.Contains("LoadScreen") == false &&
@@ -564,8 +590,10 @@ namespace LOLViewer.IO
                     }
                 }
 
-                files = archive.SearchFileEntries(".DDS", RAFArchive.RAFSearchType.All);
-                foreach (RAFFileListEntry e in files)
+
+                files = archive.SearchFileEntries(".DDS");
+
+                foreach (IFileEntry e in files)
                 {
                     // Try to parse out unwanted textures.
                     if (e.FileName.Contains("LoadScreen") == false &&
@@ -594,8 +622,9 @@ namespace LOLViewer.IO
                 }
 
                 // Get the .skn files
-                files = archive.SearchFileEntries(".skn", RAFArchive.RAFSearchType.All);
-                foreach (RAFFileListEntry e in files)
+                files = archive.SearchFileEntries(".skn");
+
+                foreach (IFileEntry e in files)
                 {
                     String name = e.FileName;
                     int pos = name.LastIndexOf("/");
@@ -614,8 +643,8 @@ namespace LOLViewer.IO
                 }
 
                 // Get the .skl files.
-                files = archive.SearchFileEntries(".skl", RAFArchive.RAFSearchType.All);
-                foreach (RAFFileListEntry e in files)
+                files = archive.SearchFileEntries(".skl");
+                foreach (IFileEntry e in files)
                 {
                     String name = e.FileName;
                     int pos = name.LastIndexOf("/");
@@ -634,8 +663,9 @@ namespace LOLViewer.IO
                 }
 
                 // There's .inibin files in here too.
-                files = archive.SearchFileEntries(".inibin", RAFArchive.RAFSearchType.All);
-                foreach (RAFFileListEntry e in files)
+                files = archive.SearchFileEntries(".inibin");
+
+                foreach (IFileEntry e in files)
                 {
                     String name = e.FileName;
                     if (name.Contains("Characters") == true) // try to only read required files
@@ -650,8 +680,9 @@ namespace LOLViewer.IO
                 }
 
                 // Read in animation lists
-                files = archive.SearchFileEntries("Animations.list", RAFArchive.RAFSearchType.All);
-                foreach (RAFFileListEntry e in files)
+                files = archive.SearchFileEntries("Animations.list");
+
+                foreach (IFileEntry e in files)
                 {
                     String name = e.FileName;
 
@@ -677,8 +708,9 @@ namespace LOLViewer.IO
                 }
 
                 // Read in animations
-                files = archive.SearchFileEntries(".anm", RAFArchive.RAFSearchType.All);
-                foreach (RAFFileListEntry e in files)
+                files = archive.SearchFileEntries(".anm");
+
+                foreach (IFileEntry e in files)
                 {
                     String name = e.FileName;
                     int pos = name.LastIndexOf("/");

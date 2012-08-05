@@ -44,7 +44,7 @@ namespace LOLViewer.IO
 {
     class ANMListReader
     {
-        public static bool ReadAnimationList(int skin, RAFFileListEntry file,
+        public static bool ReadAnimationList(int skin, IFileEntry file,
             ref Dictionary<String, String> animations, EventLogger logger)
         {
             bool result = true;

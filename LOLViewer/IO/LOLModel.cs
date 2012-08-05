@@ -42,13 +42,13 @@ namespace LOLViewer.IO
 {
     public class LOLModel
     {
-        public RAFFileListEntry skn;
-        public RAFFileListEntry skl;
-        public RAFFileListEntry texture;
+        public IFileEntry skn;
+        public IFileEntry skl;
+        public IFileEntry texture;
 
         public int skinNumber; // used for animating
         public String animationList;
-        public Dictionary<String, RAFFileListEntry> animations;
+        public Dictionary<String, IFileEntry> animations;
 
         public LOLModel() 
         {
@@ -57,7 +57,7 @@ namespace LOLViewer.IO
             texture = null;
 
             animationList = String.Empty;
-            animations = new Dictionary<String, RAFFileListEntry>();
+            animations = new Dictionary<String, IFileEntry>();
 
             skinNumber = -1;
         }

@@ -53,7 +53,7 @@ namespace LOLViewer.IO
 {
     class InibinReader
     {
-        public static bool ReadCharacterInibin(RAFFileListEntry file, ref InibinFile data, EventLogger logger)
+        public static bool ReadCharacterInibin(IFileEntry file, ref InibinFile data, EventLogger logger)
         {
             bool result = true;
             
@@ -67,7 +67,7 @@ namespace LOLViewer.IO
         
                 int end = file.FileName.LastIndexOf("/");
                 String directory = file.FileName.Substring(0, end);
-                String archive = file.RAFArchive.RAFFilePath;
+                String archive = file.GetRootPath();
                 archive = archive.Replace("\\", "/");
                 end = archive.LastIndexOf("/");
                 archive = archive.Substring(0, end);

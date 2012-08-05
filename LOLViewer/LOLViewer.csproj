@@ -49,6 +49,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Ionic.Zip, Version=1.9.1.8, Culture=neutral, PublicKeyToken=edbe51ad942a3f5c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\DotNetZipLib\zip-v1.9\Release\Ionic.Zip.dll</HintPath>
+    </Reference>
     <Reference Include="OpenTK">
       <HintPath>..\OpenTK\OpenTK.dll</HintPath>
     </Reference>
@@ -116,6 +120,7 @@
     <Compile Include="IO\InibinFile.cs" />
     <Compile Include="IO\InibinHashIDs.cs" />
     <Compile Include="IO\InibinReader.cs" />
+    <Compile Include="IO\IFileListEntry.cs" />
     <Compile Include="IO\LoaderDDS.cs" />
     <Compile Include="IO\LoaderStatics.cs" />
     <Compile Include="IO\LOLDirectoryReader.cs" />
@@ -126,6 +131,11 @@
       <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="IO\LOLModel.cs" />
+    <Compile Include="IO\RAFFileListEntryWrapper.cs" />
+    <Compile Include="IO\IArchive.cs" />
+    <Compile Include="IO\RAFArchiveWrapper.cs" />
+    <Compile Include="IO\ZIPArchiveWrapper.cs" />
+    <Compile Include="IO\ZipEntryWrapper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IO\SKLBone.cs" />

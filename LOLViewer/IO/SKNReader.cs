@@ -41,6 +41,7 @@ using System.IO;
 using System.Windows.Forms;
 using OpenTK;
 using RAFlibPlus;
+using LOLViewer.IO;
 
 namespace LOLViewer
 {
@@ -52,7 +53,7 @@ namespace LOLViewer
         /// <param name="file">The file.</param>
         /// <param name="data">The contents of the file are stored in here.</param>
         /// <returns></returns>
-        public static bool Read(RAFFileListEntry file, ref SKNFile data, EventLogger logger)
+        public static bool Read(IFileEntry file, ref SKNFile data, EventLogger logger)
         {
             bool result = true;
 

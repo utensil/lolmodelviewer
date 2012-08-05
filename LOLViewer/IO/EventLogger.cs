@@ -13,6 +13,7 @@ using System.Linq;
 using System.Text;
 
 using System.IO;
+using System.Windows.Forms;
 
 namespace LOLViewer
 {
@@ -52,6 +53,7 @@ namespace LOLViewer
             {
                 file.WriteLine("Error: " + error);
             }
+            //MessageBox.Show(null, error, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         public void LogWarning(string warning)
@@ -60,6 +62,8 @@ namespace LOLViewer
             {
                 file.WriteLine("Warning: " + warning);
             }
+
+            //MessageBox.Show(null, warning, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
         }
 
         public void LogEvent(string e)
@@ -68,6 +72,8 @@ namespace LOLViewer
             {
                 file.WriteLine("Event: " + e);
             }
+
+            //MessageBox.Show(null, e, "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 }
