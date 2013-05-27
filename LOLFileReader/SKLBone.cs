@@ -33,20 +33,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using OpenTK;
-
-namespace LOLViewer
+namespace LOLFileReader
 {
-    class SKLBone
+    public class SKLBone
     {
         public String       name;
         public const int    BONE_NAME_SIZE = 32;
         public int          ID;
         public int          parentID;
         public float        scale;
-        public Vector3      position;
-        public Quaternion   orientation;
-        public const int    TRANSFORM_SIZE = 12;
+        public float[]      position;
+        public float[]      orientation;
+        public const int    ORIENTATION_SIZE = 12;
 
         public SKLBone()
         {
@@ -54,8 +52,8 @@ namespace LOLViewer
             ID = 0;
             parentID = 0;
             scale = 0.0f;
-            position = Vector3.Zero;
-            orientation = Quaternion.Identity;
+            position = new float[3];
+            orientation = new float[ORIENTATION_SIZE];
         }
     }
 }

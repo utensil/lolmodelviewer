@@ -2,7 +2,7 @@
 
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -26,7 +26,7 @@ along with LOLViewer.  If not, see <http://www.gnu.org/licenses/>.
 
 
 
-namespace LOLViewer
+namespace LOLViewer.GUI
 {
     partial class AboutWindow
     {
@@ -65,25 +65,25 @@ namespace LOLViewer
             // titleLabel
             // 
             this.titleLabel.AutoSize = true;
-            this.titleLabel.Location = new System.Drawing.Point(30, 8);
+            this.titleLabel.Location = new System.Drawing.Point(13, 8);
             this.titleLabel.Name = "titleLabel";
-            this.titleLabel.Size = new System.Drawing.Size(121, 13);
+            this.titleLabel.Size = new System.Drawing.Size(154, 13);
             this.titleLabel.TabIndex = 0;
-            this.titleLabel.Text = "LOLViewer Version 1.18";
+            this.titleLabel.Text = "LOLViewer Version 11.16.2012";
             // 
             // descriptionTextBox
             // 
             this.descriptionTextBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.descriptionTextBox.Location = new System.Drawing.Point(12, 26);
+            this.descriptionTextBox.Location = new System.Drawing.Point(11, 24);
             this.descriptionTextBox.Multiline = true;
             this.descriptionTextBox.Name = "descriptionTextBox";
             this.descriptionTextBox.ReadOnly = true;
             this.descriptionTextBox.Size = new System.Drawing.Size(156, 166);
             this.descriptionTextBox.TabIndex = 1;
             this.descriptionTextBox.TabStop = false;
-            this.descriptionTextBox.Text = "Original Author: \r\n - Authentication\r\n\r\nContributors:\r\n - lordgreggreg\r\n\r\nSpecial" +
-                " Thanks:\r\n - ThiSpawn\r\n - ItzWarty\r\n - yourbuddypal\r\n - RobTheBloke (Gamedev.net" +
-                ")\r\n - RichieSams";
+            this.descriptionTextBox.Text = "Original Author: \r\n - Authentication\r\n\r\nContributors:\r\n - RichieSams\r\n - lordgreg" +
+    "greg\r\n\r\nSpecial Thanks:\r\n - ThiSpawn\r\n - ItzWarty\r\n - yourbuddypal\r\n - RobTheBlo" +
+    "ke (Gamedev.net)";
             // 
             // okButton
             // 
@@ -98,16 +98,16 @@ namespace LOLViewer
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(180, 232);
+            this.ClientSize = new System.Drawing.Size(178, 232);
             this.Controls.Add(this.okButton);
             this.Controls.Add(this.descriptionTextBox);
             this.Controls.Add(this.titleLabel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
-            this.MaximumSize = new System.Drawing.Size(186, 260);
+            this.MaximumSize = new System.Drawing.Size(194, 271);
             this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(186, 260);
+            this.MinimumSize = new System.Drawing.Size(194, 271);
             this.Name = "AboutWindow";
             this.ShowInTaskbar = false;
             this.Text = "About";

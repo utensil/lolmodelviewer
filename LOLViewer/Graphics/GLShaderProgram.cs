@@ -1,7 +1,7 @@
 ﻿
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -37,7 +37,7 @@ using System.Diagnostics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK;
 
-namespace LOLViewer
+namespace LOLViewer.Graphics
 {
     class GLShaderProgram
     {

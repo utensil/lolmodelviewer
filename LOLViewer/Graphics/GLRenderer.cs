@@ -2,7 +2,7 @@
 
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -33,60 +33,109 @@ using System.Linq;
 using System.Text;
 
 using System.IO;
+
 using LOLViewer.IO;
 
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
-namespace LOLViewer
+using LOLFileReader;
+
+using CSharpLogger;
+
+namespace LOLViewer.Graphics
 {
     public class GLRenderer
     {
         // Renderer Variables
-        public OpenTK.Graphics.Color4 clearColor;
+        public OpenTK.Graphics.Color4 ClearColor
+        {
+            get
+            {
+                return clearColor;
+            }
+
+            set
+            {
+                clearColor = value;
+                GL.ClearColor(clearColor);
+            }
+        }
+        private OpenTK.Graphics.Color4 clearColor = new OpenTK.Graphics.Color4(0.1f, 0.2f, 0.5f, 0);
+
+        // Skinning Identities. Used when animation mode is disabled.
+        public bool IsSkinning 
+        {
+            get
+            {
+                return isSkinning;
+            }
+
+            set
+            {
+                isSkinning = value;
+
+                // If we have turned off the skinning pipeline, we need set all the transforms to the identity.
+                if (isSkinning == false)
+                {
+                    for (int i = 0; i < boneTransforms.Length; ++i)
+                    {
+                        boneTransforms[i] = Matrix4.Identity;
+                    }
+                }
+            }
+        }
+        private bool isSkinning;
 
         // Shader Variables
         private Dictionary<String, GLShaderProgram> programs;
         private Dictionary<String, GLShader> shaders;
 
         // Geometry Variables
-        private Dictionary<String, GLBillboard> billboards;
-        private Dictionary<String, GLStaticModel> sModels;
-        private Dictionary<String, GLRiggedModel> rModels;
+        private GLBillboard billboard;
+        private GLStaticModel staticModel;
+
+        private GLRiggedModel riggedModel;
+        private Matrix4[] boneTransforms;
+        private const int MAX_BONE_TRANSFORMS = 128;
 
         // Texture Variables
         private Dictionary<String, GLTexture> textures;
 
-        public Matrix4 world;
-        public const float DEFAULT_MODEL_SCALE = 0.11f;
-        public const int DEFAULT_MODEL_YOFFSET = -50;
+        private Matrix4 world;
+        private Vector3 modelTranslation;
+        private Vector3 mouseTranslationOrigin;
+        private Vector3 mouseTranslation;
 
-        // Skinning Identities. Used when animation mode is disabled.
-        public bool isSkinning;
-        private Matrix4[] identityTM = new Matrix4[GLRig.MAX_BONES];
+        // Can't actually declare as a const.
+        private Vector3 DEFAULT_MODEL_TRANSLATION = new Vector3(0, -50, 0);
+
+        #region Initialization
 
         public GLRenderer()
         {
-            clearColor = new OpenTK.Graphics.Color4(0.1f, 0.2f, 0.5f, 0.0f);
-
             programs = new Dictionary<String, GLShaderProgram>();
             shaders = new Dictionary<String, GLShader>();
-            billboards = new Dictionary<String, GLBillboard>();
-            sModels = new Dictionary<String, GLStaticModel>();
-            rModels = new Dictionary<String, GLRiggedModel>();
+
+            billboard = new GLBillboard();
+            staticModel = new GLStaticModel();
+
+            riggedModel = new GLRiggedModel();
+            boneTransforms = new Matrix4[MAX_BONE_TRANSFORMS];
+
             textures = new Dictionary<String, GLTexture>();
 
             isSkinning = false;
-            world = Matrix4.Scale(DEFAULT_MODEL_SCALE);
-            world.M42 = DEFAULT_MODEL_YOFFSET;
 
-            for (int i = 0; i < GLRig.MAX_BONES; ++i)
-            {
-                identityTM[i] = Matrix4.Identity;
-            }
+            Reset();
         }
 
-        public bool OnLoad(EventLogger logger)
+        /// <summary>
+        /// Sets up OpenGL.  Calls this before the other functions.
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <returns></returns>
+        public bool Initialize(Logger logger)
         {
             bool result = true;
 
@@ -280,29 +329,29 @@ namespace LOLViewer
             // Old Debugging Code.
             // I kept it around incase it would be cool to draw a ground
             // plane or something.
-            
+
             if (result == true)
             {
                 List<float> verts = new List<float>();
                 // Bottom Left
-                verts.Add( -5.0f );
-                verts.Add( -5.0f );
-                verts.Add( 0.0f );
+                verts.Add(-5.0f);
+                verts.Add(-5.0f);
+                verts.Add(0.0f);
 
                 // Top Left
-                verts.Add( -5.0f );
-                verts.Add( 5.0f );
-                verts.Add( 0.0f );
+                verts.Add(-5.0f);
+                verts.Add(5.0f);
+                verts.Add(0.0f);
 
                 // Top Right
-                verts.Add( 5.0f );
-                verts.Add( 5.0f );
-                verts.Add( 0.0f );
+                verts.Add(5.0f);
+                verts.Add(5.0f);
+                verts.Add(0.0f);
 
                 // Bottom Right
-                verts.Add( 5.0f );
-                verts.Add( -5.0f );
-                verts.Add( 0.0f );
+                verts.Add(5.0f);
+                verts.Add(-5.0f);
+                verts.Add(0.0f);
 
                 List<float> texs = new List<float>();
                 // Bottom Left
@@ -323,17 +372,17 @@ namespace LOLViewer
 
                 List<uint> inds = new List<uint>();
                 // Tri 1
-                inds.Add( 0 );
-                inds.Add( 1 );
-                inds.Add( 2 );
+                inds.Add(0);
+                inds.Add(1);
+                inds.Add(2);
 
                 // Tri 2
-                inds.Add( 0 );
-                inds.Add( 2 );
-                inds.Add( 3 );
+                inds.Add(0);
+                inds.Add(2);
+                inds.Add(3);
 
                 result = CreateBillboard("default", verts, texs, inds, logger);
-            }         
+            }
 
             // Misc. OpenGL Parameters.
             if (result == true)
@@ -341,29 +390,324 @@ namespace LOLViewer
                 GL.FrontFace(FrontFaceDirection.Cw);
                 GL.CullFace(CullFaceMode.Back);
                 GL.Enable(EnableCap.CullFace);
-                SetClearColor(clearColor);
+                ClearColor = clearColor;
             }
 
             return result;
         }
 
-        public void SetClearColor(OpenTK.Graphics.Color4 color)
+        #endregion
+
+        #region Window Input Functions
+
+        public void MouseMove(System.Windows.Forms.MouseEventArgs e, GLCamera camera)
         {
-            clearColor = color;
-            GL.ClearColor(clearColor);
+            if (e.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                // Update the mouse location.
+                mouseTranslation = Intersect(e.X, e.Y, camera) - mouseTranslationOrigin;
+            }
         }
 
-        public void SetClearColor(System.Drawing.Color color)
+        public void MouseButtonUp(System.Windows.Forms.MouseEventArgs e, GLCamera camera)
         {
-            clearColor = color;
-            GL.ClearColor(clearColor);
+            if (e.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                // Get the current location of the mouse.
+                mouseTranslation = Intersect(e.X, e.Y, camera) - mouseTranslationOrigin;
+
+                // Compute the new model location.
+                modelTranslation += mouseTranslation;
+
+                // Clear the mouse origin.
+                mouseTranslationOrigin = Vector3.Zero;
+                mouseTranslation = Vector3.Zero;
+            }
         }
 
-        public bool LoadModel(LOLModel model, EventLogger logger)
+        public void MouseButtonDown(System.Windows.Forms.MouseEventArgs e, GLCamera camera)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                // Store the origin of the mouse.
+                mouseTranslationOrigin = Intersect(e.X, e.Y, camera);
+                mouseTranslation = Vector3.Zero;
+            }
+        }
+
+        #endregion
+
+        #region Renderer API
+
+        /// <summary>
+        /// Draws the scene.
+        /// </summary>
+        /// <param name="camera">The camera for the scene.</param>
+        public void Render(GLCamera camera)
+        {
+            // Clear back buffers.
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
+
+            // Enable a normal depth test without stenciling.
+            GL.Enable(EnableCap.DepthTest);
+            GL.Disable(EnableCap.StencilTest);
+            GL.DepthFunc(DepthFunction.Less);
+
+            GLShaderProgram program = null;
+
+            // Add the translation in view space.  This allows the model to rotate around
+            // itself instead of the origin in world space.
+            Matrix4 view = camera.View;
+            view.M41 += modelTranslation.X + mouseTranslation.X;
+            view.M42 += modelTranslation.Y + mouseTranslation.Y;
+            view.M43 += modelTranslation.Z + mouseTranslation.Z;
+
+            //
+            // Load shaders for Phong lit static models.
+            //
+
+            program = programs["phong"];
+            program.Load();
+
+            //
+            // Update parameters for phong lighting.
+            //                
+
+            // Vertex Shader Uniforms
+            program.UpdateUniform("u_WorldView",
+                world * view);
+            program.UpdateUniform("u_WorldViewProjection",
+                world * view * camera.Projection);
+
+            // Fragment Shader Uniforms
+            program.UpdateUniform("u_LightDirection", new Vector3(0.0f, 0.0f, 1.0f));
+            program.UpdateUniform("u_LightDiffuse",
+                new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+            program.UpdateUniform("u_KA", 0.85f);
+            program.UpdateUniform("u_KD", 0.1f);
+            program.UpdateUniform("u_KS", 0.05f);
+            program.UpdateUniform("u_SExponent", 8.0f);
+
+            // Draw Static Model
+
+            // Load the model's texture for the shader.
+            GL.ActiveTexture(TextureUnit.Texture0);
+            program.UpdateUniform("u_Texture", 0);
+            if (staticModel.TextureName != String.Empty)
+            {
+                textures[staticModel.TextureName].Bind(); // not checking return value        
+            }
+
+            staticModel.Draw();
+
+            GL.UseProgram(0);
+
+            //
+            // Load shaders for Phong lit rigged models.
+            //
+
+            program = programs["phongRigged"];
+            program.Load();
+
+            //
+            // Update parameters for phong lighting.
+            //
+
+            // Fragment Shader Uniforms
+            program.UpdateUniform("u_LightDirection", new Vector3(0.0f, 0.0f, 1.0f));
+            program.UpdateUniform("u_LightDiffuse",
+                new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+            program.UpdateUniform("u_KA", 0.85f);
+            program.UpdateUniform("u_KD", 0.1f);
+            program.UpdateUniform("u_KS", 0.05f);
+            program.UpdateUniform("u_SExponent", 8.0f);
+
+            // Draw Rigged Model
+
+            //
+            // Update the uniforms.
+            //
+
+            // Textures vary.
+            GL.ActiveTexture(TextureUnit.Texture0);
+            program.UpdateUniform("u_Texture", 0);
+            if (riggedModel.TextureName != String.Empty)
+            {
+                textures[riggedModel.TextureName].Bind(); // not checking return value        
+            }
+
+            //
+            // Bone Transforms
+            //
+
+            if (IsSkinning == true)
+            {
+                // Get the transformations from the rig.
+                boneTransforms = riggedModel.GetBoneTransformations(ref boneTransforms);
+            }
+
+            program.UpdateUniform("u_BoneTransform", boneTransforms);
+
+            //
+            // World Transform.
+            //
+            Matrix4 worldView = world * view;
+
+            // Vertex Shader Uniforms
+            program.UpdateUniform("u_WorldView",
+                worldView);
+            program.UpdateUniform("u_WorldViewProjection",
+                worldView * camera.Projection);
+
+            riggedModel.Draw();
+
+            // Unload shaders.
+            GL.UseProgram(0);
+        }
+
+        /// <summary>
+        /// Updates the animation.
+        /// </summary>
+        /// <param name="elapsedTime">The time since the last frame.</param>
+        public void Update(float elapsedTime)
+        {
+            riggedModel.Update(elapsedTime);
+        }
+
+        /// <summary>
+        /// Resizes the viewport.  Call this when the control resizes.
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="width">The width of the control.</param>
+        /// <param name="height">The height of the control.</param>
+        public void Resize(int x, int y, int width, int height)
+        {
+            GL.Viewport(x, y, width, height);
+        }
+
+        /// <summary>
+        /// Resets the location of the model to its default position.
+        /// </summary>
+        public void Reset()
+        {
+            world = Matrix4.Identity;
+
+            world.M41 = DEFAULT_MODEL_TRANSLATION.X;
+            world.M42 = DEFAULT_MODEL_TRANSLATION.Y;
+            world.M43 = DEFAULT_MODEL_TRANSLATION.Z;
+
+            modelTranslation = Vector3.Zero;
+            mouseTranslationOrigin = Vector3.Zero;
+            mouseTranslation = Vector3.Zero;
+        }
+
+        /// <summary>
+        /// Call before finalizing the memory of the renderer.
+        /// </summary>
+        public void Shutdown()
+        {
+            // Clean up shaders
+            GL.UseProgram(0);
+
+            foreach (var p in programs)
+            {
+                p.Value.Destroy();
+            }
+            programs.Clear();
+
+            foreach (var s in shaders)
+            {
+                s.Value.Destroy();
+            }
+            shaders.Clear();
+
+            // Clean up renderable objects
+            billboard.Destory();
+            staticModel.Destory();
+            riggedModel.Destroy();
+
+            GL.BindTexture(TextureTarget.Texture2D, 0);
+            foreach (var t in textures)
+            {
+                t.Value.Destroy();
+            }
+            textures.Clear();
+        }
+
+        #endregion
+
+        #region Animation API
+
+        /// <summary>
+        /// Sets the animation to be displayed.
+        /// </summary>
+        /// <param name="animation">The animation name.</param>
+        public void SetCurrentAnimation(String animation)
+        {
+            riggedModel.SetCurrentAnimation(animation);
+        }
+
+        /// <summary>
+        /// Returns a list of animation names.
+        /// </summary>
+        /// <returns></returns>
+        public List<String> GetAnimations()
+        {
+            return riggedModel.AnimationNames;
+        }
+
+        /// <summary>
+        /// Sets the current frame in the animation.
+        /// </summary>
+        /// <param name="frame">The frame number.</param>
+        /// <param name="percentTowardsNextFrame">The percent til the next frame is shown. Expects a value between 0 - 1.</param>
+        public void SetCurrentFrameInCurrentAnimation(int frame, float percentTowardsNextFrame)
+        {
+            riggedModel.SetCurrentFrame(frame, percentTowardsNextFrame);
+        }
+
+        /// <summary>
+        /// Gets the total number of frames in the animation.
+        /// </summary>
+        /// <returns></returns>
+        public uint GetNumberOfFramesInCurrentAnimation()
+        {
+            uint result = 0;
+
+            result = riggedModel.GetNumberOfFramesInCurrentAnimation();
+
+            return result;
+        }
+
+        /// <summary>
+        /// Gets the percentage of the animation completed.
+        /// </summary>
+        /// <returns>Current Frame / Total Number of Frames</returns>
+        public float GetPercentAnimated()
+        {
+            float result = 0.0f;
+
+            result = riggedModel.GetPercentAnimated();
+
+            return result;
+        }
+
+        #endregion
+
+        #region Model API
+
+        /// <summary>
+        /// Loads a model into the renderer.
+        /// </summary>
+        /// <param name="model">The model to load.</param>
+        /// <param name="logger"></param>
+        /// <returns></returns>
+        public bool LoadModel(LOLModel model, Logger logger)
         {
             bool result = true;
 
-            DestroyCurrentModels();
+            DestroyModel();
 
             //
             // Create model geometry
@@ -385,292 +729,14 @@ namespace LOLViewer
             return result;
         }
 
-        public void OnResize(int x, int y, int width, int height)
-        {
-            GL.Viewport(x, y, width, height);
-        }
-
-        public void OnRender(ref GLCamera camera)
-        {
-            //
-            // TODO: Refactor/clean up this render loop.
-            // It supports multiple static and dynamic models at the moment.
-            // However, none of that is ever used.  Only one dynamic is ever loaded at the moment.
-            // There's just alot of clutter in this function which is really not needed.
-            //
-
-            // Clear back buffers.
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
-            
-            // Enable a normal depth test without stenciling.
-            GL.Enable(EnableCap.DepthTest);
-            GL.Disable(EnableCap.StencilTest);
-            GL.DepthFunc(DepthFunction.Less);
-
-            GLShaderProgram program = null;
-            
-            //
-            // Load shaders for Phong lit static models.
-            //
-
-            if (sModels.Count > 0)
-            {
-                program = programs["phong"];
-                program.Load();
-
-                //
-                // Update parameters for phong lighting.
-                //
-
-                // Vertex Shader Uniforms
-                program.UpdateUniform("u_WorldView",
-                    world * camera.view);
-                program.UpdateUniform("u_WorldViewProjection",
-                    world * camera.view * camera.projection);
-
-                // Fragment Shader Uniforms
-                program.UpdateUniform("u_LightDirection", new Vector3(0.0f, 0.0f, 1.0f));
-                program.UpdateUniform("u_LightDiffuse",
-                    new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-                program.UpdateUniform("u_KA", 0.85f);
-                program.UpdateUniform("u_KD", 0.1f);
-                program.UpdateUniform("u_KS", 0.05f);
-                program.UpdateUniform("u_SExponent", 8.0f);
-            }
-
-            // Draw Model
-            foreach (var s in sModels)
-            {
-                // Load the model's texture for the shader.
-                GL.ActiveTexture(TextureUnit.Texture0);
-                program.UpdateUniform("u_Texture", 0);
-                if (s.Value.textureName != String.Empty)
-                {
-                    textures[s.Value.textureName].Bind(); // not checking return value        
-                }
-       
-                s.Value.Draw();
-            }
-
-            GL.UseProgram(0);
-
-            //
-            // Load shaders for Phong lit rigged models.
-            //
-
-            if (rModels.Count > 0)
-            {
-                program = programs["phongRigged"];
-                program.Load();
-
-                //
-                // Update parameters for phong lighting.
-                //
-
-                // Fragment Shader Uniforms
-                program.UpdateUniform("u_LightDirection", new Vector3(0.0f, 0.0f, 1.0f));
-                program.UpdateUniform("u_LightDiffuse",
-                    new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-                program.UpdateUniform("u_KA", 0.85f);
-                program.UpdateUniform("u_KD", 0.1f);
-                program.UpdateUniform("u_KS", 0.05f);
-                program.UpdateUniform("u_SExponent", 8.0f);
-            }
-
-            // Draw Model
-            foreach (var r in rModels)
-            {
-                //
-                // Update the uniforms which vary per model.
-                //
-
-
-                // Textures vary.
-                GL.ActiveTexture(TextureUnit.Texture0);
-                program.UpdateUniform("u_Texture", 0);
-                if (r.Value.textureName != String.Empty)
-                {
-                    textures[r.Value.textureName].Bind(); // not checking return value        
-                }
-
-                //
-                // Bone Transforms
-                //
-
-                
-                if (isSkinning == true)
-                {
-                    Matrix4[] transforms = r.Value.GetBoneTransformations();
-                    // Sanity for when the currentAnimation is invalid.
-                    if (transforms != null)
-                    {
-                        //
-                        // Normal case when skinning is valid.
-                        //
-
-                        program.UpdateUniform("u_BoneTransform", r.Value.GetBoneTransformations());
-                    }
-                    else
-                    {
-                        //
-                        // Odd case when the currentAnimation does not exist.
-                        //
-
-                        // Perserve world space transforms between skinning and non skinning.
-                        transforms = new Matrix4[GLRig.MAX_BONES];
-                        for ( int i = 0; i < GLRig.MAX_BONES; ++i )
-                        {
-                            transforms[i] = Matrix4.Scale(1.0f / 
-                                rModels.First().Value.rig.bindingJoints[0].scale); //hacky
-                        }
-
-                        program.UpdateUniform("u_BoneTransform", transforms);
-                    }
-                }
-                else
-                {
-                    //
-                    // Case when the user does not wish to use animation data and just
-                    // wants to render the model.
-                    //
-
-                    program.UpdateUniform("u_BoneTransform", identityTM);
-                }
-
-                //
-                // World Transform.  We need to offset it when not using the skinning
-                // pipeline.
-                //
-
-                Matrix4 worldView = Matrix4.Identity;
-                if (isSkinning == true)
-                {
-                    worldView = world * camera.view;
-                }
-                else
-                {
-                    // Account for the skinning scale if we're not skinning.
-                    Matrix4 scale = Matrix4.Scale(rModels.First().Value.rig.bindingJoints[0].scale); //hacky
-                    worldView = scale * world * camera.view;
-                }
-
-                // Vertex Shader Uniforms
-                program.UpdateUniform("u_WorldView",
-                    worldView);
-                program.UpdateUniform("u_WorldViewProjection",
-                    worldView * camera.projection);
-
-                r.Value.Draw();
-            }
-          
-            // Unload shaders.
-            GL.UseProgram( 0 );
-        }
-
-        public void IncrementAnimations()
-        {
-            foreach (var m in rModels)
-            {
-                m.Value.IncrementCurrentAnimation();
-            }
-        }
-
-        public void DecrementAnimations()
-        {
-            foreach (var m in rModels)
-            {
-                m.Value.DecrementCurrentAnimation();
-            }
-        }
-
-        // TODO: Doesn't support multiple models.
-        public void SetCurrentFrameInCurrentAnimation(int frame, float percentTowardsNextFrame)
-        {
-            foreach (var m in rModels)
-            {
-                m.Value.SetCurrentFrame( frame, percentTowardsNextFrame );
-                break;
-            }
-        }
-
-        // TODO: Doesn't support multiple models.
-        public float GetCurrentAnimationPercentageAnimated()
-        {
-            float result = 0.0f;
-
-            foreach (var m in rModels)
-            {
-                result = m.Value.GetPercentageAnimated();
-                break;
-            }
-
-            return result;
-        }
-
-        // Unlike decrement and increment, this function doesn't directly
-        // translate to multiple models.  Need to pass a model ID or something.
-        // But for now, who cares.  Only one model should be available at a time anyways.
-        public void SetAnimations(String animation)
-        {
-            foreach (var m in rModels)
-            {
-                m.Value.SetCurrentAnimation(animation);
-            }
-        }
-
-        // TODO: Doesn't support multiple models.
-        public uint GetNumberOfFramesInCurrentAnimation()
-        {
-            uint result = 0;
-
-            foreach (var m in rModels)
-            {
-                result = m.Value.GetNumberOfFramesInCurrentAnimation();
-                break;
-            }
-
-            return result;
-        }
-
-        // TODO: Doesn't support multiple models.
-        public List<String> GetAnimationsInCurrentModel()
-        {
-            List<String> result = new List<String>();
-
-            foreach (var m in rModels)
-            {
-                foreach (var animation in m.Value.animations)
-                {
-                    result.Add(animation.Key);
-                }
-                break;
-            }
-
-            return result;
-        }
-
-        public void OnUpdate(float elapsedTime)
-        {
-            foreach (var m in rModels)
-            {
-                m.Value.Update(elapsedTime);
-            }
-        }
-
-        public void DestroyCurrentModels()
+        /// <summary>
+        /// Removes the model from the renderer.
+        /// </summary>
+        public void DestroyModel()
         {
             // Clear out old model data.
-            foreach (var s in sModels)
-            {
-                s.Value.Destory();
-            }
-            sModels.Clear();
-
-            foreach (var r in rModels)
-            {
-                r.Value.Destroy();
-            }
-            rModels.Clear();
+            staticModel.Destory();
+            riggedModel.Destroy();
 
             GL.BindTexture(TextureTarget.Texture2D, 0);
             foreach (var t in textures)
@@ -681,62 +747,116 @@ namespace LOLViewer
             // End Clearing
         }
 
-        public void ShutDown()
+        /// <summary>
+        /// Set the scale of the model.
+        /// </summary>
+        /// <param name="scale">The scale of the model between 0 and 1.</param>
+        public void ScaleModel(float scale)
         {
-            // Clean up shaders
-            GL.UseProgram(0);
+            // Store old translation.
+            Vector3 translation = Vector3.Zero;
+            translation.X = world.M41;
+            translation.Y = world.M42;
+            translation.Z = world.M43;
 
-            foreach (var p in programs)
-            {
-                p.Value.Destroy();
-            }
-            programs.Clear();
+            // Create the scale.
+            world = Matrix4.Scale(scale);
 
-            foreach (var s in shaders)
-            {
-                s.Value.Destroy();
-            }
-            shaders.Clear();
-
-            // Clean up renderable objects
-            foreach (var b in billboards)
-            {
-                b.Value.Destory();
-            }
-            billboards.Clear();
-
-            foreach (var s in sModels)
-            {
-                s.Value.Destory();
-            }
-            sModels.Clear();
-
-            foreach (var r in rModels)
-            {
-                r.Value.Destroy();
-            }
-            rModels.Clear();
-
-            GL.BindTexture(TextureTarget.Texture2D, 0);
-            foreach (var t in textures)
-            {
-                t.Value.Destroy();
-            }
-            textures.Clear();
+            // Reapply old translation.
+            world.M41 = translation.X;
+            world.M42 = translation.Y;
+            world.M43 = translation.Z;
         }
 
-        //
-        // Helper Functions
-        //
+        #endregion
 
-        // TODO: Alot of this code is a mess.
-        // It should be refactored into more meaningful sub classes.
+        #region Helper Functions
 
-        private bool CreateShaderFromMemory(String name, String data, ShaderType type, EventLogger logger)
+        /// <summary>
+        /// Computes the intersection point between the mouse coordinate vector and the plane
+        /// formed by the model's location and the camera's eye.
+        /// </summary>
+        /// <param name="x">The X mouse coordinate.</param>
+        /// <param name="y">The Y mouse coordinate.</param>
+        /// <param name="camera">The camera.</param>
+        private Vector3 Intersect(int x, int y, GLCamera camera)
+        {
+            // Invert the transformation pipeline.
+            Matrix4 inverseProjectionView = camera.View * camera.Projection;
+            inverseProjectionView.Invert();
+
+            // Transform mouse coordinates into world space.
+
+            // We are "mouse" space.  Need to convert into screen space.
+            Vector4 worldMouse = new Vector4(x, y, 1, 1);
+
+            int[] viewport = new int[4];
+            GL.GetInteger(GetPName.Viewport, viewport);
+
+            worldMouse.X = (2.0f * (worldMouse.X - viewport[0]) / viewport[2]) - 1.0f;
+            worldMouse.Y = -((2.0f * (worldMouse.Y - viewport[1]) / viewport[3]) - 1.0f);
+
+            // We are in screen space.  Need to convert into view space and then world space.
+            worldMouse = Vector4.Transform(worldMouse, inverseProjectionView);
+
+            if (worldMouse.W > float.Epsilon || worldMouse.W < float.Epsilon)
+            {
+                worldMouse.X /= worldMouse.W;
+                worldMouse.Y /= worldMouse.W;
+                worldMouse.Z /= worldMouse.W;
+            }
+
+            // The model translation is applied in VIEW space.  So, we need to project it back
+            // into world space for these calculations.  We need to remove the translation components of the view
+            // matrix.
+
+            Matrix4 viewRotation = camera.View;
+            viewRotation.M41 = 0;
+            viewRotation.M42 = 0;
+            viewRotation.M43 = 0;
+
+            Matrix4 inverseViewRotation = Matrix4.Invert(viewRotation);
+
+            Vector3 worldModelTranslation = Vector3.Transform(modelTranslation, inverseViewRotation);
+
+            // Get the world location of the model.  This is the point on the plane.
+            Vector3 planePoint = worldModelTranslation;
+
+            // Get the camera eye.  This is the line origin.
+            Vector3 lineOrigin = camera.Eye;
+
+            // Create the normal of the plane.
+            Vector3 planeNormal = lineOrigin - planePoint;
+            planeNormal.Normalize();
+
+            // Create the direction of the line intersecting the plane.
+            Vector3 lineDirection = new Vector3(worldMouse);
+            lineDirection -= lineOrigin;
+            lineDirection.Normalize();
+
+            // Computes the distance along the line until it intersects the plane.
+            // Note: In pure math, there are three possible solutions.
+            //      1.) The line intersects the plane once.  Normal solution.
+            //      2.) The line is outside and parallel to the plane. Denom -> 0 -> Undefined solution.
+            //      3.) The line is contained inside the plane. Denom & Num -> 0 -> Indeterminate solution.
+            // However, in the scope of this problem, only solution 1.) is possible because of the constraints of the camera class.
+            // So, we assume nothing crazy can happen with this computation (which is probably a terrible assumption but oh well).
+            float distance = Vector3.Dot(planePoint - lineOrigin, planeNormal) / Vector3.Dot(lineDirection, planeNormal);
+
+            // Calculate the new model location.
+            Vector3 result = lineOrigin + lineDirection * distance;
+
+            // Convert back into view space.
+            result = Vector3.Transform(result, viewRotation);
+
+            return result;
+        }
+
+        private bool CreateShaderFromMemory(String name, String data, ShaderType type, Logger logger)
         {
             bool result = true;
 
-            logger.LogEvent("Creating shader: " + name);
+            logger.Event("Creating shader: " + name);
 
             GLShader shader = new GLShader(type);
             result = shader.LoadFromMemory(data);
@@ -752,7 +872,7 @@ namespace LOLViewer
             }
             else
             {
-                logger.LogError("Failed to create shader: " + name);
+                logger.Error("Failed to create shader: " + name);
                 // We need to clean up this shader since it failed.
                 shader.Destroy();
             }
@@ -761,11 +881,11 @@ namespace LOLViewer
         }
 
         private bool CreateProgram(String progName, String vertName, String fragName,
-            List<String> attributes, List<String> uniforms, EventLogger logger) 
+            List<String> attributes, List<String> uniforms, Logger logger)
         {
             bool result = true;
 
-            logger.LogEvent("Creating shader program: " + progName);
+            logger.Event("Creating shader program: " + progName);
 
             GLShaderProgram program = new GLShaderProgram();
             if (result == true)
@@ -848,64 +968,49 @@ namespace LOLViewer
             }
             else
             {
-                logger.LogError("Failed to create shader program: " + progName);
+                logger.Error("Failed to create shader program: " + progName);
                 program.Destroy();
             }
 
             return result;
         }
 
-        private bool CreateBillboard( String name, List<float> vertexData,
-            List<float> texData, List<uint> indexData, EventLogger logger )
+        private bool CreateBillboard(String name, List<float> vertexData,
+            List<float> texData, List<uint> indexData, Logger logger)
         {
             bool result = true;
 
-            logger.LogEvent("Creating billboard: " + name);
+            logger.Event("Creating billboard: " + name);
 
-            GLBillboard billboard = new GLBillboard();
+            billboard = new GLBillboard();
             result = billboard.Create(vertexData, texData, indexData);
 
-            // Store new billboard.
-            if (result == true)
+            if (result == false)
             {
-                billboards.Add(name, billboard);
-            }
-            else
-            {
-                logger.LogError("Failed to create billboard: " + name);
+                logger.Error("Failed to create billboard: " + name);
                 billboard.Destory();
             }
 
             return result;
         }
 
-        private bool CreateStaticModel(LOLModel model, EventLogger logger)
+        private bool CreateStaticModel(LOLModel model, Logger logger)
         {
             bool result = true;
 
-            logger.LogEvent("Creating static model.");
+            logger.Event("Creating static model.");
 
             SKNFile file = new SKNFile();
             if (result == true)
             {
                 // Model is stored in a RAF.
-                result = SKNReader.Read(model.skn, ref file, logger);             
+                result = SKNReader.Read(model.skn, ref file, logger);
             }
 
-            GLStaticModel glModel = new GLStaticModel();
+            staticModel = new GLStaticModel();
             if (result == true)
             {
-                result = file.ToGLStaticModel(ref glModel, true, logger);
-            }
-
-            // Store it.
-            if (result == true)
-            {
-                String name = model.skn.FileName;
-                int pos = name.LastIndexOf("/");
-                name = name.Substring(pos + 1);
-
-                sModels.Add(name, glModel);
+                result = staticModel.Create(file, logger);
             }
 
             //
@@ -925,51 +1030,68 @@ namespace LOLViewer
                     int pos = name.LastIndexOf("/");
                     name = name.Substring(pos + 1);
 
-                    glModel.textureName = name;
+                    staticModel.TextureName = name;
                 }
             }
 
             if (result == false)
             {
-                logger.LogError("Failed to create static model.");
+                logger.Error("Failed to create static model.");
             }
 
             return result;
         }
 
-        private bool CreateRiggedModel(LOLModel model, EventLogger logger)
+        private bool CreateRiggedModel(LOLModel model, Logger logger)
         {
             bool result = true;
 
-            logger.LogEvent("Creating rigged model.");
+            logger.Event("Creating rigged model.");
 
+            // Open the skn file.
             SKNFile sknFile = new SKNFile();
             if (result == true)
             {
-                // Model is stored in a RAF.
                 result = SKNReader.Read(model.skn, ref sknFile, logger);
             }
 
+            // Open the skl file.
             SKLFile sklFile = new SKLFile();
             if (result == true)
             {
                 result = SKLReader.Read(model.skl, ref sklFile, logger);
             }
 
-            GLRiggedModel glModel = new GLRiggedModel();
+            // Open the anm files.
+            Dictionary<String, ANMFile> anmFiles = new Dictionary<String, ANMFile>();
             if (result == true)
             {
-                result = sklFile.ToGLRiggedModel(ref glModel, sknFile, true, logger);
+                foreach (var a in model.animations)
+                {
+                    ANMFile anmFile = new ANMFile();
+                    bool anmResult = ANMReader.Read(a.Value, ref anmFile, logger);
+                    if (anmResult == true)
+                    {
+                        anmFiles.Add(a.Key, anmFile);
+                    }
+                }
             }
 
-            // Store it.
+            // Create the model.
+            riggedModel = new GLRiggedModel();
             if (result == true)
             {
-                String name = model.skn.FileName;
-                int pos = name.LastIndexOf("/");
-                name = name.Substring(pos + 1);
+                result = riggedModel.Create(sknFile, sklFile, anmFiles, logger);
+            }
 
-                rModels.Add(name, glModel);
+            // Set up an initial animation.
+            if (result == true)
+            {
+                if (anmFiles.Count > 0)
+                {
+                    riggedModel.SetCurrentAnimation(anmFiles.First().Key);
+                    riggedModel.SetCurrentFrame(0, 0);
+                }
             }
 
             //
@@ -980,7 +1102,7 @@ namespace LOLViewer
                 // Texture stored in RAF file.
                 result = CreateTexture(model.texture, TextureTarget.Texture2D,
                         GLTexture.SupportedImageEncodings.DDS, logger);
-                
+
                 // Store it in our new model file.
                 if (result == true)
                 {
@@ -988,95 +1110,27 @@ namespace LOLViewer
                     int pos = name.LastIndexOf("/");
                     name = name.Substring(pos + 1);
 
-                    glModel.textureName = name;
+                    riggedModel.TextureName = name;
                 }
-            }
-
-            //
-            // Load up the model animations
-            //
-            if (result == true)
-            {
-                //
-                // This code used to be in LOLDirectoryReader.
-                // However, it takes awhile to parse all the animation files
-                // for all the models.  So, I decided not to preload all of this
-                // data and only load it when a model needs to be displayed.
-                //
-
-                Dictionary<String, ANMFile> animationFiles =
-                    new Dictionary<String, ANMFile>();
-
-                // Read in the animation files.
-                foreach (var a in model.animations)
-                {
-                    ANMFile anmFile = new ANMFile();
-                    bool anmResult = ANMReader.Read(a.Value, ref anmFile, logger);
-                    if (anmResult == true)
-                    {
-                        animationFiles.Add(a.Key, anmFile);
-                    }
-                }
-
-                bool currentSet = false;
-                foreach (var a in animationFiles)
-                {
-                    GLAnimation newAnimation = new GLAnimation();
-                    a.Value.ToGLAnimation(ref newAnimation);
-                    glModel.AddAnimation(a.Key, newAnimation);
-
-                    // Set a default animation.
-                    if (currentSet == false)
-                    {
-                        glModel.SetCurrentAnimation(a.Key);
-                        currentSet = true;
-                    }
-                }
-
-                glModel.currentFrame = 0;
             }
 
             if (result == false)
             {
-                logger.LogError("Failed to create rigged model.");
-            }
-
-            return result;
-        }
-        
-        private bool CreateTexture(FileInfo f, TextureTarget target,
-            GLTexture.SupportedImageEncodings encoding, EventLogger logger)
-        {
-            bool result = true;
-
-            logger.LogEvent("Creating texture: " + f.Name + ": " + f.FullName);
-
-            GLTexture texture = new GLTexture();
-            result = texture.Create(f, target, encoding);
-
-            // Store new texture.
-            if (result == true)
-            {
-                textures.Add(f.Name, texture);
-            }
-            else
-            {
-                logger.LogError("Failed to create texture: " + f.Name + ": " + f.FullName);
-                texture.Destroy();
+                logger.Error("Failed to create rigged model.");
             }
 
             return result;
         }
 
         private bool CreateTexture(IFileEntry f, TextureTarget target,
-            GLTexture.SupportedImageEncodings encoding, EventLogger logger)
+            GLTexture.SupportedImageEncodings encoding, Logger logger)
         {
             bool result = true;
 
-            logger.LogEvent("Creating texture: " + f.FileName);
+            logger.Event("Creating texture: " + f.FileName);
 
             GLTexture texture = new GLTexture();
-            result = texture.Create(f, target, encoding);
+            result = texture.Create(f, target, encoding, logger);
 
             // Store new texture.
             if (result == true)
@@ -1089,11 +1143,13 @@ namespace LOLViewer
             }
             else
             {
-                logger.LogError("Failed to create texture: " + f.FileName);
+                logger.Error("Failed to create texture: " + f.FileName);
                 texture.Destroy();
             }
 
             return result;
         }
+
+        #endregion
     }
 }

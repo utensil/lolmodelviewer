@@ -3,7 +3,7 @@
 
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -35,9 +35,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace LOLViewer
+namespace LOLFileReader
 {
-    class SKNMaterial
+    public class SKNMaterial
     {
         public String       name;
         public const int    MATERIAL_NAME_SIZE = 64; // in bytes

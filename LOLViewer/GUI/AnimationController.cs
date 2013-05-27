@@ -2,7 +2,7 @@
 
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -36,10 +36,14 @@ using System.Text;
 using System.Windows.Forms;
 using System.Diagnostics;
 
+using LOLViewer.Graphics;
+
 namespace LOLViewer.GUI
 {
     public class AnimationController
     {
+        public GLRenderer renderer;
+
         public bool isEnabled;
         public bool isAnimating;
         public String currentAnimation;
@@ -50,12 +54,11 @@ namespace LOLViewer.GUI
         //
 
         public OpenTK.GLControl glControlMain;
-        public CheckBox enableAnimationCheckBox;
+        public Button enableAnimationButton;
         public ComboBox currentAnimationComboBox;
-        public Button previousKeyFrameButton;
-        public Button nextKeyFrameButton;
         public Button playAnimationButton;
         public TrackBar timelineTrackBar;
+        public ToolStripStatusLabel mainWindowStatusLabel;
 
         public AnimationController()
         {
@@ -67,61 +70,42 @@ namespace LOLViewer.GUI
             timer.Stop();
         }
 
-        // More references
-        public GLRenderer renderer;
-
         public void DisableAnimation()
         {
-            isEnabled = false;
             StopAnimation();
 
+            isEnabled = false;
+
+            enableAnimationButton.Text = "Enable";
+
             currentAnimationComboBox.Enabled = false;
-            previousKeyFrameButton.Enabled = false;
-            nextKeyFrameButton.Enabled = false;
             playAnimationButton.Enabled = false;
             timelineTrackBar.Enabled = false;
 
-            renderer.isSkinning = false;
+            renderer.IsSkinning = false;
         }
 
         public void EnableAnimation()
         {
-            isEnabled = true;
             StopAnimation();
 
-            currentAnimationComboBox.Enabled = true;
-            previousKeyFrameButton.Enabled = true;
-            nextKeyFrameButton.Enabled = true;
-            playAnimationButton.Enabled = true;
-            timelineTrackBar.Enabled = true;
+            // Sanity. Don't enable animation with no animations available.
+            if (currentAnimationComboBox.Items.Count > 0)
+            {
+                isEnabled = true;
 
-            renderer.isSkinning = true;
-        }
+                enableAnimationButton.Text = "Disable";
 
-        public void StopAnimation()
-        {
-            isAnimating = false;
-            playAnimationButton.Text = "Play";
+                currentAnimationComboBox.Enabled = true;
+                playAnimationButton.Enabled = true;
+                timelineTrackBar.Enabled = true;
 
-            // Remove the update loop.
-            timer.Stop();
-            timer.Reset();
-            Application.Idle -= OnApplicationIdle;
-
-            glControlMain.Invalidate();
-        }
-
-        public void StartAnimation()
-        {
-            isAnimating = true;
-            playAnimationButton.Text = "Pause";
-
-            // Add an update loop.
-            Application.Idle += new EventHandler(OnApplicationIdle);
-            timer.Reset();
-            timer.Start();
-
-            glControlMain.Invalidate();
+                renderer.IsSkinning = true;
+            }
+            else
+            {
+                mainWindowStatusLabel.Text = "Can not animate.  No animations are available.";
+            }
         }
 
         //
@@ -137,7 +121,7 @@ namespace LOLViewer.GUI
             {
                 TimeSpan time = timer.Elapsed;
                 float elapsedTime = (float)time.Seconds + ((float)time.Milliseconds / 1000.0f);
-                renderer.OnUpdate(elapsedTime);
+                renderer.Update(elapsedTime);
 
                 timer.Restart();
 
@@ -147,40 +131,14 @@ namespace LOLViewer.GUI
             }
         }
 
-        public void SetAnimation()
+        private void SetAnimation()
         {
             // Cache animation name.
             currentAnimation = currentAnimationComboBox.SelectedItem.ToString();
 
             if (currentAnimation.Length > 0)
             {
-                renderer.SetAnimations(currentAnimation);
-
-                UpdateTimelineTrackBar();
-
-                glControlMain.Invalidate();
-            }
-        }
-
-        public void IncrementAnimation()
-        {
-            if (isEnabled == true)
-            {
-                StopAnimation();
-                renderer.IncrementAnimations();
-
-                UpdateTimelineTrackBar();
-
-                glControlMain.Invalidate();
-            }
-        }
-
-        public void DecrementAnimation()
-        {
-            if (isEnabled == true)
-            {
-                StopAnimation();
-                renderer.DecrementAnimations();
+                renderer.SetCurrentAnimation(currentAnimation);
 
                 UpdateTimelineTrackBar();
 
@@ -197,16 +155,6 @@ namespace LOLViewer.GUI
             SetAnimation();
         }
 
-        public void OnPreviousKeyFrameButtonClick(object sender, EventArgs e)
-        {
-            DecrementAnimation();
-        }
-
-        public void OnNextKeyFrameButtonClick(object sender, EventArgs e)
-        {
-            IncrementAnimation();
-        }
-
         public void OnPlayAnimationButtonClick(object sender, EventArgs e)
         {
             if (isAnimating == true)
@@ -219,7 +167,7 @@ namespace LOLViewer.GUI
             }         
         }
 
-        public void OnEnableCheckBoxClick(object sender, EventArgs e)
+        public void OnEnableAnimationButtonClick(object sender, EventArgs e)
         {
             if (isEnabled == true)
             {
@@ -257,6 +205,7 @@ namespace LOLViewer.GUI
         //
         // Helper functions
         //
+
         private void UpdateTimelineTrackBar()
         {
             //
@@ -266,7 +215,7 @@ namespace LOLViewer.GUI
             // Called when the animation controller updates the renderer.
             //
 
-            float percentageAnimated = renderer.GetCurrentAnimationPercentageAnimated();
+            float percentageAnimated = renderer.GetPercentAnimated();
             int timelineValue = (int)Math.Floor(percentageAnimated * 100.0f); // Move the decimal into integer range.
 
             // Try to cut down on the amount of time we change the track bar value.
@@ -275,6 +224,32 @@ namespace LOLViewer.GUI
             {
                 timelineTrackBar.Value = timelineValue;
             }
+        }
+
+        private void StopAnimation()
+        {
+            isAnimating = false;
+            playAnimationButton.Text = "Play";
+
+            // Remove the update loop.
+            timer.Stop();
+            timer.Reset();
+            Application.Idle -= OnApplicationIdle;
+
+            glControlMain.Invalidate();
+        }
+
+        public void StartAnimation()
+        {
+            isAnimating = true;
+            playAnimationButton.Text = "Pause";
+
+            // Add an update loop.
+            Application.Idle += new EventHandler(OnApplicationIdle);
+            timer.Reset();
+            timer.Start();
+
+            glControlMain.Invalidate();
         }
     }
 }

@@ -24,7 +24,7 @@ along with LOLViewer.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 //
-// Abrstraction to read .skl files.
+// Abstraction to read .skl files.
 //
 
 using System;
@@ -33,73 +33,69 @@ using System.Linq;
 using System.Text;
 
 using System.IO;
-using System.Windows.Forms;
-using OpenTK;
-using RAFlibPlus;
-using LOLViewer.IO;
 
-namespace LOLViewer
+using CSharpLogger;
+
+using RAFlibPlus;
+
+namespace LOLFileReader
 {
-    class SKLReader
+    public class SKLReader
     {
-        public static bool Read(IFileEntry file, ref SKLFile data, EventLogger logger)
+        public static bool Read(IFileEntry file, ref SKLFile data, Logger logger)
         {
             bool result = true;
 
-            logger.LogEvent("Reading skl: " + file.FileName);
+            logger.Event("Reading skl: " + file.FileName);
 
             try
             {
                 // Get the data from the archive
-                MemoryStream myInput = new MemoryStream( file.GetContent() );
+                MemoryStream myInput = new MemoryStream(file.GetContent());
                 result = ReadBinary(myInput, ref data, logger);
                 myInput.Close();
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                logger.LogError("Unable to open memory stream: " + file.FileName);
-                logger.LogError(e.Message);
+                logger.Error("Unable to open memory stream: " + file.FileName);
+                logger.Error(e.Message);
                 result = false;
             }
 
             return result;
         }
 
-        //
-        // Helper Functions. 
-        // (Because nested Try/Catch looks nasty in one function block.)
-        //
-
-        private static bool ReadBinary(MemoryStream input, ref SKLFile data, EventLogger logger)
+        
+        //Helper Functions. 
+        //(Because nested Try/Catch looks nasty in one function block.) 
+        private static bool ReadBinary(MemoryStream input, ref SKLFile data, Logger logger)
         {
             bool result = true;
 
             try
             {
-                BinaryReader myFile = new BinaryReader(input);
+                BinaryReader myFile = new BinaryReader(input, Encoding.ASCII);
                 result = ReadData(myFile, ref data, logger);
                 myFile.Close();
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                logger.LogError("Unable to open binary reader.");
-                logger.LogError(e.Message);
+                logger.Error("Unable to open binary reader.");
+                logger.Error(e.Message);
                 result = false;
             }
 
             return result;
         }
 
-        private static bool ReadData(BinaryReader file, ref SKLFile data, EventLogger logger)
+        private static bool ReadData(BinaryReader file, ref SKLFile data, Logger logger)
         {
             bool result = true;
 
             try
             {
                 // File Header Information.
-                data.magicOne = file.ReadInt32();
-                data.magicTwo = file.ReadInt32();
-
+                data.id = new String(file.ReadChars(SKLFile.ID_SIZE));
                 data.version = file.ReadUInt32();
 
                 if (data.version == 1 || data.version == 2)
@@ -122,31 +118,18 @@ namespace LOLViewer
                         bone.scale = file.ReadSingle();
 
                         // Read in transform matrix.
-                        float[] matrix = new float[SKLBone.TRANSFORM_SIZE];
-                        for (int j = 0; j < SKLBone.TRANSFORM_SIZE; ++j)
+                        float[] orientation = new float[SKLBone.ORIENTATION_SIZE];
+                        for (int j = 0; j < SKLBone.ORIENTATION_SIZE; ++j)
                         {
-                            matrix[j] = file.ReadSingle();
+                            orientation[j] = file.ReadSingle();
                         }
 
-                        Matrix4 orientationTransform = Matrix4.Identity;
-
-                        orientationTransform.M11 = matrix[0]; //
-                        orientationTransform.M21 = matrix[1]; // Column 1
-                        orientationTransform.M31 = matrix[2]; //
-                        
-                        orientationTransform.M12 = matrix[4]; //
-                        orientationTransform.M22 = matrix[5]; // Column 2
-                        orientationTransform.M32 = matrix[6]; //
-                        
-                        orientationTransform.M13 = matrix[8]; //
-                        orientationTransform.M23 = matrix[9]; // Column 3
-                        orientationTransform.M33 = matrix[10]; //
-
-                        bone.orientation = OpenTKExtras.Matrix4.CreateQuatFromMatrix(orientationTransform);
+                        bone.orientation = orientation;
 
                         // Position from matrix.
-                        Vector3 position = new Vector3(matrix[3], matrix[7], matrix[11]);
-                        bone.position = position;
+                        bone.position[0] = orientation[3];
+                        bone.position[1] = orientation[7];
+                        bone.position[2] = orientation[11];
 
                         data.bones.Add(bone);
                     }
@@ -167,7 +150,7 @@ namespace LOLViewer
                     // Header
                     Int16 zero = file.ReadInt16(); // ?
 
-                    data.numBones = (uint) file.ReadInt16();
+                    data.numBones = (uint)file.ReadInt16();
 
                     data.numBoneIDs = file.ReadUInt32();
                     Int16 offsetToVertexData = file.ReadInt16(); // Should be 64.
@@ -192,27 +175,27 @@ namespace LOLViewer
                         // For now, just go with it.
                         bone.scale = 0.1f;
 
-                        zero            = file.ReadInt16(); // ?
-                        bone.ID         = file.ReadInt16();
-                        bone.parentID   = file.ReadInt16();
-                        unknown         = file.ReadInt16(); // ?
+                        zero = file.ReadInt16(); // ?
+                        bone.ID = file.ReadInt16();
+                        bone.parentID = file.ReadInt16();
+                        unknown = file.ReadInt16(); // ?
 
                         int namehash = file.ReadInt32();
 
                         float twoPointOne = file.ReadSingle();
 
-                        bone.position.X = file.ReadSingle();
-                        bone.position.Y = file.ReadSingle();
-                        bone.position.Z = file.ReadSingle();
+                        bone.position[0] = file.ReadSingle();
+                        bone.position[1] = file.ReadSingle();
+                        bone.position[2] = file.ReadSingle();
 
                         float one = file.ReadSingle(); // ? Maybe scales for X, Y, and Z
                         one = file.ReadSingle();
                         one = file.ReadSingle();
 
-                        bone.orientation.X = file.ReadSingle();
-                        bone.orientation.Y = file.ReadSingle();
-                        bone.orientation.Z = file.ReadSingle();
-                        bone.orientation.W = file.ReadSingle();
+                        bone.orientation[0] = file.ReadSingle();
+                        bone.orientation[1] = file.ReadSingle();
+                        bone.orientation[2] = file.ReadSingle();
+                        bone.orientation[3] = file.ReadSingle();
 
                         float ctx = file.ReadSingle(); // ctx
                         float cty = file.ReadSingle(); // cty
@@ -225,11 +208,13 @@ namespace LOLViewer
                     }
 
                     file.BaseStream.Position = offset1;
-                    for (int i = 0; i < data.numBones; ++i) // ?
+                    for (int i = 0; i < data.numBones; ++i) // Inds for version 4 animation.
                     {
                         // 8 bytes
-                        int valueOne = file.ReadInt32();
-                        int valueTwo = file.ReadInt32();
+                        uint sklID = file.ReadUInt32();
+                        uint anmID = file.ReadUInt32();
+
+                        data.boneIDMap[anmID] = sklID;
                     }
 
                     file.BaseStream.Position = offsetToAnimationIndices;
@@ -244,63 +229,36 @@ namespace LOLViewer
                     for (int i = 0; i < data.numBones; ++i)
                     {
                         // bone names
-                        string name = ""; 
-                        while( name.Contains( '\0' ) == false )
+                        string name = "";
+                        while (name.Contains('\0') == false)
                         {
                             name += new string(file.ReadChars(4));
                         }
                         name = RemoveBoneNamePadding(name);
                         name = name.ToLower();
-                        
+
                         data.bones[i].name = name;
-                    }
-
-                    // Converting to original format.
-                    for (int i = 0; i < data.numBones; ++i)
-                    {
-                        // Only update non root bones.
-                        if (data.bones[i].parentID != -1)
-                        {
-                            // Determine the parent bone.
-                            SKLBone parentBone = data.bones[ data.bones[i].parentID ];
-
-                            // Append quaternions for rotation transform B * A
-                            data.bones[i].orientation = parentBone.orientation * data.bones[i].orientation;
-
-                            Vector3 localPosition = Vector3.Zero;
-                            localPosition.X = data.bones[i].position.X;
-                            localPosition.Y = data.bones[i].position.Y;
-                            localPosition.Z = data.bones[i].position.Z;
-
-                            data.bones[i].position = parentBone.position +
-                                Vector3.Transform(localPosition, parentBone.orientation);
-                        }
                     }
                 }
                 // Unknown Version
                 else
                 {
-                    logger.LogError("Unknown skl version: " + data.version);
-#if DEBUG
-                    MessageBox.Show("New .skl version.", "Error",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-#endif
+                    logger.Error("Unknown skl version: " + data.version);
                     result = false;
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                logger.LogError("Skl reading error.");
-                logger.LogError(e.Message);
+                logger.Error("Skl reading error.");
+                logger.Error(e.Message);
                 result = false;
             }
 
-            logger.LogEvent("Magic One: " + data.magicOne);
-            logger.LogEvent("Magic Two: " + data.magicTwo);
-            logger.LogEvent("Version: " + data.version);
-            logger.LogEvent("Designer ID: " + data.designerID);
-            logger.LogEvent("Number of Bones: " + data.numBones);
-            logger.LogEvent("Number of Bone IDs: " + data.numBoneIDs);
+            logger.Event("File ID: " + data.id);
+            logger.Event("Version: " + data.version);
+            logger.Event("Designer ID: " + data.designerID);
+            logger.Event("Number of Bones: " + data.numBones);
+            logger.Event("Number of Bone IDs: " + data.numBoneIDs);
 
             return result;
         }

@@ -4,7 +4,7 @@
 
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -36,27 +36,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using OpenTK;
-
-namespace LOLViewer
+namespace LOLFileReader
 {
-    class SKNVertex
+    public class SKNVertex
     {
-        public Vector3      position;
+        public float[]      position;
         public int[]        boneIndex;
-        public Vector4      weights;
-        public Vector3      normal;
-        public Vector2      texCoords;
+        public float[]      weights;
+        public float[]      normal;
+        public float[]      texCoords;
 
         public const int    BONE_INDEX_SIZE = 4; // in bytes
 
         public SKNVertex()
         {
-            position = Vector3.Zero;
+            position = new float[3];
             boneIndex = new int[BONE_INDEX_SIZE];
-            weights = Vector4.Zero;
-            normal = Vector3.Zero;
-            texCoords = Vector2.Zero;
+            weights = new float[4];
+            normal = new float[3];
+            texCoords = new float[2];
         }
     }
 }

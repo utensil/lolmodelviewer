@@ -3,7 +3,7 @@
 
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -38,18 +38,21 @@ using System.Linq;
 using System.Text;
 
 using System.IO;
+
+using CSharpLogger;
+
 using RAFlibPlus;
 
-namespace LOLViewer.IO
+namespace LOLFileReader
 {
-    class ANMListReader
+    public class ANMListReader
     {
-        public static bool ReadAnimationList(int skin, IFileEntry file,
-            ref Dictionary<String, String> animations, EventLogger logger)
+        public static bool Read(int skin, IFileEntry file,
+            ref Dictionary<String, String> animations, Logger logger)
         {
             bool result = true;
 
-            logger.LogEvent("Parsing animation list: " + file.FileName );
+            logger.Event("Parsing animation list: " + file.FileName );
 
             try
             {
@@ -64,7 +67,7 @@ namespace LOLViewer.IO
             }
             catch
             {
-                logger.LogError("Failed to parse animation list: " + file.FileName);
+                logger.Error("Failed to parse animation list: " + file.FileName);
 
                 result = false;
                 animations.Clear();
@@ -73,7 +76,7 @@ namespace LOLViewer.IO
             return result;
         }
 
-        public static void ParseAnimations(int skin, StreamReader f,
+        private static void ParseAnimations(int skin, StreamReader f,
             ref Dictionary<String, String> animations)
         {
             while (f.EndOfStream == false)
@@ -124,7 +127,7 @@ namespace LOLViewer.IO
             }
         }
 
-        public static void ParseSkinSpecificAnimations(int modelSkin, int animationSkin, ref StreamReader f,
+        private static void ParseSkinSpecificAnimations(int modelSkin, int animationSkin, ref StreamReader f,
             ref Dictionary<String, String> animations)
         {
             // We need to read or skip over these animations.
@@ -171,7 +174,7 @@ namespace LOLViewer.IO
             }
         }
 
-        public static void ParseAnimation(bool replace, String animation, String file,
+        private static void ParseAnimation(bool replace, String animation, String file,
             ref Dictionary<String, String> animations)
         {
             // Letter case does not correlate between animation.list files and the .anm file.

@@ -1,7 +1,7 @@
 ﻿
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -32,16 +32,19 @@ using System.Linq;
 using System.Text;
 
 using System.IO;
+using System.Drawing;
+using System.Drawing.Imaging;
+
 using RAFlibPlus;
 
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
-using System.Drawing;
-using System.Drawing.Imaging;
-using LOLViewer.IO;
+using LOLFileReader;
 
-namespace LOLViewer
+using CSharpLogger;
+
+namespace LOLViewer.Graphics
 {
     class GLTexture
     {
@@ -55,7 +58,7 @@ namespace LOLViewer
             DDS
         };
 
-        public int textureBuffer;
+        private int textureBuffer;
         private TextureTarget target;
 
         public GLTexture()
@@ -64,20 +67,19 @@ namespace LOLViewer
         }
 
         /// <summary>
-        /// Load a texture from file. Supports standard .NET image types 
-        /// and .DDS only.
+        /// Load texture from RAF.
         /// </summary>
-        /// <param name="path"></param>
-        /// <param name="target"></param>
+        /// <param name="file">The file entry of the texture.</param>
+        /// <param name="target">Only supports 2D.</param>
         /// <returns></returns>
-        public bool Create(FileInfo f, TextureTarget target, SupportedImageEncodings encoding)
+        public bool Create(IFileEntry file, TextureTarget target, SupportedImageEncodings encoding, Logger logger)
         {
             bool result = true;
 
             this.target = target;
 
             // Hacky sanity check
-            if( System.IO.File.Exists(f.FullName) == false )
+            if (target != TextureTarget.Texture2D)
             {
                 return false;
             }
@@ -85,75 +87,25 @@ namespace LOLViewer
             GL.Enable(EnableCap.Texture2D);
             GL.Hint(HintTarget.PerspectiveCorrectionHint, HintMode.Nicest);
 
-            // Check file type
-            if (encoding != SupportedImageEncodings.DDS)
+            // Create a System.Drawing.Bitmap.
+            Bitmap bitmap = null;
+            if (encoding == SupportedImageEncodings.DDS)
             {
-                // Normal file type.
-                // All OpenGL buffers are created in the helper function below.
-                result = CreateDotNetTexture(f, target);
+                // Special case.
+                result = DDSReader.Read(file, ref bitmap, logger);
             }
             else
             {
-                // DDS Compression.
-                // All OpenGL buffers are created internally in the OpenTK
-                // Utility class.
-                result = CreateDDSTexture(f, target);
+                // Normal case.
+                result = CreateBitmap(file.GetContent(), ref bitmap);
             }
 
-            if (result == true)
+            // Pass the Bitmap into OpenGL.
+            if (result == true &&
+                bitmap != null)
             {
-                // Set up texture parameters.
-                GL.TexEnv(TextureEnvTarget.TextureEnv,
-                    TextureEnvParameter.TextureEnvMode,
-                    (Int32)TextureEnvModeCombine.Modulate);
-
-                GL.TexParameter(TextureTarget.Texture2D,
-                    TextureParameterName.TextureMinFilter,
-                    (Int32)TextureMinFilter.Linear);
-
-                GL.TexParameter(TextureTarget.Texture2D,
-                    TextureParameterName.TextureMagFilter,
-                    (Int32)TextureMagFilter.Linear);
-
-                GL.TexParameter(TextureTarget.Texture2D,
-                    TextureParameterName.TextureWrapS,
-                    (Int32)TextureWrapMode.Repeat);
-
-                GL.TexParameter(TextureTarget.Texture2D,
-                    TextureParameterName.TextureWrapT,
-                    (Int32)TextureWrapMode.Repeat);
+                result = CreateTexture(bitmap, target);
             }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Load texture from RAF.
-        /// </summary>
-        /// <param name="f">The RAF file entry of the texture.</param>
-        /// <param name="target">Only supports 2D.</param>
-        /// <param name="encoding">Only supports DDS.</param>
-        /// <returns></returns>
-        public bool Create( IFileEntry f, TextureTarget target, SupportedImageEncodings encoding)
-        {
-            bool result = true;
-
-            this.target = target;
-
-            // Hacky sanity check
-            if (target != TextureTarget.Texture2D &&
-                encoding != SupportedImageEncodings.DDS)
-            {
-                return false;
-            }
-
-            GL.Enable(EnableCap.Texture2D);
-            GL.Hint(HintTarget.PerspectiveCorrectionHint, HintMode.Nicest);
-
-            // Only doing DDS at the moment.
-            // I don't really have a need at the moment to load
-            // other textures from RAF.
-            result = CreateDDSTexture(f, target);
 
             if (result == true)
             {
@@ -190,9 +142,6 @@ namespace LOLViewer
             }
         }
 
-        //
-        // Helper Functions
-        //
         public bool Bind()
         {
             bool result = true;
@@ -212,7 +161,34 @@ namespace LOLViewer
             return result;
         }
 
-        private bool CreateDotNetTexture(FileInfo f, TextureTarget target)
+        //
+        // Helper Functions
+        //
+
+        private bool CreateBitmap(byte[] data, ref Bitmap bitmap)
+        {
+            bool result = true;
+
+            MemoryStream stream = null;
+            try
+            {
+                stream = new MemoryStream(data);
+                bitmap = new Bitmap(stream);
+            }
+            catch
+            {
+                result = false;
+            }
+
+            if (stream != null)
+            {
+                stream.Close();
+            }
+
+            return result;
+        }
+
+        private bool CreateTexture(Bitmap bitmap, TextureTarget target)
         {
             bool result = true;
 
@@ -237,11 +213,9 @@ namespace LOLViewer
             // Set the texture data.
             if (result == true)
             {
-                // File is a normal .NET encoding
                 try
                 {
-                    // Read the texture from file.
-                    Bitmap bitmap = new Bitmap(f.FullName);
+                    // Get the pixel data from the bitmap.
                     BitmapData data = bitmap.LockBits(new System.Drawing.Rectangle(0, 0,
                         bitmap.Width, bitmap.Height),
                         ImageLockMode.ReadOnly,
@@ -264,57 +238,6 @@ namespace LOLViewer
 
             error = GL.GetError();
             if (error != ErrorCode.NoError)
-            {
-                result = false;
-            }
-
-            return result;
-        }
-
-        private bool CreateDDSTexture(FileInfo f, TextureTarget target)
-        {
-            bool result = true;
-
-            TextureTarget dimension;
-            uint handle;
-            TextureLoaders.ImageDDS.LoadFromDisk(f.FullName, out handle,
-                out dimension);
-
-            if (handle > 0)
-            {
-                textureBuffer = (int)handle;
-            }
-            else
-            {
-                result = false;
-            }
-
-            return result;
-        }
-
-        private bool CreateDDSTexture(IFileEntry file, TextureTarget target)
-        {
-            bool result = true;
-
-            TextureTarget dimension;
-            uint handle = 0;
-
-            try
-            {
-                // Get the data from the archive
-                TextureLoaders.ImageDDS.LoadFromMemory(file.GetContent(), out handle, out dimension);
-            }
-            catch
-            {
-                // The DDS loader can't read all types of DDS files.
-                result = false;
-            }
-
-            if (handle > 0)
-            {
-                textureBuffer = (int)handle;
-            }
-            else
             {
                 result = false;
             }

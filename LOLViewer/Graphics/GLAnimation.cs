@@ -2,7 +2,7 @@
 
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -33,7 +33,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace LOLViewer
+namespace LOLViewer.Graphics
 {
     class GLAnimation
     {
@@ -43,14 +43,14 @@ namespace LOLViewer
         public uint numberOfBones;
         public uint numberOfFrames;
 
-        public List<ANMBone> bones;
+        public List<GLBone> bones;
 
         public GLAnimation()
         {
             playbackFPS = 0;
             numberOfBones = 0;
             numberOfFrames = 0;
-            bones = new List<ANMBone>();
+            bones = new List<GLBone>();
         }
     }
 }

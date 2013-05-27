@@ -2,7 +2,7 @@
 
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -37,6 +37,7 @@ using System.Text;
 using System.IO;
 
 using RAFlibPlus;
+using LOLFileReader;
 
 namespace LOLViewer.IO
 {

@@ -4,14 +4,17 @@ using System.Linq;
 using System.Text;
 using RAFlibPlus;
 
-namespace LOLViewer.IO
+namespace LOLFileReader
 {
     public class RAFFileListEntryWrapper : IFileEntry
     {
-        public RAFFileListEntryWrapper(RAFFileListEntry rafFile)
+        public RAFFileListEntryWrapper(RAFMasterFileList.RAFSearchResult result)
         {
-            e = rafFile;
+            e = result.value;
+            SearchPhrase = result.searchPhrase;
         }
+
+        public String SearchPhrase { get; private set; }
 
         public String FileName {
             get

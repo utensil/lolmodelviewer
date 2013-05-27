@@ -2,7 +2,7 @@
 
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -32,16 +32,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace LOLViewer
+namespace LOLFileReader
 {
-    class ANMFile
+    public class ANMFile
     {
-        public UInt32 magicOne;
-        public UInt32 magicTwo;
+        public const Int32 ID_SIZE = 8;
+        public String id;
 
         public UInt32 version;
 
-        public UInt32 magicThree;
+        public UInt32 magic;
 
         public UInt32 numberOfBones;
         public UInt32 numberOfFrames;
@@ -52,12 +52,11 @@ namespace LOLViewer
 
         public ANMFile()
         {
-            magicOne = 0;
-            magicTwo = 0;
+            id = String.Empty;
 
             version = 0;
 
-            magicThree = 0;
+            magic = 0;
 
             numberOfBones = 0;
             numberOfFrames = 0;
@@ -65,16 +64,6 @@ namespace LOLViewer
             playbackFPS = 0;
 
             bones = new List<ANMBone>();
-        }
-
-        public void ToGLAnimation( ref GLAnimation animation )
-        {
-            animation.playbackFPS = playbackFPS;
-            animation.numberOfBones = numberOfBones;
-            animation.numberOfFrames = numberOfFrames;
-            animation.bones = bones;
-
-            animation.timePerFrame = 1.0f / (float)animation.playbackFPS;
         }
     }
 }

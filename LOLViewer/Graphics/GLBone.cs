@@ -1,7 +1,7 @@
 ﻿
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -34,22 +34,24 @@ using System.Text;
 
 using OpenTK;
 
-namespace LOLViewer
+namespace LOLViewer.Graphics
 {
     class GLBone
     {
+        public String name;
         public int parent;
-        public float scale;
-        public Quaternion worldOrientation;
-        public Vector3 worldPosition;
+
+        public Matrix4 transform;
+        public List<Matrix4> frames;
 
         public GLBone()
         {
+            name = String.Empty;
             // -1 reserved for root
             parent = -2;
-            scale = 0.0f;
-            worldOrientation = Quaternion.Identity;
-            worldPosition = Vector3.Zero;
+
+            transform = Matrix4.Identity;
+            frames = new List<Matrix4>();
         }
     }
 }

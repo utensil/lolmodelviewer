@@ -1,7 +1,7 @@
 ﻿
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -35,24 +35,26 @@ using System.Text;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
-namespace LOLViewer
+namespace LOLViewer.Graphics
 {
     class GLBillboard
     {
-        public int numIndices;
-        public int vao, vBuffer, iBuffer, tBuffer, nBuffer;
+        private int numIndices;
+
+        // OpenGL objects.
+        private int vao, vertexPositionBuffer, indexBuffer, vertexTextureCoordinateBuffer, vertexNormalBuffer;
 
         public GLBillboard() 
         {
-            vao = vBuffer = iBuffer = tBuffer = nBuffer = numIndices = 0;
+            vao = vertexPositionBuffer = indexBuffer = vertexTextureCoordinateBuffer = vertexNormalBuffer = numIndices = 0;
         }
 
-        public bool Create(List<float> vertexData, List<float> texData,
-                List<uint> indexData)
+        public bool Create(List<float> vertexPositions, List<float> vertexTextureCoordinates,
+                List<uint> indices)
         {
             bool result = true;
 
-            numIndices = indexData.Count;
+            numIndices = indices.Count;
 
             // Create Vertex Array Object
             if (result == true)
@@ -89,18 +91,18 @@ namespace LOLViewer
             // Store data and bind vertex buffer.
             if (result == true)
             {
-                vBuffer = buffers[0];
-                tBuffer = buffers[1];
-                iBuffer = buffers[2];
+                vertexPositionBuffer = buffers[0];
+                vertexTextureCoordinateBuffer = buffers[1];
+                indexBuffer = buffers[2];
 
-                GL.BindBuffer(BufferTarget.ArrayBuffer, vBuffer);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vertexPositionBuffer);
             }
 
             // Set vertex data.
             if (result == true)
             {
-                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(vertexData.Count * sizeof(float)),
-                    vertexData.ToArray(), BufferUsageHint.StaticDraw);
+                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(vertexPositions.Count * sizeof(float)),
+                    vertexPositions.ToArray(), BufferUsageHint.StaticDraw);
             }
 
             // Check for errors.
@@ -132,14 +134,14 @@ namespace LOLViewer
             // Bind texture cordinates buffer.
             if (result == true)
             {
-                GL.BindBuffer(BufferTarget.ArrayBuffer, tBuffer);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vertexTextureCoordinateBuffer);
             }
 
             // Set Texture Coordinate Data
             if (result == true)
             {
-                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(texData.Count * sizeof(float)),
-                    texData.ToArray(), BufferUsageHint.StaticDraw);
+                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(vertexTextureCoordinates.Count * sizeof(float)),
+                    vertexTextureCoordinates.ToArray(), BufferUsageHint.StaticDraw);
             }
 
             error = GL.GetError();
@@ -170,14 +172,14 @@ namespace LOLViewer
             // Bind index buffer.
             if (result == true)
             {
-                GL.BindBuffer(BufferTarget.ElementArrayBuffer, iBuffer);
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBuffer);
             }
 
             // Set index data.
             if (result == true)
             {
-                GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(indexData.Count * sizeof(uint)),
-                    indexData.ToArray(), BufferUsageHint.StaticDraw);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(indices.Count * sizeof(uint)),
+                    indices.ToArray(), BufferUsageHint.StaticDraw);
             }
 
             error = GL.GetError();
@@ -211,28 +213,28 @@ namespace LOLViewer
                 vao = 0;
             }
 
-            if (vBuffer != 0)
+            if (vertexPositionBuffer != 0)
             {
-                GL.DeleteBuffers(1, ref vBuffer);
-                vBuffer = 0;
+                GL.DeleteBuffers(1, ref vertexPositionBuffer);
+                vertexPositionBuffer = 0;
             }
 
-            if (tBuffer != 0)
+            if (vertexTextureCoordinateBuffer != 0)
             {
-                GL.DeleteBuffers(1, ref tBuffer);
-                tBuffer = 0;
+                GL.DeleteBuffers(1, ref vertexTextureCoordinateBuffer);
+                vertexTextureCoordinateBuffer = 0;
             }
 
-            if (nBuffer != 0)
+            if (vertexNormalBuffer != 0)
             {
-                GL.DeleteBuffers(1, ref nBuffer);
-                nBuffer = 0;
+                GL.DeleteBuffers(1, ref vertexNormalBuffer);
+                vertexNormalBuffer = 0;
             }
 
-            if (iBuffer != 0)
+            if (indexBuffer != 0)
             {
-                GL.DeleteBuffers(1, ref iBuffer);
-                iBuffer = 0;
+                GL.DeleteBuffers(1, ref indexBuffer);
+                indexBuffer = 0;
             }
 
             numIndices = 0;

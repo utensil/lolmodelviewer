@@ -2,7 +2,7 @@
 
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -28,24 +28,20 @@ along with LOLViewer.  If not, see <http://www.gnu.org/licenses/>.
 // Abrstraction to read .skn files.
 //
 
-//
-// TODO: Some of the newer SKLs can not be read properly.  IE Frost Fire Brand
-//
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 using System.IO;
-using System.Windows.Forms;
-using OpenTK;
-using RAFlibPlus;
-using LOLViewer.IO;
 
-namespace LOLViewer
+using CSharpLogger;
+
+using RAFlibPlus;
+
+namespace LOLFileReader
 {
-    class SKNReader
+    public class SKNReader
     {
         /// <summary>
         /// Read in binary .skn file from RAF.
@@ -53,11 +49,11 @@ namespace LOLViewer
         /// <param name="file">The file.</param>
         /// <param name="data">The contents of the file are stored in here.</param>
         /// <returns></returns>
-        public static bool Read(IFileEntry file, ref SKNFile data, EventLogger logger)
+        public static bool Read(IFileEntry file, ref SKNFile data, Logger logger)
         {
             bool result = true;
 
-            logger.LogEvent("Reading skn: " + file.FileName);
+            logger.Event("Reading skn: " + file.FileName);
 
             try
             {
@@ -68,8 +64,8 @@ namespace LOLViewer
             }
             catch(Exception e)
             {
-                logger.LogError("Unable to open memory stream: " + file.FileName);
-                logger.LogError(e.Message);
+                logger.Error("Unable to open memory stream: " + file.FileName);
+                logger.Error(e.Message);
                 result = false;
             }
 
@@ -81,7 +77,7 @@ namespace LOLViewer
         // (Because nested Try/Catch looks nasty in one function block.)
         //
 
-        private static bool ReadBinary(MemoryStream input, ref SKNFile data, EventLogger logger)
+        private static bool ReadBinary(MemoryStream input, ref SKNFile data, Logger logger)
         {
             bool result = true;
 
@@ -93,15 +89,15 @@ namespace LOLViewer
             }
             catch(Exception e)
             {
-                logger.LogError("Unable to open binary reader.");
-                logger.LogError(e.Message);
+                logger.Error("Unable to open binary reader.");
+                logger.Error(e.Message);
                 result = false;
             }
 
             return result;
         }
 
-        private static bool ReadData(BinaryReader file, ref SKNFile data, EventLogger logger)
+        private static bool ReadData(BinaryReader file, ref SKNFile data, Logger logger)
         {
             bool result = true;
 
@@ -143,9 +139,9 @@ namespace LOLViewer
                     {
                         SKNVertex vertex = new SKNVertex();
 
-                        vertex.position.X = file.ReadSingle();
-                        vertex.position.Y = file.ReadSingle();
-                        vertex.position.Z = file.ReadSingle();
+                        vertex.position[0] = file.ReadSingle(); // x
+                        vertex.position[1] = file.ReadSingle(); // y
+                        vertex.position[2] = file.ReadSingle(); // z
 
                         for (int j = 0; j < SKNVertex.BONE_INDEX_SIZE; ++j)
                         {
@@ -153,17 +149,17 @@ namespace LOLViewer
                             vertex.boneIndex[j] = bone;
                         }
 
-                        vertex.weights.X = file.ReadSingle();
-                        vertex.weights.Y = file.ReadSingle();
-                        vertex.weights.Z = file.ReadSingle();
-                        vertex.weights.W = file.ReadSingle();
+                        vertex.weights[0] = file.ReadSingle();
+                        vertex.weights[1] = file.ReadSingle();
+                        vertex.weights[2] = file.ReadSingle();
+                        vertex.weights[3] = file.ReadSingle();
 
-                        vertex.normal.X = file.ReadSingle();
-                        vertex.normal.Y = file.ReadSingle();
-                        vertex.normal.Z = file.ReadSingle();
+                        vertex.normal[0] = file.ReadSingle(); // x
+                        vertex.normal[1] = file.ReadSingle(); // y
+                        vertex.normal[2] = file.ReadSingle(); // z
 
-                        vertex.texCoords.X = file.ReadSingle();
-                        vertex.texCoords.Y = file.ReadSingle();
+                        vertex.texCoords[0] = file.ReadSingle(); // u
+                        vertex.texCoords[1] = file.ReadSingle(); // v
 
                         data.vertices.Add(vertex);
                     }
@@ -179,27 +175,23 @@ namespace LOLViewer
                 // Unknown Version
                 else           
                 {
-                    logger.LogError("Unknown skn version: " + data.version);
-#if DEBUG
-                    MessageBox.Show("New .skn version.", "Error",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-#endif
+                    logger.Error("Unknown skn version: " + data.version);
                     result = false;
                 }
             }
             catch(Exception e)
             {
-                logger.LogError("Skn reading error.");
-                logger.LogError(e.Message);
+                logger.Error("Skn reading error.");
+                logger.Error(e.Message);
                 result = false;
             }
 
-            logger.LogEvent("Magic: " + data.magic);
-            logger.LogEvent("Version: " + data.version);
-            logger.LogEvent("Number of Objects: " + data.numObjects);
-            logger.LogEvent("Number of Material Headers: " + data.numMaterialHeaders);
-            logger.LogEvent("Number of Vertices: " + data.numVertices);
-            logger.LogEvent("Number of Indices: " + data.numIndices);
+            logger.Event("Magic: " + data.magic);
+            logger.Event("Version: " + data.version);
+            logger.Event("Number of Objects: " + data.numObjects);
+            logger.Event("Number of Material Headers: " + data.numMaterialHeaders);
+            logger.Event("Number of Vertices: " + data.numVertices);
+            logger.Event("Number of Indices: " + data.numIndices);
 
             return result;
         }

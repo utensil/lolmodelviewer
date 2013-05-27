@@ -1,7 +1,7 @@
 ﻿
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -47,17 +47,19 @@ using System.Text;
 using System.IO;
 using System.Diagnostics;
 
+using CSharpLogger;
+
 using RAFlibPlus;
 
-namespace LOLViewer.IO
+namespace LOLFileReader
 {
-    class InibinReader
+    public class InibinReader
     {
-        public static bool ReadCharacterInibin(IFileEntry file, ref InibinFile data, EventLogger logger)
+        public static bool Read(IFileEntry file, ref InibinFile data, Logger logger)
         {
             bool result = true;
             
-            logger.LogEvent("Reading inibin: " + file.FileName);
+            logger.Event("Reading inibin: " + file.FileName);
 
             try
             {
@@ -77,15 +79,15 @@ namespace LOLViewer.IO
             }
             catch(Exception e)
             {
-                logger.LogError("Unable to open memory stream: " + file.FileName);
-                logger.LogError(e.Message);
+                logger.Error("Unable to open memory stream: " + file.FileName);
+                logger.Error(e.Message);
                 result = false;
             }
         
             return result;
         }
 
-        public static bool ReadCharacterInibin(MemoryStream stream, ref InibinFile file, EventLogger logger)
+        private static bool ReadCharacterInibin(MemoryStream stream, ref InibinFile file, Logger logger)
         {
  	        bool result = true;
 
@@ -454,79 +456,79 @@ namespace LOLViewer.IO
             Debug.WriteLine("Skin #8 DDS: " + file.properties[(long)InibinHashID.SKIN_EIGHT_TEXTURE]); 
 #endif
 
-            logger.LogEvent("Version: " + version);
+            logger.Event("Version: " + version);
 
             //if (file.properties.ContainsKey((long)InibinHashID.SKIN_ONE_NAME))
                 //logger.LogEvent("Skin #1 Name: " + file.properties[(long) InibinHashID.SKIN_ONE_NAME]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_ONE_SKN))
-                logger.LogEvent("Skin #1 SKN: " + file.properties[(long)InibinHashID.SKIN_ONE_SKN]);
+                logger.Event("Skin #1 SKN: " + file.properties[(long)InibinHashID.SKIN_ONE_SKN]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_ONE_SKL))
-                logger.LogEvent("Skin #1 SKL: " + file.properties[(long)InibinHashID.SKIN_ONE_SKL]);
+                logger.Event("Skin #1 SKL: " + file.properties[(long)InibinHashID.SKIN_ONE_SKL]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_ONE_TEXTURE))
-                logger.LogEvent("Skin #1 DDS: " + file.properties[(long)InibinHashID.SKIN_ONE_TEXTURE]);
+                logger.Event("Skin #1 DDS: " + file.properties[(long)InibinHashID.SKIN_ONE_TEXTURE]);
 
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_TWO_NAME))
-                logger.LogEvent("Skin #2 Name: " + file.properties[(long)InibinHashID.SKIN_TWO_NAME]);
+                logger.Event("Skin #2 Name: " + file.properties[(long)InibinHashID.SKIN_TWO_NAME]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_TWO_SKN))
-                logger.LogEvent("Skin #2 SKN: " + file.properties[(long)InibinHashID.SKIN_TWO_SKN]);
+                logger.Event("Skin #2 SKN: " + file.properties[(long)InibinHashID.SKIN_TWO_SKN]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_TWO_SKL))
-                logger.LogEvent("Skin #2 SKL: " + file.properties[(long)InibinHashID.SKIN_TWO_SKL]);
+                logger.Event("Skin #2 SKL: " + file.properties[(long)InibinHashID.SKIN_TWO_SKL]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_TWO_TEXTURE))
-                logger.LogEvent("Skin #2 DDS: " + file.properties[(long)InibinHashID.SKIN_TWO_TEXTURE]);
+                logger.Event("Skin #2 DDS: " + file.properties[(long)InibinHashID.SKIN_TWO_TEXTURE]);
 
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_THREE_NAME))
-                logger.LogEvent("Skin #3 Name: " + file.properties[(long)InibinHashID.SKIN_THREE_NAME]);
+                logger.Event("Skin #3 Name: " + file.properties[(long)InibinHashID.SKIN_THREE_NAME]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_THREE_SKN))
-                logger.LogEvent("Skin #3 SKN: " + file.properties[(long)InibinHashID.SKIN_THREE_SKN]);
+                logger.Event("Skin #3 SKN: " + file.properties[(long)InibinHashID.SKIN_THREE_SKN]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_THREE_SKL))
-                logger.LogEvent("Skin #3 SKL: " + file.properties[(long)InibinHashID.SKIN_THREE_SKL]);
+                logger.Event("Skin #3 SKL: " + file.properties[(long)InibinHashID.SKIN_THREE_SKL]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_THREE_TEXTURE))
-                logger.LogEvent("Skin #3 DDS: " + file.properties[(long)InibinHashID.SKIN_THREE_TEXTURE]);
+                logger.Event("Skin #3 DDS: " + file.properties[(long)InibinHashID.SKIN_THREE_TEXTURE]);
 
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_FOUR_NAME))
-                logger.LogEvent("Skin #4 Name: " + file.properties[(long)InibinHashID.SKIN_FOUR_NAME]);
+                logger.Event("Skin #4 Name: " + file.properties[(long)InibinHashID.SKIN_FOUR_NAME]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_FOUR_SKN))
-                logger.LogEvent("Skin #4 SKN: " + file.properties[(long)InibinHashID.SKIN_FOUR_SKN]);
+                logger.Event("Skin #4 SKN: " + file.properties[(long)InibinHashID.SKIN_FOUR_SKN]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_FOUR_SKL))
-                logger.LogEvent("Skin #4 SKL: " + file.properties[(long)InibinHashID.SKIN_FOUR_SKL]);
+                logger.Event("Skin #4 SKL: " + file.properties[(long)InibinHashID.SKIN_FOUR_SKL]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_FOUR_TEXTURE))
-                logger.LogEvent("Skin #4 DDS: " + file.properties[(long)InibinHashID.SKIN_FOUR_TEXTURE]);
+                logger.Event("Skin #4 DDS: " + file.properties[(long)InibinHashID.SKIN_FOUR_TEXTURE]);
 
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_FIVE_NAME))
-                logger.LogEvent("Skin #5 Name: " + file.properties[(long)InibinHashID.SKIN_FIVE_NAME]);
+                logger.Event("Skin #5 Name: " + file.properties[(long)InibinHashID.SKIN_FIVE_NAME]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_FIVE_SKN))
-                logger.LogEvent("Skin #5 SKN: " + file.properties[(long)InibinHashID.SKIN_FIVE_SKN]);
+                logger.Event("Skin #5 SKN: " + file.properties[(long)InibinHashID.SKIN_FIVE_SKN]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_FIVE_SKL))
-                logger.LogEvent("Skin #5 SKL: " + file.properties[(long)InibinHashID.SKIN_FIVE_SKL]);
+                logger.Event("Skin #5 SKL: " + file.properties[(long)InibinHashID.SKIN_FIVE_SKL]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_FIVE_TEXTURE))
-                logger.LogEvent("Skin #5 DDS: " + file.properties[(long)InibinHashID.SKIN_FIVE_TEXTURE]);
+                logger.Event("Skin #5 DDS: " + file.properties[(long)InibinHashID.SKIN_FIVE_TEXTURE]);
 
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_SIX_NAME))
-                logger.LogEvent("Skin #6 Name: " + file.properties[(long)InibinHashID.SKIN_SIX_NAME]);
+                logger.Event("Skin #6 Name: " + file.properties[(long)InibinHashID.SKIN_SIX_NAME]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_SIX_SKN))
-                logger.LogEvent("Skin #6 SKN: " + file.properties[(long)InibinHashID.SKIN_SIX_SKN]);
+                logger.Event("Skin #6 SKN: " + file.properties[(long)InibinHashID.SKIN_SIX_SKN]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_SIX_SKL))
-                logger.LogEvent("Skin #6 SKL: " + file.properties[(long)InibinHashID.SKIN_SIX_SKL]);
+                logger.Event("Skin #6 SKL: " + file.properties[(long)InibinHashID.SKIN_SIX_SKL]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_SIX_TEXTURE))
-                logger.LogEvent("Skin #6 DDS: " + file.properties[(long)InibinHashID.SKIN_SIX_TEXTURE]);
+                logger.Event("Skin #6 DDS: " + file.properties[(long)InibinHashID.SKIN_SIX_TEXTURE]);
 
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_SEVEN_NAME))
-                logger.LogEvent("Skin #7 Name: " + file.properties[(long)InibinHashID.SKIN_SEVEN_NAME]);
+                logger.Event("Skin #7 Name: " + file.properties[(long)InibinHashID.SKIN_SEVEN_NAME]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_SEVEN_SKN))
-                logger.LogEvent("Skin #7 SKN: " + file.properties[(long)InibinHashID.SKIN_SEVEN_SKN]);
+                logger.Event("Skin #7 SKN: " + file.properties[(long)InibinHashID.SKIN_SEVEN_SKN]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_SEVEN_SKL))
-                logger.LogEvent("Skin #7 SKL: " + file.properties[(long)InibinHashID.SKIN_SEVEN_SKL]);
+                logger.Event("Skin #7 SKL: " + file.properties[(long)InibinHashID.SKIN_SEVEN_SKL]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_SEVEN_TEXTURE))
-                logger.LogEvent("Skin #7 DDS: " + file.properties[(long)InibinHashID.SKIN_SEVEN_TEXTURE]);
+                logger.Event("Skin #7 DDS: " + file.properties[(long)InibinHashID.SKIN_SEVEN_TEXTURE]);
 
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_EIGHT_NAME))
-                logger.LogEvent("Skin #8 Name: " + file.properties[(long)InibinHashID.SKIN_EIGHT_NAME]);
+                logger.Event("Skin #8 Name: " + file.properties[(long)InibinHashID.SKIN_EIGHT_NAME]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_EIGHT_SKN))
-                logger.LogEvent("Skin #8 SKN: " + file.properties[(long)InibinHashID.SKIN_EIGHT_SKN]);
+                logger.Event("Skin #8 SKN: " + file.properties[(long)InibinHashID.SKIN_EIGHT_SKN]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_EIGHT_SKL))
-                logger.LogEvent("Skin #8 SKL: " + file.properties[(long)InibinHashID.SKIN_EIGHT_SKL]);
+                logger.Event("Skin #8 SKL: " + file.properties[(long)InibinHashID.SKIN_EIGHT_SKL]);
             if (file.properties.ContainsKey((long)InibinHashID.SKIN_EIGHT_TEXTURE))
-                logger.LogEvent("Skin #8 DDS: " + file.properties[(long)InibinHashID.SKIN_EIGHT_TEXTURE]); 
+                logger.Event("Skin #8 DDS: " + file.properties[(long)InibinHashID.SKIN_EIGHT_TEXTURE]); 
 
             return result;
         }
@@ -583,7 +585,7 @@ namespace LOLViewer.IO
             return result;
         }
 
-        public static String ReadNullTerminatedString(ref MemoryStream s, int atOffset)
+        private static String ReadNullTerminatedString(ref MemoryStream s, int atOffset)
         {
             long oldPos = s.Position;
             s.Seek(atOffset, SeekOrigin.Begin);

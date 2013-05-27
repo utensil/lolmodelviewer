@@ -37,9 +37,9 @@ using System.Text;
 using System.IO;
 using System.Diagnostics;
 
-namespace LOLViewer.IO
+namespace LOLFileReader
 {
-    class ModelDefinition
+    public class ModelDefinition
     {
         public int skin;
         public String anmListKey; // for finding animation files.
@@ -59,7 +59,7 @@ namespace LOLViewer.IO
         }
     };
 
-    class InibinFile
+    public class InibinFile
     {
         public DirectoryInfo directory;
         public Dictionary<long, Object> properties;
@@ -84,13 +84,14 @@ namespace LOLViewer.IO
 
             // Read in model 1
             ModelDefinition def = new ModelDefinition();
-            def.anmListKey = directory.Name;
+            def.anmListKey = GetAnimationList(directory);
+          
+            bool modelStringsResult = GetModelStrings((long)InibinHashID.SKIN_ONE_NAME, 
+                    (long)InibinHashID.SKIN_ONE_SKN,
+                    (long)InibinHashID.SKIN_ONE_SKL,
+                    (long)InibinHashID.SKIN_ONE_TEXTURE, ref def);
 
-            bool flag = GetModelStrings(0, (long)InibinHashID.SKIN_ONE_SKN,
-                (long)InibinHashID.SKIN_ONE_SKL,
-                (long)InibinHashID.SKIN_ONE_TEXTURE, ref def);
-
-            if (flag == true)
+            if (modelStringsResult == true)
             {
                 def.skin = 1;
                 result.Add(def);
@@ -99,12 +100,12 @@ namespace LOLViewer.IO
             // Read in model 2
             def = new ModelDefinition();
             def.anmListKey = directory.Name;
-            flag = GetModelStrings((long)InibinHashID.SKIN_TWO_NAME,
+            modelStringsResult = GetModelStrings((long)InibinHashID.SKIN_TWO_NAME,
                 (long)InibinHashID.SKIN_TWO_SKN,
                 (long)InibinHashID.SKIN_TWO_SKL,
                 (long)InibinHashID.SKIN_TWO_TEXTURE, ref def);
 
-            if (flag == true)
+            if (modelStringsResult == true)
             {
                 def.skin = 2;
                 result.Add(def);
@@ -113,12 +114,12 @@ namespace LOLViewer.IO
             // Read in model 3
             def = new ModelDefinition();
             def.anmListKey = directory.Name;
-            flag = GetModelStrings((long)InibinHashID.SKIN_THREE_NAME,
+            modelStringsResult = GetModelStrings((long)InibinHashID.SKIN_THREE_NAME,
                 (long)InibinHashID.SKIN_THREE_SKN,
                 (long)InibinHashID.SKIN_THREE_SKL,
                 (long)InibinHashID.SKIN_THREE_TEXTURE, ref def);
 
-            if (flag == true)
+            if (modelStringsResult == true)
             {
                 def.skin = 3;
                 result.Add(def);
@@ -127,12 +128,12 @@ namespace LOLViewer.IO
             // Read in model 4
             def = new ModelDefinition();
             def.anmListKey = directory.Name;
-            flag = GetModelStrings((long)InibinHashID.SKIN_FOUR_NAME,
+            modelStringsResult = GetModelStrings((long)InibinHashID.SKIN_FOUR_NAME,
                 (long)InibinHashID.SKIN_FOUR_SKN,
                 (long)InibinHashID.SKIN_FOUR_SKL,
                 (long)InibinHashID.SKIN_FOUR_TEXTURE, ref def);
 
-            if (flag == true)
+            if (modelStringsResult == true)
             {
                 def.skin = 4;
                 result.Add(def);
@@ -141,12 +142,12 @@ namespace LOLViewer.IO
             // Read in model 5 
             def = new ModelDefinition();
             def.anmListKey = directory.Name;
-            flag = GetModelStrings((long)InibinHashID.SKIN_FIVE_NAME,
+            modelStringsResult = GetModelStrings((long)InibinHashID.SKIN_FIVE_NAME,
                 (long)InibinHashID.SKIN_FIVE_SKN,
                 (long)InibinHashID.SKIN_FIVE_SKL,
                 (long)InibinHashID.SKIN_FIVE_TEXTURE, ref def);
 
-            if (flag == true)
+            if (modelStringsResult == true)
             {
                 def.skin = 5;
                 result.Add(def);
@@ -155,12 +156,12 @@ namespace LOLViewer.IO
             // Read in model 6
             def = new ModelDefinition();
             def.anmListKey = directory.Name;
-            flag = GetModelStrings((long)InibinHashID.SKIN_SIX_NAME,
+            modelStringsResult = GetModelStrings((long)InibinHashID.SKIN_SIX_NAME,
                 (long)InibinHashID.SKIN_SIX_SKN,
                 (long)InibinHashID.SKIN_SIX_SKL,
                 (long)InibinHashID.SKIN_SIX_TEXTURE, ref def);
 
-            if (flag == true)
+            if (modelStringsResult == true)
             {
                 def.skin = 6;
                 result.Add(def);
@@ -169,12 +170,12 @@ namespace LOLViewer.IO
             // Read in model 7
             def = new ModelDefinition();
             def.anmListKey = directory.Name;
-            flag = GetModelStrings((long)InibinHashID.SKIN_SEVEN_NAME,
+            modelStringsResult = GetModelStrings((long)InibinHashID.SKIN_SEVEN_NAME,
                 (long)InibinHashID.SKIN_SEVEN_SKN,
                 (long)InibinHashID.SKIN_SEVEN_SKL,
                 (long)InibinHashID.SKIN_SEVEN_TEXTURE, ref def);
 
-            if (flag == true)
+            if (modelStringsResult == true)
             {
                 def.skin = 7;
                 result.Add(def);
@@ -183,12 +184,12 @@ namespace LOLViewer.IO
             // Read in model 8
             def = new ModelDefinition();
             def.anmListKey = directory.Name;
-            flag = GetModelStrings((long)InibinHashID.SKIN_EIGHT_NAME,
+            modelStringsResult = GetModelStrings((long)InibinHashID.SKIN_EIGHT_NAME,
                 (long)InibinHashID.SKIN_EIGHT_SKN,
                 (long)InibinHashID.SKIN_EIGHT_SKL,
                 (long)InibinHashID.SKIN_EIGHT_TEXTURE, ref def);
 
-            if (flag == true)
+            if (modelStringsResult == true)
             {
                 def.skin = 8;
                 result.Add(def);
@@ -206,40 +207,54 @@ namespace LOLViewer.IO
         {
             bool result = false;
 
-            // For skin 1
-            if (nameID == 0)
+            // Sometimes the first skin is named by the root directory.
+            if (properties.ContainsKey(nameID))
             {
-                if (properties.ContainsKey(sknID) &&
-                    properties.ContainsKey(sklID) &&
-                    properties.ContainsKey(textureID))
-                {
-                    m.skn = (String)properties[sknID];
+                m.name = (String)properties[nameID];
+            }
+
+            if (properties.ContainsKey(sknID) &&
+                properties.ContainsKey(sklID) &&
+                properties.ContainsKey(textureID))
+            {
+                m.skn = (String)properties[sknID];
                     m.skn = m.skn.ToLower();
                     m.skl = (String)properties[sklID];
                     m.skl = m.skl.ToLower();
-                    m.tex = (String)properties[textureID];
-                    m.tex = m.tex.ToLower();
+                m.tex = (String)properties[textureID];
+                m.tex = m.tex.ToLower();
 
-                    result = true;
-                }
+                result = true;
             }
-            // For other skins.
+
+            return result;
+        }
+
+        private string GetAnimationList(DirectoryInfo directory)
+        {
+            string result = string.Empty;
+
+            // Riot changed their directory structure for some skins.
+            // Originally, champion .inibin files were stored in a directory structure like
+            // "*/ChampionName/*.inibin".  Now, some are stored like
+            // "*/ChampionName/Skins/Skin01/*inibin".
+
+            if (directory.Name.ToLower().Contains("skin") == false &&
+                directory.Name.ToLower().Contains("base") == false)
+            {
+                // Original Case.
+                result = directory.Name;
+            }
             else
             {
-                if (properties.ContainsKey(nameID) &&
-                    properties.ContainsKey(sknID) &&
-                    properties.ContainsKey(sklID) &&
-                    properties.ContainsKey(textureID))
-                {
-                    m.name = (String)properties[nameID];
-                    m.skn = (String)properties[sknID];
-                    m.skn = m.skn.ToLower();
-                    m.skl = (String)properties[sklID];
-                    m.skl = m.skl.ToLower();
-                    m.tex = (String)properties[textureID];
-                    m.tex = m.tex.ToLower();
+                // Newer Case.
+                string path = directory.ToString();
+                string[] splitPath = path.Split('/');
 
-                    result = true;
+                // Sanity
+                if (splitPath.Length > 2)
+                {
+                    result = splitPath[splitPath.Length - 3];
                 }
             }
 

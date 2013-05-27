@@ -1,3 +1,9 @@
 *.suo
 LOLViewer/bin/
 LOLViewer/obj/
+/.hgignore
+/.hgsub
+/.hgsubstate
+/RAFlib-Plus/.hgignore
+/lolviewer.dat
+/lolviewer.log

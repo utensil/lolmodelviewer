@@ -2,7 +2,7 @@
 
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -36,41 +36,50 @@ using System.Text;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
-namespace LOLViewer
+using LOLFileReader;
+
+using LOLViewer.IO;
+
+using CSharpLogger;
+
+namespace LOLViewer.Graphics
 {
     class GLRiggedModel
     {
-        public int version;
+        public String TextureName { get; set; }
+        public List<String> AnimationNames
+        {
+            get
+            {
+                List<String> result = new List<String>();
 
-        public int numIndices;
-        public int vao, vBuffer, iBuffer, tBuffer, nBuffer;
+                foreach (var animation in animations)
+                {
+                    result.Add(animation.Key);
+                }
 
-        public String textureName;
-        public int bBuffer, wBuffer;
+                return result;
+            }
+        }
 
-        public GLRig rig;
+        // OpenGL objects.
+        private int numIndices;
+        private int vao, vertexPositionBuffer, indexBuffer, vertexTextureCoordinateBuffer, vertexNormalBuffer,
+            vertexBoneBuffer, vertexBoneWeightBuffer;
 
-        // Not 100% if we need this.
-        // Bones might map in order from the .anm files.
-        public Dictionary<String, int> boneNameToIndex;
+        private String currentAnimation;
+        private float currentFrameTime;
+        private int currentFrame;
+        private Dictionary<String, GLAnimation> animations;
 
-        public String   currentAnimation;
-        public float    currentFrameTime;
-        public int      currentFrame;
-        public Dictionary<String, GLAnimation> animations;
+        #region Initialization
 
         public GLRiggedModel()
         {
-            version = 0;
+            TextureName = String.Empty;
 
-            vao = vBuffer = iBuffer = tBuffer = nBuffer = numIndices = 0;
-
-            textureName = String.Empty;
-            bBuffer = wBuffer = 0;
-
-            rig = new GLRig();
-
-            boneNameToIndex = new Dictionary<String, int>();
+            vao = vertexPositionBuffer = indexBuffer = vertexTextureCoordinateBuffer = vertexNormalBuffer = 
+                numIndices = vertexBoneBuffer = vertexBoneWeightBuffer = 0;
 
             currentAnimation = String.Empty;
             currentFrameTime = 0.0f;
@@ -78,61 +87,567 @@ namespace LOLViewer
             animations = new Dictionary<String, GLAnimation>();
         }
 
-        // Version 0 and 2
-        public bool Create(int version, List<float> vertexData, List<float> normalData,
-            List<float> texData, List<float> boneData, List<float> weightData, List<uint> indexData,
-            List<Quaternion> bOrientation, List<Vector3> bPosition, List<float> bScale,
-            List<String> bName, List<int> bParent , List<uint> boneIDs, EventLogger logger)
+        /// <summary>
+        /// Loads data from SKN and SKL files into OpenGL.
+        /// </summary>
+        /// <param name="skn">The .skn data.</param>
+        /// <param name="skl">The .skl data.</param>
+        /// <returns></returns>
+        public bool Create(SKNFile skn, SKLFile skl, Dictionary<String, ANMFile> anms, Logger logger)
         {
-            // Depending on the version of the model, the look ups change.
-            if (version == 2 || version == 0)
+            bool result = true;
+
+            // This function converts the handedness of the DirectX style input data
+            // into the handedness OpenGL expects.
+            // So, vector inputs have their Z value negated and quaternion inputs have their
+            // Z and W values negated.
+
+            // Vertex Data
+            List<float> vertexPositions = new List<float>();
+            List<float> vertexNormals = new List<float>();
+            List<float> vertexTextureCoordinates = new List<float>();
+            List<float> vertexBoneIndices = new List<float>();
+            List<float> vertexBoneWeights = new List<float>();
+            List<uint> indices = new List<uint>();
+
+            // Animation data.
+            List<OpenTK.Quaternion> boneOrientations = new List<OpenTK.Quaternion>();
+            List<OpenTK.Vector3> bonePositions = new List<OpenTK.Vector3>();
+            List<float> boneScales = new List<float>();
+            List<int> boneParents = new List<int>();
+            List<String> boneNames = new List<String>();
+
+            // Bones are not always in order between the ANM and SKL files.
+            Dictionary<String, int> boneNameToID = new Dictionary<String, int>();
+            Dictionary<int, String> boneIDToName = new Dictionary<int, String>();
+
+            for (int i = 0; i < skn.numVertices; ++i)
             {
-                for (int i = 0; i < boneData.Count; ++i)
+                // Position Information
+                vertexPositions.Add(skn.vertices[i].position[0]);
+                vertexPositions.Add(skn.vertices[i].position[1]);
+                vertexPositions.Add(-skn.vertices[i].position[2]);
+
+                // Normal Information
+                vertexNormals.Add(skn.vertices[i].normal[0]);
+                vertexNormals.Add(skn.vertices[i].normal[1]);
+                vertexNormals.Add(-skn.vertices[i].normal[2]);
+
+                // Tex Coords Information
+                vertexTextureCoordinates.Add(skn.vertices[i].texCoords[0]);
+                vertexTextureCoordinates.Add(skn.vertices[i].texCoords[1]);
+
+                // Bone Index Information
+                for (int j = 0; j < SKNVertex.BONE_INDEX_SIZE; ++j)
+                {
+                    vertexBoneIndices.Add(skn.vertices[i].boneIndex[j]);
+                }
+
+                // Bone Weight Information
+                vertexBoneWeights.Add(skn.vertices[i].weights[0]);
+                vertexBoneWeights.Add(skn.vertices[i].weights[1]);
+                vertexBoneWeights.Add(skn.vertices[i].weights[2]);
+                vertexBoneWeights.Add(skn.vertices[i].weights[3]);
+            }
+
+            // Animation data
+            for (int i = 0; i < skl.numBones; ++i)
+            {
+                Quaternion orientation = Quaternion.Identity;
+                if (skl.version == 0)
+                {
+                    // Version 0 SKLs contain a quaternion.
+                    orientation.X = skl.bones[i].orientation[0];
+                    orientation.Y = skl.bones[i].orientation[1];
+                    orientation.Z = -skl.bones[i].orientation[2];
+                    orientation.W = -skl.bones[i].orientation[3];
+                }
+                else
+                {
+                    // Other SKLs contain a rotation matrix.
+
+                    // Create a matrix from the orientation values.
+                    Matrix4 transform = Matrix4.Identity;
+
+                    transform.M11 = skl.bones[i].orientation[0];
+                    transform.M21 = skl.bones[i].orientation[1];
+                    transform.M31 = skl.bones[i].orientation[2];
+
+                    transform.M12 = skl.bones[i].orientation[4];
+                    transform.M22 = skl.bones[i].orientation[5];
+                    transform.M32 = skl.bones[i].orientation[6];
+
+                    transform.M13 = skl.bones[i].orientation[8];
+                    transform.M23 = skl.bones[i].orientation[9];
+                    transform.M33 = skl.bones[i].orientation[10];
+
+                    // Convert the matrix to a quaternion.
+                    orientation = OpenTKExtras.Matrix4.CreateQuatFromMatrix(transform);
+                    orientation.Z = -orientation.Z;
+                    orientation.W = -orientation.W;
+                }
+
+                boneOrientations.Add(orientation);
+
+                // Create a vector from the position values.
+                Vector3 position = Vector3.Zero;
+                position.X = skl.bones[i].position[0];
+                position.Y = skl.bones[i].position[1];
+                position.Z = -skl.bones[i].position[2];
+                bonePositions.Add(position);
+
+                boneNames.Add(skl.bones[i].name);
+                boneNameToID[skl.bones[i].name] = i;
+                boneIDToName[i] = skl.bones[i].name;
+
+                boneScales.Add(skl.bones[i].scale);
+                boneParents.Add(skl.bones[i].parentID);
+            }
+
+            //
+            // Version 0 SKL files are similar to the animation files.
+            // The bone positions and orientations are relative to their parent.
+            // So, we need to compute their absolute location by hand.
+            //
+            if (skl.version == 0)
+            {
+                //
+                // This algorithm is a little confusing since it's indexing identical data from
+                // the SKL file and the local variable List<>s. The indexing scheme works because
+                // the List<>s are created in the same order as the data in the SKL files.
+                //
+                for (int i = 0; i < skl.numBones; ++i)
+                {
+                    // Only update non root bones.
+                    if (skl.bones[i].parentID != -1)
+                    {
+                        // Determine the parent bone.
+                        int parentBoneID = skl.bones[i].parentID;
+
+                        // Update orientation.
+                        // Append quaternions for rotation transform B * A.
+                        boneOrientations[i] = boneOrientations[parentBoneID] * boneOrientations[i];
+                        
+                        Vector3 localPosition = Vector3.Zero;
+                        localPosition.X = skl.bones[i].position[0];
+                        localPosition.Y = skl.bones[i].position[1];
+                        localPosition.Z = skl.bones[i].position[2];
+                        
+                        // Update position.
+                        bonePositions[i] = bonePositions[parentBoneID] + Vector3.Transform(localPosition, boneOrientations[parentBoneID]);
+                    }
+                }
+            }
+
+            // Depending on the version of the model, the look ups change.
+            if (skl.version == 2 || skl.version == 0)
+            {
+                for (int i = 0; i < vertexBoneIndices.Count; ++i)
                 {
                     // I don't know why things need remapped, but they do.
 
                     // Sanity
-                    if (boneData[i] < boneIDs.Count)
+                    if (vertexBoneIndices[i] < skl.boneIDs.Count)
                     {
-                        boneData[i] = boneIDs[(int)boneData[i]];
+                        vertexBoneIndices[i] = skl.boneIDs[(int)vertexBoneIndices[i]];
+                    }
+                }
+            }
+
+            // Add the animations.
+            foreach (var animation in anms)
+            {
+                if (animations.ContainsKey(animation.Key) == false)
+                {
+                    // Create the OpenGL animation wrapper.
+                    GLAnimation glAnimation = new GLAnimation();
+
+                    glAnimation.playbackFPS = animation.Value.playbackFPS;
+                    glAnimation.numberOfBones = animation.Value.numberOfBones;
+                    glAnimation.numberOfFrames = animation.Value.numberOfFrames;
+
+                    // Convert ANMBone to GLBone.
+                    foreach (ANMBone bone in animation.Value.bones)
+                    {
+                        GLBone glBone = new GLBone();
+
+                        if (animation.Value.version == 4 && skl.boneIDMap.Count > 0)
+                        {
+                            // Version 4 ANM files contain a hash value to represent the bone ID/name.
+                            // We need to use the map from the SKL file to match the ANM bone with the correct
+                            // SKL bone.
+
+                            if (skl.boneIDMap.ContainsKey(bone.id))
+                            {
+                                int sklID = (int)skl.boneIDMap[bone.id];
+                                glBone.name = boneIDToName[sklID];
+                            }
+                        }
+                        else
+                        {
+                            glBone.name = bone.name;
+                        }
+
+                        // Convert ANMFrame to Matrix4.
+                        foreach (ANMFrame frame in bone.frames)
+                        {
+                            Matrix4 transform = Matrix4.Identity;
+
+                            Quaternion quat = new Quaternion(frame.orientation[0], frame.orientation[1], -frame.orientation[2], -frame.orientation[3]);
+                            transform = Matrix4.Rotate(quat);
+
+                            transform.M41 = frame.position[0];
+                            transform.M42 = frame.position[1];
+                            transform.M43 = -frame.position[2];
+
+                            glBone.frames.Add(transform);
+                        }
+
+                        glAnimation.bones.Add(glBone);
+                    }
+
+                    glAnimation.timePerFrame = 1.0f / (float)animation.Value.playbackFPS;
+
+                    // Store the animation.
+                    animations.Add(animation.Key, glAnimation);
+                }
+            }
+
+            // Index Information
+            for (int i = 0; i < skn.numIndices; ++i)
+            {
+                indices.Add((uint)skn.indices[i]);
+            }
+            this.numIndices = indices.Count;
+
+            //
+            // Compute the final animation transforms.
+            //
+
+            foreach (var animation in animations)
+            {
+                // This is sort of a mess. 
+                // We need to make sure "parent" bones are always updated before their "children".  The SKL file contains
+                // bones ordered in this manner.  However, ANM files do not always do this.  So, we sort the bones in the ANM to match the ordering in
+                // the SKL file.
+                animation.Value.bones.Sort( (a, b) =>
+                {
+                    if (boneNameToID.ContainsKey(a.name) && boneNameToID.ContainsKey(b.name))
+                    {
+                        return boneNameToID[a.name].CompareTo(boneNameToID[b.name]);
+                    }
+                    else if (boneNameToID.ContainsKey(a.name) == false)
+                    {
+                        return 1;
                     }
                     else
                     {
-                        boneData[i] = 0;
+                        return -1;
+                    }
+                });
+            }
+
+            // Create the binding transform.  (The SKL initial transform.)
+            GLAnimation bindingBones = new GLAnimation();
+            for (int i = 0; i < boneOrientations.Count; ++i)
+            {
+                GLBone bone = new GLBone();
+
+                bone.name = boneNames[i];
+                bone.parent = boneParents[i];
+
+                bone.transform = Matrix4.Rotate(boneOrientations[i]);
+                bone.transform.M41 = bonePositions[i].X;
+                bone.transform.M42 = bonePositions[i].Y;
+                bone.transform.M43 = bonePositions[i].Z;
+
+                bone.transform = Matrix4.Invert(bone.transform);
+
+                bindingBones.bones.Add(bone);
+            }
+            
+            // Convert animations into absolute space.
+            foreach (var animation in animations)
+            {
+                foreach (var bone in animation.Value.bones)
+                {
+                    // Sanity.
+                    if (boneNameToID.ContainsKey(bone.name))
+                    {
+                        int id = boneNameToID[bone.name];
+                        bone.parent = bindingBones.bones[id].parent;
+
+                        // For each frame...
+                        for (int i = 0; i < bone.frames.Count; ++i)
+                        {
+                            Matrix4 parentTransform = Matrix4.Identity;
+                            if (bone.parent >= 0)
+                            {
+                                if (bone.parent < animation.Value.bones.Count)
+                                {
+                                    GLBone parent = animation.Value.bones[bone.parent];
+                                    parentTransform = parent.frames[i];
+                                }
+                            }
+                            bone.frames[i] = bone.frames[i] * parentTransform;
+                        }
                     }
                 }
             }
 
-            // Call the version 1 create with the remapped bone data.
-            return Create(version, vertexData, normalData, texData, boneData, weightData, indexData,
-                bOrientation, bPosition, bScale, bName, bParent, logger);
+            // Multiply the animation transforms by the binding transform.
+            foreach (var animation in animations)
+            {
+                foreach (var bone in animation.Value.bones)
+                {
+                    // Sanity.
+                    if (boneNameToID.ContainsKey(bone.name))
+                    {
+                        int id = boneNameToID[bone.name];
+                        GLBone bindingBone = bindingBones.bones[id];
+
+                        for (int i = 0; i < bone.frames.Count; ++i)
+                        {
+                            bone.frames[i] = bindingBone.transform * bone.frames[i];
+                        }
+                    }
+                }
+            }
+
+            // Create the OpenGL objects.
+            result = Create(vertexPositions, vertexNormals, vertexTextureCoordinates,
+                vertexBoneIndices, vertexBoneWeights, indices, logger);
+
+            return result;
         }
 
-        // Version 1 Create
-        public bool Create(int version, List<float> vertexData, List<float> normalData,
-            List<float> texData, List<float> boneData, List<float> weightData, 
-            List<uint> indexData, List<Quaternion> bOrientation, List<Vector3> bPosition,
-            List<float> bScale, List<String> bName, List<int> bParent, EventLogger logger)
+#endregion
+
+        #region Rendering API
+
+        public void Draw()
+        {
+            GL.BindVertexArray(vao);
+
+            GL.DrawElements(BeginMode.Triangles, numIndices,
+                DrawElementsType.UnsignedInt, 0);
+        }
+
+        public void Update(float elapsedTime)
+        {
+            // Sanity
+            if (animations.ContainsKey(currentAnimation) == false)
+                return;
+
+            currentFrameTime += elapsedTime;
+
+            // See if we need to switch to next frame.
+            while (currentFrameTime >= animations[currentAnimation].timePerFrame)
+            {
+                currentFrame = (currentFrame + 1) % (int)animations[currentAnimation].numberOfFrames;
+                currentFrameTime -= animations[currentAnimation].timePerFrame;
+            }
+        }
+
+        /// <summary>
+        /// Computes the bone transformations for the model.
+        /// </summary>
+        /// <param name="transforms">A preallocated array of transformation matrices.</param>
+        /// <returns>The resultant bone transformation.  This value is identical to the reference parameter result.</returns>
+        public Matrix4[] GetBoneTransformations(ref Matrix4[] transforms)
+        {
+            // Sanity.
+            if (animations.ContainsKey(currentAnimation) == true)
+            {
+                //
+                // Normal Case
+                //
+                // Interpolate between the current and next frames to calculate
+                // the transform to send to the renderer.
+                //
+
+                GLAnimation animation = animations[currentAnimation];
+                float blend = currentFrameTime / animation.timePerFrame;
+
+                int nextFrame = (currentFrame + 1) % (int)animation.numberOfFrames;
+                for (int i = 0; i < animation.bones.Count; ++i)
+                {
+                    // Get the current frame's transform.
+                    Matrix4 current = animation.bones[i].frames[currentFrame];
+
+                    //
+                    // The interpolation code is unstable.  It creates alot of animation anomalies.
+                    //
+                    // TODO: Fix it.
+                    //
+
+                    // Break it down into a vector and quaternion.
+                    Vector3 currentPosition = Vector3.Zero;
+                    currentPosition.X = current.M41;
+                    currentPosition.Y = current.M42;
+                    currentPosition.Z = current.M43;
+                    
+                    Quaternion currentOrientation = OpenTKExtras.Matrix4.CreateQuatFromMatrix(current);
+                    
+                    // Get the next frame's transform.
+                    Matrix4 next = animation.bones[i].frames[nextFrame];
+                    
+                    // Break it down into a vector and quaternion.
+                    Vector3 nextPosition = Vector3.Zero;
+                    nextPosition.X = next.M41;
+                    nextPosition.Y = next.M42;
+                    nextPosition.Z = next.M43;
+                    
+                    Quaternion nextOrientation = OpenTKExtras.Matrix4.CreateQuatFromMatrix(next);
+                    
+                    // Interpolate the frame data.
+                    Vector3 finalPosition = Vector3.Lerp(currentPosition, nextPosition, blend);
+                    Quaternion finalOrientation = Quaternion.Slerp(currentOrientation, nextOrientation, blend);
+                    
+                    // Rebuild a transform.
+                    Matrix4 finalTransform = Matrix4.Rotate(finalOrientation);
+                    finalTransform.M41 = finalPosition.X;
+                    finalTransform.M42 = finalPosition.Y;
+                    finalTransform.M43 = finalPosition.Z;
+                    
+                    transforms[i] = finalTransform;
+                }
+            }
+            else
+            {
+                //
+                // Case when the animation is not present.
+                //
+
+                for (int i = 0; i < transforms.Length; ++i)
+                {
+                    transforms[i] = Matrix4.Identity;
+                }
+            }
+
+            return transforms;
+        }
+
+        public void Destroy()
+        {
+            if (vao != 0)
+            {
+                GL.DeleteVertexArrays(1, ref vao);
+                vao = 0;
+            }
+
+            if (vertexPositionBuffer != 0)
+            {
+                GL.DeleteBuffers(1, ref vertexPositionBuffer);
+                vertexPositionBuffer = 0;
+            }
+
+            if (vertexTextureCoordinateBuffer != 0)
+            {
+                GL.DeleteBuffers(1, ref vertexTextureCoordinateBuffer);
+                vertexTextureCoordinateBuffer = 0;
+            }
+
+            if (vertexNormalBuffer != 0)
+            {
+                GL.DeleteBuffers(1, ref vertexNormalBuffer);
+                vertexNormalBuffer = 0;
+            }
+
+            if (indexBuffer != 0)
+            {
+                GL.DeleteBuffers(1, ref indexBuffer);
+                indexBuffer = 0;
+            }
+
+            if (vertexBoneBuffer != 0)
+            {
+                GL.DeleteBuffers(1, ref vertexBoneBuffer);
+                vertexBoneBuffer = 0;
+            }
+
+            if (vertexBoneWeightBuffer != 0)
+            {
+                GL.DeleteBuffers(1, ref vertexBoneWeightBuffer);
+                vertexBoneWeightBuffer = 0;
+            }
+
+            numIndices = 0;
+        }
+
+
+#endregion
+
+        #region Animation API
+
+        public void SetCurrentAnimation(String name)
+        {
+            currentAnimation = name;
+            currentFrameTime = 0.0f;
+            currentFrame = 0;
+        }
+
+        /// <summary>
+        /// Sets the current frame.
+        /// </summary>
+        /// <param name="frame">The index of the frame.</param>
+        /// <param name="percentTowardsNextFrame">The percent towards the next frame.  Expects a number between 0 - 1.</param>
+        public void SetCurrentFrame(int frame, float percentTowardsNextFrame)
+        {
+            if (animations.ContainsKey(currentAnimation) == true)
+            {
+                // Set frame.
+                currentFrame = frame % (int)animations[currentAnimation].numberOfFrames;
+
+                // Set elapsed time towards the next frame.
+                currentFrameTime = percentTowardsNextFrame * animations[currentAnimation].timePerFrame;
+            }
+        }
+
+        public uint GetNumberOfFramesInCurrentAnimation()
+        {
+            uint result = 0;
+
+            if (animations.ContainsKey(currentAnimation) == true)
+            {
+                result = animations[currentAnimation].numberOfFrames;
+            }
+
+            return result;
+        }        
+
+        /// <summary>
+        /// Returns a decimal representing the percent
+        /// of the current animation already animated.
+        /// 
+        /// I.E. If the currentFrame = 5 with an animation containing 10 frames, this
+        /// function will return .5.
+        /// </summary>
+        /// <returns></returns>
+        public float GetPercentAnimated()
+        {
+            float result = 0.0f;
+
+            if (animations.ContainsKey(currentAnimation) == true)
+            {
+                float absoluteFrame = (float)currentFrame + (currentFrameTime / animations[currentAnimation].timePerFrame);
+                result = absoluteFrame / (float)animations[currentAnimation].numberOfFrames;
+            }
+
+            return result;
+        }
+
+        #endregion
+
+        #region Helpers
+
+        private bool Create(List<float> vertexPositions, List<float> vertexNormals,
+            List<float> vertexTextureCoordinates, List<float> vertexBoneIndices, List<float> vertexBoneWeights,
+            List<uint> indices, Logger logger)
         {
             bool result = true;
 
-            this.version = version;
-            this.numIndices = indexData.Count;
-
-            logger.LogEvent("Creating GL rigged model.");
-
-            // Create the initial binding joints.
-            rig.Create(bOrientation, bPosition, bScale, bParent);
-
-            // Store the bone transforms.
-            for (int i = 0; i < bOrientation.Count; ++i)
-            {
-                // Sanity
-                if( boneNameToIndex.ContainsKey( bName[i] ) == false )
-                {
-                    boneNameToIndex.Add(bName[i], i);
-                }
-            }
+            logger.Event("Creating GL rigged model.");
 
             // Create Vertex Array Object
             if (result == true)
@@ -169,14 +684,14 @@ namespace LOLViewer
             // Store data and bind vertex buffer.
             if (result == true)
             {
-                vBuffer = buffers[0];
-                nBuffer = buffers[1];
-                tBuffer = buffers[2];
-                bBuffer = buffers[3];
-                wBuffer = buffers[4];
-                iBuffer = buffers[5];
+                vertexPositionBuffer = buffers[0];
+                vertexNormalBuffer = buffers[1];
+                vertexTextureCoordinateBuffer = buffers[2];
+                vertexBoneBuffer = buffers[3];
+                vertexBoneWeightBuffer = buffers[4];
+                indexBuffer = buffers[5];
 
-                GL.BindBuffer(BufferTarget.ArrayBuffer, vBuffer);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vertexPositionBuffer);
             }
 
             //
@@ -186,8 +701,8 @@ namespace LOLViewer
             //
             if (result == true)
             {
-                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(vertexData.Count * sizeof(float)),
-                    vertexData.ToArray(), BufferUsageHint.StaticDraw);
+                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(vertexPositions.Count * sizeof(float)),
+                    vertexPositions.ToArray(), BufferUsageHint.StaticDraw);
             }
 
             // Check for errors.
@@ -223,14 +738,14 @@ namespace LOLViewer
             //
             if (result == true)
             {
-                GL.BindBuffer(BufferTarget.ArrayBuffer, nBuffer);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vertexNormalBuffer);
             }
 
             // Set normal data.
             if (result == true)
             {
-                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(normalData.Count * sizeof(float)),
-                    normalData.ToArray(), BufferUsageHint.StaticDraw);
+                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(vertexNormals.Count * sizeof(float)),
+                    vertexNormals.ToArray(), BufferUsageHint.StaticDraw);
             }
 
             // Check for errors.
@@ -266,14 +781,14 @@ namespace LOLViewer
             //
             if (result == true)
             {
-                GL.BindBuffer(BufferTarget.ArrayBuffer, tBuffer);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vertexTextureCoordinateBuffer);
             }
 
             // Set Texture Coordinate Data
             if (result == true)
             {
-                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(texData.Count * sizeof(float)),
-                    texData.ToArray(), BufferUsageHint.StaticDraw);
+                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(vertexTextureCoordinates.Count * sizeof(float)),
+                    vertexTextureCoordinates.ToArray(), BufferUsageHint.StaticDraw);
             }
 
             error = GL.GetError();
@@ -309,14 +824,14 @@ namespace LOLViewer
             //
             if (result == true)
             {
-                GL.BindBuffer(BufferTarget.ArrayBuffer, bBuffer);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBoneBuffer);
             }
 
             // Set bone index data
             if (result == true)
             {
-                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(boneData.Count * sizeof(float)),
-                    boneData.ToArray(), BufferUsageHint.StaticDraw);
+                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(vertexBoneIndices.Count * sizeof(float)),
+                    vertexBoneIndices.ToArray(), BufferUsageHint.StaticDraw);
             }
 
             error = GL.GetError();
@@ -351,14 +866,14 @@ namespace LOLViewer
             //
             if (result == true)
             {
-                GL.BindBuffer(BufferTarget.ArrayBuffer, wBuffer);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBoneWeightBuffer);
             }
 
             // Set bone weight data
             if (result == true)
             {
-                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(weightData.Count * sizeof(float)),
-                    weightData.ToArray(), BufferUsageHint.StaticDraw);
+                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(vertexBoneWeights.Count * sizeof(float)),
+                    vertexBoneWeights.ToArray(), BufferUsageHint.StaticDraw);
             }
 
             error = GL.GetError();
@@ -392,14 +907,14 @@ namespace LOLViewer
 
             if (result == true)
             {
-                GL.BindBuffer(BufferTarget.ElementArrayBuffer, iBuffer);
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBuffer);
             }
 
             // Set index data.
             if (result == true)
             {
-                GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(indexData.Count * sizeof(uint)),
-                    indexData.ToArray(), BufferUsageHint.StaticDraw);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(indices.Count * sizeof(uint)),
+                    indices.ToArray(), BufferUsageHint.StaticDraw);
             }
 
             error = GL.GetError();
@@ -416,202 +931,12 @@ namespace LOLViewer
 
             if (result == false)
             {
-                logger.LogError("Failed to create GL rigged model.");
+                logger.Error("Failed to create GL rigged model.");
             }
 
             return result;
         }
 
-        public void Draw()
-        {
-            GL.BindVertexArray(vao);
-
-            GL.DrawElements(BeginMode.Triangles, numIndices,
-                DrawElementsType.UnsignedInt, 0);
-        }
-        
-        public void SetTexture(String name)
-        {
-            textureName = name;
-        }
-
-        public void AddAnimation(String name, GLAnimation animation)
-        {
-            if (animations.ContainsKey(name) == false)
-            {
-                animations.Add(name, animation);
-            }
-        }
-
-        public void SetCurrentAnimation(String name)
-        {
-            currentAnimation = name;
-            currentFrameTime = 0.0f;
-            currentFrame = 0;
-        }
-
-        public void Update(float elapsedTime)
-        {
-            // Sanity
-            if (animations.ContainsKey(currentAnimation) == false)
-                return;
-
-            currentFrameTime += elapsedTime;
-
-            // See if we need to switch to next frame.
-            while (currentFrameTime >= animations[currentAnimation].timePerFrame)
-            {
-                currentFrame = (currentFrame + 1) % (int)animations[currentAnimation].numberOfFrames;
-                currentFrameTime -= animations[currentAnimation].timePerFrame;
-            }
-        }
-
-        public Matrix4[] GetBoneTransformations()
-        {
-            // Sanity.
-            if (animations.ContainsKey(currentAnimation) == false)
-            {
-                return null;
-            }
-
-            foreach (ANMBone bone in animations[currentAnimation].bones)
-            {
-                if (boneNameToIndex.ContainsKey(bone.name))
-                {
-                    int index = boneNameToIndex[bone.name];
-
-                    // For current frame.
-                    ANMFrame frame = bone.frames[currentFrame];
-                    rig.CalculateWorldSpacePose(0, index, frame.orientation,
-                        frame.position);
-
-                    // For next frame.
-                    frame = bone.frames[(currentFrame + 1) % bone.frames.Count];
-                    rig.CalculateWorldSpacePose(1, index, frame.orientation,
-                        frame.position);
-                }
-                //else
-
-                // Not sure what to do if it doesn't contain the bone.
-                // Last time I checked, this does happen more frequently that I'd like to ignore.
-                // It's probably why certain models don't animate properly.
-            }
-
-            return rig.GetBoneTransformations( currentFrameTime / animations[currentAnimation].timePerFrame );
-        }
-
-        public uint GetNumberOfFramesInCurrentAnimation()
-        {
-            uint result = 0;
-
-            if (animations.ContainsKey(currentAnimation) == true)
-            {
-                result = animations[currentAnimation].numberOfFrames;
-            }
-
-            return result;
-        }
-
-        public void IncrementCurrentAnimation()
-        {
-            if (animations.ContainsKey(currentAnimation) == true)
-            {
-                currentFrame = (currentFrame + 1) % (int)animations[currentAnimation].numberOfFrames;
-                currentFrameTime = 0;
-            }
-        }
-
-        public void DecrementCurrentAnimation()
-        {
-            if (animations.ContainsKey(currentAnimation) == true)
-            {
-                currentFrame--;
-                if (currentFrame < 0)
-                {
-                    currentFrame = (int)animations[currentAnimation].numberOfFrames - 1;
-                }
-                currentFrameTime = 0;
-            }
-        }
-
-        public void SetCurrentFrame( int frame, float percentTowardsNextFrame )
-        {  
-            if (animations.ContainsKey(currentAnimation) == true)
-            {
-                // Set frame.
-                currentFrame = frame % (int)animations[currentAnimation].numberOfFrames;
-
-                // Set elapsed time towards the next frame.
-                currentFrameTime = percentTowardsNextFrame * animations[currentAnimation].timePerFrame;
-            }
-        }
-
-        /// <summary>
-        /// Returns a decimal representing the percent
-        /// of the current animation already animated.
-        /// 
-        /// I.E. If the currentFrame = 5 with an animation containing 10 frames, this
-        /// function will return .5.
-        /// </summary>
-        /// <returns></returns>
-        public float GetPercentageAnimated()
-        {
-            float result = 0.0f;
-
-            if (animations.ContainsKey(currentAnimation) == true)
-            {
-                float absoluteFrame = (float)currentFrame + (currentFrameTime / animations[currentAnimation].timePerFrame);
-                result = absoluteFrame / (float)animations[currentAnimation].numberOfFrames;
-            }
-
-            return result;
-        }
-
-        public void Destroy()
-        {
-            if (vao != 0)
-            {
-                GL.DeleteVertexArrays(1, ref vao);
-                vao = 0;
-            }
-
-            if (vBuffer != 0)
-            {
-                GL.DeleteBuffers(1, ref vBuffer);
-                vBuffer = 0;
-            }
-
-            if (tBuffer != 0)
-            {
-                GL.DeleteBuffers(1, ref tBuffer);
-                tBuffer = 0;
-            }
-
-            if (nBuffer != 0)
-            {
-                GL.DeleteBuffers(1, ref nBuffer);
-                nBuffer = 0;
-            }
-
-            if (iBuffer != 0)
-            {
-                GL.DeleteBuffers(1, ref iBuffer);
-                iBuffer = 0;
-            }
-
-            if (bBuffer != 0)
-            {
-                GL.DeleteBuffers(1, ref bBuffer);
-                bBuffer = 0;
-            }
-
-            if (wBuffer != 0)
-            {
-                GL.DeleteBuffers(1, ref wBuffer);
-                wBuffer = 0;
-            }
-
-            numIndices = 0;
-        }
+#endregion
     }
 }

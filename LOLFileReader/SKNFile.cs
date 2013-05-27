@@ -2,7 +2,7 @@
 
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -34,9 +34,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace LOLViewer
+namespace LOLFileReader
 {
-    class SKNFile
+    public class SKNFile
     {
         // File Header Data
         public int                 magic;  // ????? What does this do?????
@@ -68,56 +68,6 @@ namespace LOLViewer
             vertices = new List<SKNVertex>();
 
             endTab = new List<int>();
-        }
-
-        /// <summary>
-        /// Loads the data in the SKNFile class into
-        /// an OpenGL model file.
-        /// </summary>
-        /// <param name="model">Where to put the data.</param>
-        /// <param name="usingDDSTexture">The V coordinate in OpenGL
-        /// is different from directX.  If you're using textures on
-        /// this model which were intended to be used with directX, you 
-        /// need to invert the V coordinate.</param>
-        /// <returns></returns>
-        public bool ToGLStaticModel(ref GLStaticModel model, bool usingDDSTexture, EventLogger logger)
-        {
-            bool result = true;
-
-            List<float> vData = new List<float>();
-            List<float> nData = new List<float>();
-            List<float> tData = new List<float>();
-            for (int i = 0; i < numVertices; ++i)
-            {
-                vData.Add(vertices[i].position.X);
-                vData.Add(vertices[i].position.Y);
-                vData.Add(vertices[i].position.Z);
-
-                nData.Add(vertices[i].normal.X);
-                nData.Add(vertices[i].normal.Y);
-                nData.Add(vertices[i].normal.Z);
-
-                tData.Add(vertices[i].texCoords.X);
-                if (usingDDSTexture == false)
-                {
-                    tData.Add(vertices[i].texCoords.Y);
-                }
-                else
-                {
-                    // DDS Texture.
-                    tData.Add(1.0f - vertices[i].texCoords.Y);
-                }
-            }
-
-            List<uint> iData = new List<uint>();
-            for (int i = 0; i < numIndices; ++i)
-            {
-                iData.Add((uint)indices[i]);
-            }
-
-            result = model.Create(vData, nData, tData, iData, logger);
-
-            return result;
         }
     }
 }

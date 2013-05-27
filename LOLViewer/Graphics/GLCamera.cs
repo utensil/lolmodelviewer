@@ -2,7 +2,7 @@
 
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -41,12 +41,12 @@ using System.Windows.Forms;
 
 using OpenTK;
 
-namespace LOLViewer
+namespace LOLViewer.Graphics
 {
     public class GLCamera
     {
         // Keybinding
-        public enum CameraKeyValues
+        private enum CameraKeyValues
         {
             Left = 0,
             Right = 1,
@@ -55,25 +55,23 @@ namespace LOLViewer
             Reset = 4,
             Size = 5
         };
-        public Dictionary<Keys, CameraKeyValues> bindings;
+        private Dictionary<Keys, CameraKeyValues> bindings;
 
         // View / Projection Parameters
-        public float fov, aspect, near, far;
-        public Vector3 eye, target, defaultEye, defaultTarget;
-        public Matrix4 view, projection;
+        private float fov, aspect, near, far;
+        private Vector3 defaultEye, defaultTarget;
 
-        // We need to account for the fact that OpenGL does not have
-        // the same handedness as DirectX.  So, we compute everything 
-        // left handed as a DirectX pipeline would.  Then, at the very last step,
-        // we multiply in the conversion into the view matrix.  This will convert
-        // the data to a right handed system.
-        public Matrix4 handConverter;
+        public Vector3 Eye { get; set; }
+        public Vector3 Target { get; set; }
 
-        public Dictionary<CameraKeyValues, bool> keyState;
+        public Matrix4 View { get; set; }
+        public Matrix4 Projection { get; set; }
 
-        public Dictionary<MouseButtons, bool> mouseState;
-        public int wheelDelta;
-        private const float WHEEL_SCALE = 0.0005f;
+        private Dictionary<CameraKeyValues, bool> keyState;
+
+        private Dictionary<MouseButtons, bool> mouseState;
+        private int wheelDelta;
+        private const float WHEEL_SCALE = 0.0015f;
 
         private const float MINIMUM_RADIUS = 35.0f;
         private const float MAXIMUM_RADIUS = 800.0f;
@@ -89,13 +87,11 @@ namespace LOLViewer
         {
             fov = aspect = near = far = 0.0f;
 
-            eye = defaultEye = Vector3.Zero;
-            target = defaultTarget = Vector3.Zero;
+            Eye = defaultEye = Vector3.Zero;
+            Target = defaultTarget = Vector3.Zero;
 
-            view        = Matrix4.Identity;
-            projection  = Matrix4.Identity;
-            handConverter = Matrix4.Identity;
-            handConverter.M33 = -handConverter.M33;
+            View        = Matrix4.Identity;
+            Projection  = Matrix4.Identity;
 
             // Default Keybindings
             bindings = new Dictionary<Keys, CameraKeyValues>();
@@ -232,11 +228,10 @@ namespace LOLViewer
                         invCamRotation);
 
             // Update the camera's eye.
-            eye = target - (worldAhead * radius);
+            Eye = Target - (worldAhead * radius);
 
             // Update view.
-            view = Matrix4.LookAt(eye, target, worldUp);
-            view = handConverter * view;
+            View = Matrix4.LookAt(Eye, Target, worldUp);
 
             // After a drag has finished
             if (updateLastRotation == true)
@@ -256,13 +251,12 @@ namespace LOLViewer
         public void SetViewParameters(Vector3 eye, Vector3 target)
         {
             // Store parameters
-            this.eye = this.defaultEye = eye;
-            this.target = this.defaultTarget = target;
+            this.Eye = this.defaultEye = eye;
+            this.Target = this.defaultTarget = target;
 
             // Update view matrix.
             Matrix4 rotation = Matrix4.LookAt(eye, target, new Vector3(0.0f, 1.0f, 0.0f));
-            view = rotation;
-            view = handConverter * view;
+            View = rotation;
 
             // Update arc ball.
             Quaternion quat = OpenTKExtras.Matrix4.CreateQuatFromMatrix(rotation);
@@ -291,7 +285,7 @@ namespace LOLViewer
             this.far = far;
 
             // Update projection matrix.
-            projection = Matrix4.CreatePerspectiveFieldOfView(fov, aspect, near, far);
+            Projection = Matrix4.CreatePerspectiveFieldOfView(fov, aspect, near, far);
 
             // Update arc ball.
             viewArcBall.SetWindow(width, height);
@@ -303,8 +297,8 @@ namespace LOLViewer
 
         public void Reset()
         {
-            eye = defaultEye;
-            target = defaultTarget;
+            Eye = defaultEye;
+            Target = defaultTarget;
 
             radius = defaultRadius;
             viewArcBall.Reset();

@@ -6,14 +6,15 @@ using RAFlibPlus;
 using Ionic.Zip;
 using Ionic.Crc;
 
-namespace LOLViewer.IO
+namespace LOLFileReader
 {
     public class ZIPEntryWrapper : IFileEntry
     {
-        public ZIPEntryWrapper(ZipEntry ze, String zipFilePath)
+        public ZIPEntryWrapper(ZipEntry ze, String zipFilePath, String endsWith)
         {
             e = ze;
             rootPath = zipFilePath;
+            SearchPhrase = endsWith;
         }
 
         public String FileName 
@@ -22,6 +23,9 @@ namespace LOLViewer.IO
                 return e.FileName;
             }
         }
+
+        public String SearchPhrase { get; private set; }
+
         public byte[] GetContent()
         {
             byte[] buffer = new byte[e.UncompressedSize];

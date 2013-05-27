@@ -3,7 +3,7 @@
 
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -39,41 +39,45 @@ using System.IO;
 using System.Diagnostics;
 using System.Windows.Forms;
 
+using LOLFileReader;
+
 using RAFlibPlus;
+
+using CSharpLogger;
 using Ionic.Zip;
 
 namespace LOLViewer.IO
 {
     public class LOLDirectoryReader
     {
-        public const String DEFAULT_ROOT = "C:/Riot Games/League of Legends";
-        public const String DEFAULT_MODEL_ROOT = "/DATA/Characters";
-        public const String DEFAULT_RAF_DIRECTORY_ONE = "DATA";
-        public const String DEFAULT_RAF_DIRECTORY_TWO = "Characters";
+        private const String DEFAULT_ROOT = "C:/Riot Games/League of Legends";
+        private const String DEFAULT_MODEL_ROOT = "/DATA/Characters";
+        private const String DEFAULT_RAF_DIRECTORY_ONE = "DATA";
+        private const String DEFAULT_RAF_DIRECTORY_TWO = "Characters";
 
-        public const String DEFAULT_EXTRACTED_TEXTURES_ROOT = "content/textures/";
-        public String root;
+        private const String DEFAULT_EXTRACTED_TEXTURES_ROOT = "content/textures/";
 
-        public Dictionary<String, IFileEntry> skls;
-        public Dictionary<String, IFileEntry> skns;
-        public Dictionary<String, IFileEntry> textures;
+        public String Root { get; set; }
 
-        public List<IFileEntry> inibins;
-        public Dictionary<String, IFileEntry> animationLists;
-        public Dictionary<String, IFileEntry> animations;
+        private Dictionary<String, IFileEntry> skls;
+        private Dictionary<String, IFileEntry> skns;
+        private Dictionary<String, IFileEntry> textures;
 
+        private List<IFileEntry> inibins;
+        private Dictionary<String, IFileEntry> animationLists;
+        private Dictionary<String, IFileEntry> animations;
 
-        public Dictionary<String, LOLModel> models;
+        private Dictionary<String, LOLModel> models;
 
         public LOLDirectoryReader()
         {
-            root = DEFAULT_ROOT;
+            Root = DEFAULT_ROOT;
 
             inibins = new List<IFileEntry>();
 
             animationLists = new Dictionary<String, IFileEntry>();
             animations = new Dictionary<String, IFileEntry>();
-            
+
             skls = new Dictionary<String, IFileEntry>();
             skns = new Dictionary<String, IFileEntry>();
             textures = new Dictionary<String, IFileEntry>();
@@ -81,16 +85,7 @@ namespace LOLViewer.IO
             models = new Dictionary<String,LOLModel>();
         }
 
-        /// <summary>
-        /// Call this if LOL was installed in a non-default location.
-        /// </summary>
-        /// <param name="s">Full path to and including the "Riot Games" folder.</param>
-        public void SetRoot(String s)
-        {
-            root = s;
-        }
-
-        public bool Read( EventLogger logger )
+        public bool Read(Logger logger)
         {
             bool result = true;
 
@@ -109,83 +104,317 @@ namespace LOLViewer.IO
             DirectoryInfo rootDir = null;
             try
             {
-                logger.LogEvent("Reading models from: " + root);
-                rootDir = new DirectoryInfo(root);
+                logger.Event("Reading models from: " + Root);
+                rootDir = new DirectoryInfo(Root);
             }
             catch 
             {
-                logger.LogError("Unable to get the directory information: " + root);
-                return false;
-            }
-
-            //
-            // Directory Guard.
-            // Assume the user selected the wrong LOL installation directory.
-            //
-            // Possibly correct directories:
-            // - Name contains "Riot Games"  ...\Riot Games\League of Legends\RADS...
-            // - Name contains "League of Legends" ...\League of Legends\RADS...
-            // - Child Directory Contains "League of Legends" ...\Renamed\League of Legends\RADS...
-            // - Child Directory Contains "RADS" ...\Renamed\RADS...
-            //
-            // The only case not really handled is something like
-            // ...\Riot Games\Renamed\RADS... which no one better have!  And, honestly, this case should fail
-            // because someone could have a new Riot game installed which is not LOL.
-            //
-
-            bool isRootSelected = false;
-
-            // Deafult directory installations.
-            if (rootDir.Name.Contains("League of Legends") == true ||
-                rootDir.Name.Contains("Riot Games") == true ||
-                rootDir.Name.Contains("RADS") == true ||
-                rootDir.Name.Contains("rads") == true ||
-                rootDir.Name.Contains("英雄联盟") == true)
-            {
-                isRootSelected = true;
-            }
-            // Selected a renamed "Riot Games" directory.
-            else if (ContainsDirectory(rootDir, "League of Legends") == true)
-            {
-                isRootSelected = true;
-            }
-            // Selected a rename "League of Legends" directory.
-            else if (ContainsDirectory(rootDir, "RADS") == true || 
-                     ContainsDirectory(rootDir, "rads") == true )
-            {
-                isRootSelected = true;
-            }
-
-            // If we didn't find the root, just bail.
-            if (isRootSelected == false)
-            {
-                logger.LogError(root + " is not a League of Legends root directory.");
-                return false;
-            }
-
-            //
-            // Start from the root and try to read
-            // model files and textures.
-            //
-            try
-            {
-                DirectoryInfo di = new DirectoryInfo(root);
-                foreach (DirectoryInfo d in di.GetDirectories())
-                {
-                    result = ReadDirectory(d, logger);
-                }
-            }
-            catch(Exception e)
-            {
-                logger.LogError("Unable to open directory: " + root);
-                logger.LogError(e.Message);
+                logger.Error("Unable to get the directory information: " + Root);
                 result = false;
             }
 
-            foreach( IFileEntry f in inibins )
+            //
+            // Try to find the raf files and read them.
+	        //
+
+            if (result == true)
+            {
+                try
+                {
+                    result = GetFiles(rootDir, logger);
+
+                    // If the finding or reading fails, bail.
+                    if (!result)
+                    {
+                        logger.Error("Unable to find the 'filearchives' directory: " + Root);
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger.Error("Unable to open directory: " + Root);
+                    logger.Error(e.Message);
+                    result = false;
+                }
+            }
+
+            // Sanity
+            if (result == true)
+            {
+                GenerateModelDefinitions(logger);
+            }
+
+            return result;
+        }
+
+        public void SortModelNames()
+        {
+            IEnumerable<KeyValuePair<String, LOLModel>> alphabetical = models.OrderBy(model => model.Key);
+
+            Dictionary<String, LOLModel> temp = new Dictionary<String, LOLModel>();
+            foreach (var m in alphabetical)
+            {
+                temp.Add(m.Key, m.Value);
+            }
+
+            models.Clear();
+            models = temp;
+        }
+
+        public List<String> GetModelNames()
+        {
+            List<String> names = new List<String>();
+
+            foreach (var model in models)
+            {
+                names.Add(model.Key);
+            }
+
+            return names;
+        }
+
+        public LOLModel GetModel(String name)
+        {
+            LOLModel result = null;
+
+            if (models.ContainsKey(name) == true)
+            {
+                result = models[name];
+            }
+
+            return result;
+        }
+
+        #region Helper Functions
+
+        // Single recursive function to replace the double
+        // It still assumes a certain LoL directory, but it has a little more flexibility than a straight path
+        // It should be only a bit slower than a stright path since it's a selective recurse, not a complete
+        private bool GetFiles(DirectoryInfo dir, Logger logger)
+        {
+            if (dir.Name.ToLower() == "league of legends")
+            {
+                foreach (DirectoryInfo dInfo in dir.GetDirectories())
+                {
+                    // If we have found the filearchives directory, just pass true all the way up the stack
+                    if (GetFiles(dInfo, logger))
+                        return true;
+                }
+            }
+            else if (dir.Name.ToLower() == "rads")
+            {
+                foreach (DirectoryInfo dInfo in dir.GetDirectories())
+                {
+                    if (GetFiles(dInfo, logger))
+                        return true;
+                }
+            }
+            else if (dir.Name.Contains("英雄联盟") == true)
+            {
+                foreach (DirectoryInfo dInfo in dir.GetDirectories())
+                {
+                    if (GetFiles(dInfo, logger))
+                        return true;
+                }
+            }
+            else if (dir.Name.ToLower() == "projects")
+            {
+                foreach (DirectoryInfo dInfo in dir.GetDirectories())
+                {
+                    if (GetFiles(dInfo, logger))
+                        return true;
+                }
+            }
+            else if (dir.Name.ToLower() == "lol_game_client")
+            {
+                foreach (DirectoryInfo dInfo in dir.GetDirectories())
+                {
+                    if (GetFiles(dInfo, logger))
+                        return true;
+                }
+            }
+            else if (dir.Name.ToLower() == "filearchives")
+            {
+                return ReadFiles(dir, logger, FileType.RAF);
+            }
+            else if (dir.Name == "Game")
+            {
+                return ReadFiles(dir, logger, FileType.ZIP);
+            }
+            
+            // Directory we don't care about.
+            return false;
+        }
+
+        enum FileType
+        {
+            RAF,
+            ZIP
+        }
+
+        // Replacement for individual raf reading and individual filetype searching
+        // Provide the directory of RADS\projects\lol_game_client\filearchives or the equivalent
+        private bool ReadFiles(DirectoryInfo dir, Logger logger, FileType filetype)
+        {
+            try
+            {
+                IArchive archive = null;
+
+                logger.Event("Opening the 'filearchives' directory: " + dir.FullName);
+
+                switch (filetype)
+                {
+                    case FileType.RAF:
+                        archive = new RAFArchiveWrapper(new RAFMasterFileList(dir.FullName));
+                        break;
+                    case FileType.ZIP:
+                        archive = new ZIPArchiveWrapper(new ZipFile(dir.FullName + "/HeroPak_client.zip"));
+                        break;
+                    default:
+                        //TODO log error
+                        return false;
+                }
+
+                foreach (IFileEntry e in archive.SearchFileEntries(new string[] { ".dds", ".skn", ".skl", ".inibin", "animations.list", ".anm" }))
+                {
+
+                    // Split off the actual file name from the full path
+                    String name = e.FileName.Substring(e.FileName.LastIndexOf('/') + 1).ToLower();
+
+                    switch (e.SearchPhrase)
+                    {
+                        case ".dds":
+                            // Try to parse out unwanted textures.
+                            if (!e.FileName.ToLower().Contains("loadscreen") &&
+                                !e.FileName.ToLower().Contains("circle") &&
+                                !e.FileName.ToLower().Contains("square") &&
+                                e.FileName.ToLower().Contains("data") &&
+                                e.FileName.ToLower().Contains("characters"))
+                            {
+                                // Check that the file isn't already in the dictionary
+                                if (!textures.ContainsKey(name))
+                                {
+                                    textures.Add(name, e);
+                                }
+                                else
+                                {
+                                    logger.Warning("Duplicate texture " + name + ": " + e.FileName);
+                                }
+                            }
+                            break;
+
+                        case ".skn":
+                            if (!skns.ContainsKey(name))
+                            {
+                                skns.Add(name, e);
+                            }
+                            else
+                            {
+                                logger.Warning("Duplicate skn " + name + ": " + e.FileName);
+                            }
+                            break;
+
+                        case ".skl":
+                            if (!skls.ContainsKey(name))
+                            {
+                                skls.Add(name, e);
+                            }
+                            else
+                            {
+                                logger.Warning("Duplicate skn " + name + ": " + e.FileName);
+                            }
+                            break;
+
+                        case ".inibin":
+                            // Try to only read champion inibins
+                            if (e.FileName.ToLower().Contains("data") &&
+                                e.FileName.ToLower().Contains("characters"))
+                            {
+                                inibins.Add(e);
+                            }
+                            else
+                            {
+                                logger.Warning("Excluding inibin " + name + ": " + e.FileName);
+                            }
+                            break;
+
+                        case "animations.list":
+                            // Riot changed their directory structure for some skins.
+                            // Originally, champion Animation.list files were stored in a directory structure like
+                            // "*/ChampionName/Animation.list".  Now, some are stored like
+                            // "*/ChampionName/Skins/Skin01/Animation.list".
+
+                            //logger.Event("animationLists << " + e.FileName);
+
+                            if (e.FileName.ToLower().Contains("skin") == false &&
+                                e.FileName.ToLower().Contains("base") == false)
+                            {
+                                // Original Case.
+
+                                // Remove the file name.
+                                name = e.FileName.Remove(e.FileName.LastIndexOf('/'));
+
+                                // Remove proceeding directories to get the parent directory
+                                name = name.Substring(name.LastIndexOf('/') + 1).ToLower();
+                            }
+                            else
+                            {
+                                // Newer Case.
+                                string path = e.FileName.ToString();
+                                string[] splitPath = path.Split('/');
+
+                                // Sanity
+                                if (splitPath.Length > 3)
+                                {
+                                    name = splitPath[splitPath.Length - 4].ToLower();
+                                }
+                            }
+
+                            // Store.
+                            if (!animationLists.ContainsKey(name))
+                            {
+                                //logger.Event("animationLists.Add(" + name + ", " + e.FileName + ");");
+                                animationLists.Add(name, e);
+                            }
+                            else
+                            {
+                                logger.Warning("Duplicate animation list " + name + ": " + e.FileName);
+                            }
+                            break;
+
+                        case ".anm":
+                            // Remove the .anm extension.
+                            name = name.Remove(name.Length - 4);
+
+                            if (!animations.ContainsKey(name))
+                            {
+                                animations.Add(name, e);
+                            }
+                            else
+                            {
+                                logger.Warning("Duplicate anm " + name + ": " + e.FileName);
+                            }
+                            break;
+                    }
+                }
+
+            }
+            catch (Exception e)
+            {
+                // Something went wrong. Most likely the RAF read failed due to a bad directory.
+                logger.Error("Failed to open RAFs");
+                logger.Error(e.Message);
+                return false;
+            }
+
+            return true;
+        }
+
+        private void GenerateModelDefinitions(Logger logger)
+        {
+            foreach (IFileEntry f in inibins)
             {
                 InibinFile iniFile = new InibinFile();
-                bool readResult = InibinReader.ReadCharacterInibin(f, ref iniFile, logger);
+                bool readResult = InibinReader.Read(f, ref iniFile, logger);
 
                 if (readResult == true)
                 {
@@ -196,16 +425,23 @@ namespace LOLViewer.IO
                         // Name the model after the parent directory
                         // of the .inibin plus the name from the .inibin.
                         // Some things overlap without both.
-                        String name = modelDefs[j].name;
 
-                        String directoryName = f.FileName;
-                        int pos = directoryName.LastIndexOf("/");
-                        directoryName = directoryName.Remove(pos);
-                        pos = directoryName.LastIndexOf("/");
-                        directoryName = directoryName.Substring(pos + 1);
+                        string path = f.FileName;
+                        string[] splitPath = path.Split('/');
+
+                        string directoryName = splitPath[splitPath.Length - 2];
+                        if (directoryName.Contains("Base") == true ||
+                            directoryName.Contains("Skin") == true)
+                        {
+                            // The directory structure for this case will be something like
+                            // "*/ChampionName/Skins/Base/".
+                            // We just want the "ChampionName".
+                            directoryName = splitPath[splitPath.Length - 4];
+                        }
 
                         // Sometimes the name from the .inibin file is "".
                         // So, just name it after the directory
+                        String name = modelDefs[j].name;
                         if (name == "")
                         {
                             name = directoryName + "/" + directoryName;
@@ -230,28 +466,26 @@ namespace LOLViewer.IO
                             {
                                 if (models.ContainsKey(name) == false)
                                 {
-                                    logger.LogEvent("Adding model definition: " + name);
+                                    logger.Event("Adding model definition: " + name);
                                     models.Add(name, model);
                                 }
                                 else
                                 {
-                                    logger.LogWarning("Duplicate model definition: " + name);
+                                    logger.Warning("Duplicate model definition: " + name);
                                 }
                             }
                         }
-                        catch(Exception e) 
+                        catch (Exception e)
                         {
-                            logger.LogError("Unable to store model definition: " + name);
-                            logger.LogError(e.Message + e.StackTrace);
+                            logger.Error("Unable to store model definition: " + name);
+                            logger.Error(e.Message);
                         }
                     }
                 }
             }
-
-            return result;
         }
 
-        private bool StoreModel(ModelDefinition def, out LOLModel model, EventLogger logger)
+        private bool StoreModel(ModelDefinition def, out LOLModel model, Logger logger)
         {
             model = new LOLModel();
             model.skinNumber = def.skin;
@@ -264,8 +498,8 @@ namespace LOLViewer.IO
             }
             else
             {
-               logger.LogError("Unable to find skn file: " + def.skn);
-               return false;
+                logger.Error("Unable to find skn file: " + def.skn);
+                return false;
             }
 
             // Find the skl.
@@ -275,7 +509,7 @@ namespace LOLViewer.IO
             }
             else
             {
-                logger.LogError("Unable to find skl file: " + def.skl);
+                logger.Error("Unable to find skl file: " + def.skl);
                 return false;
             }
 
@@ -286,14 +520,14 @@ namespace LOLViewer.IO
             }
             else
             {
-                logger.LogError("Unable to find texture file: " + def.tex);
+                logger.Error("Unable to find texture file: " + def.tex);
                 return false;
             }
 
             return true;
         }
 
-        private bool StoreAnimations(ref LOLModel model, EventLogger logger)
+        private bool StoreAnimations(ref LOLModel model, Logger logger)
         {
             bool result = true;
 
@@ -303,12 +537,12 @@ namespace LOLViewer.IO
             // Sanity
             if (animationLists.ContainsKey(model.animationList) == true)
             {
-                result = ANMListReader.ReadAnimationList(model.skinNumber - 1, // indexing in animations.list assumes the original skin to be -1
+                result = ANMListReader.Read(model.skinNumber - 1, // indexing in animations.list assumes the original skin to be -1
                     animationLists[model.animationList], ref animationStrings, logger);
             }
             else
             {
-                logger.LogError("Unable to find animation list: " + model.animationList);
+                logger.Error("Unable to find animation list: " + model.animationList);
             }
 
             if (result == true)
@@ -316,20 +550,20 @@ namespace LOLViewer.IO
                 // Store the animations in the model.
                 foreach (var a in animationStrings)
                 {
-                    if (animations.ContainsKey(a.Value) == true )
+                    if (animations.ContainsKey(a.Value) == true)
                     {
-                        if( model.animations.ContainsKey(a.Key) == false )
+                        if (model.animations.ContainsKey(a.Key) == false)
                         {
                             model.animations.Add(a.Key, animations[a.Value]);
                         }
                         else
                         {
-                            logger.LogError("Duplicate animation: " + a.Key);
+                            logger.Error("Duplicate animation: " + a.Key);
                         }
                     }
                     else
                     {
-                        logger.LogError("Unable to find animation: " + a.Value);
+                        logger.Error("Unable to find animation: " + a.Value);
                     }
                 }
             }
@@ -337,434 +571,7 @@ namespace LOLViewer.IO
             return result;
         }
 
-        public void SortModelNames()
-        {
-            IEnumerable<KeyValuePair<String, LOLModel>> alphabetical = models.OrderBy(model => model.Key);
-
-            Dictionary<String, LOLModel> temp = new Dictionary<String, LOLModel>();
-            foreach (var m in alphabetical)
-            {
-                temp.Add(m.Key, m.Value);
-            }
-
-            models.Clear();
-            models = temp;
-        }
-
-        public List<String> GetModelNames()
-        {
-            List<String> names = new List<String>();
-            
-            foreach (var model in models)
-            {
-                names.Add(model.Key);
-            }
-
-            return names;
-        }
-
-        public LOLModel GetModel(String name)
-        {
-            LOLModel result = null;
-            
-            foreach(var m in models)
-            {
-                if (m.Key == name)
-                {
-                    // This is the model we want.
-                    result = m.Value;
-                    break;
-                }
-            }
-
-            return result;
-        }
-
-        //
-        // Helper functions for reading the directory structure.
-        //
-
-        private bool ReadDirectory(DirectoryInfo dir, EventLogger logger)
-        {
-            bool result = true;
-
-            //
-            // Parse the directory's name and determine what to do.
-            //
-
-            // Odd case
-            // US Client: "League of Legends"
-            // EU Client: "League of Legends EU"
-            // etc.
-            if (dir.Name.Contains("League of Legends") == true)
-            {
-                result = OpenDirectory(dir, logger);
-            }
-            else if (dir.Name.Contains("lol_game_client") == true)
-            {
-                result = OpenDirectory(dir, logger);
-            }
-            else
-            {
-                //
-                // Standard Case
-                //
-
-                switch (dir.Name)
-                {
-                    case "rads":
-                    case "RADS":
-                        {
-                            result = OpenDirectory(dir, logger);
-                            break;
-                        };
-                    case "projects":
-                        {
-                            result = OpenDirectory(dir, logger);
-                            break;
-                        };
-                    case "filearchives":
-                        {
-                            result = OpenModelsRoot(dir, logger);
-                            break;
-                        };
-                    case "Game":
-                        {
-                            result = OpenGameClientVersion(dir, logger);
-                            break;
-                        };                    
-                    default:
-                        {
-                            // Just ignore this directory.
-                            break;
-                        }
-                };
-
-            }
-
-            return result;
-        }
-
-        private bool OpenDirectory(DirectoryInfo dir, EventLogger logger)
-        {
-            bool result = true;
-
-            // Open this directory and keep reading more directories.
-            try
-            {
-                DirectoryInfo di = new DirectoryInfo(dir.FullName);
-                foreach (DirectoryInfo d in di.GetDirectories())
-                {
-                    result = ReadDirectory(d, logger);
-                    if (result == false)
-                        break;
-                }
-            }
-            catch(Exception e)
-            {
-                logger.LogError( "Unable to open directory: " + dir.FullName );
-                logger.LogError(e.Message);
-                result = false;
-            }
-
-            return result;
-        }
-
-        private bool OpenModelsRoot(DirectoryInfo dir, EventLogger logger)
-        {
-            bool result = true;
-
-            // We've arrived at the root of the model folders.
-            try
-            {
-                DirectoryInfo di = new DirectoryInfo(dir.FullName);
-
-                // Read directories in reverse order to prioritize newer files.
-                DirectoryInfo[] children = di.GetDirectories();
-                for (int i = 1; i <= children.Length; ++i)
-                {
-                    result = OpenGameClientVersion(children[children.Length - i], logger);
-                    if (result == false)
-                        break;
-                }
-            }
-            catch(Exception e)
-            {
-                logger.LogError("Unable to open directory: " + dir.FullName);
-                logger.LogError(e.Message);
-                result = false;
-            }
-
-            return result;
-        }
-
-        private bool OpenGameClientVersion(DirectoryInfo dir, EventLogger logger)
-        {
-            bool result = true;
-
-            // Read in .raf files and look for model information in them.
-            IArchive archive = null;
-            try
-            {
-                foreach(FileInfo f in dir.GetFiles())
-                {
-                    // Ignore non RAF files.
-                    if (f.Extension != ".raf" && f.Name != "HeroPak_client.zip")
-                        continue;
-
-                    logger.LogError(f.Name);
-                    
-                    // ReadArch() opens the archive.
-                    result = ReadArch(f, ref archive, logger);
-                    if (result == false)
-                    {
-                        break;
-                    }
-                }
-            }
-            catch(Exception e)
-            {
-                logger.LogError("Unable to open directory: " + dir.FullName);
-                logger.LogError(e.Message);
-                result = false;
-            }
-
-            return result;
-        }
-
-        private IArchive openArchive(FileInfo f)
-        {
-            if(f.Extension == ".raf")
-            {
-                return new RAFArchiveWrapper(new RAFArchive(f.FullName));
-            }
-            else if (f.Extension == ".zip")
-            {
-                return new ZIPArchiveWrapper(new ZipFile(f.FullName));
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        private bool ReadArch(FileInfo f, ref IArchive archive, EventLogger logger)
-        {
-            bool result = true;
-
-            try
-            {
-                logger.LogEvent("Opening archive file: " + f.FullName);
-
-                // Open the archive
-                archive = openArchive(f);
-
-                // Get the texture files.
-                List<IFileEntry> files = archive.SearchFileEntries(".dds");
-
-                foreach (IFileEntry e in files)
-                {
-                    // Try to parse out unwanted textures.
-                    if (e.FileName.Contains("LoadScreen") == false &&
-                        e.FileName.Contains("Loadscreen") == false &&
-                        e.FileName.Contains("loadscreen") == false &&
-                        e.FileName.Contains("circle") == false &&
-                        e.FileName.Contains("square") == false &&
-                        e.FileName.Contains("DATA") == true &&
-                        e.FileName.Contains("Characters") == true)
-                    {
-                        String name = e.FileName;
-                        int pos = name.LastIndexOf("/");
-                        name = name.Substring(pos + 1);
-                        name = name.ToLower();
-
-                        if (textures.ContainsKey(name) == false)
-                        {
-                            logger.LogEvent("Adding texture " + name + ": " + e.FileName);
-                            textures.Add(name, e);
-                        }
-                        else
-                        {
-                            logger.LogWarning("Duplicate texture " + name + ": " + e.FileName);
-                        }
-                    }
-                }
-
-
-                files = archive.SearchFileEntries(".DDS");
-
-                foreach (IFileEntry e in files)
-                {
-                    // Try to parse out unwanted textures.
-                    if (e.FileName.Contains("LoadScreen") == false &&
-                        e.FileName.Contains("Loadscreen") == false &&
-                        e.FileName.Contains("loadscreen") == false &&
-                        e.FileName.Contains("circle") == false &&
-                        e.FileName.Contains("square") == false &&
-                        e.FileName.Contains("DATA") == true &&
-                        e.FileName.Contains("Characters") == true)
-                    {
-                        String name = e.FileName;
-                        int pos = name.LastIndexOf("/");
-                        name = name.Substring(pos + 1);
-                        name = name.ToLower();
-
-                        if (textures.ContainsKey(name) == false)
-                        {
-                            logger.LogEvent("Adding texture " + name + ": " + e.FileName);
-                            textures.Add(name, e);
-                        }
-                        else
-                        {
-                            logger.LogWarning("Duplicate texture " + name + ": " + e.FileName);
-                        }
-                    }
-                }
-
-                // Get the .skn files
-                files = archive.SearchFileEntries(".skn");
-
-                foreach (IFileEntry e in files)
-                {
-                    String name = e.FileName;
-                    int pos = name.LastIndexOf("/");
-                    name = name.Substring(pos + 1);
-                    name = name.ToLower();
-
-                    if (skns.ContainsKey(name) == false)
-                    {
-                        logger.LogEvent("Adding skn " + name + ": " + e.FileName);
-                        skns.Add(name, e);
-                    }
-                    else
-                    {
-                        logger.LogWarning("Duplicate skn " + name + ": " + e.FileName);
-                    }
-                }
-
-                // Get the .skl files.
-                files = archive.SearchFileEntries(".skl");
-                foreach (IFileEntry e in files)
-                {
-                    String name = e.FileName;
-                    int pos = name.LastIndexOf("/");
-                    name = name.Substring(pos + 1);
-                    name = name.ToLower();
-
-                    if (skls.ContainsKey(name) == false)
-                    {
-                        logger.LogEvent("Adding skl " + name + ": " + e.FileName);
-                        skls.Add(name, e);
-                    }
-                    else
-                    {
-                        logger.LogWarning("Duplicate skl " + name + ": " + e.FileName);
-                    }
-                }
-
-                // There's .inibin files in here too.
-                files = archive.SearchFileEntries(".inibin");
-
-                foreach (IFileEntry e in files)
-                {
-                    String name = e.FileName;
-                    if (name.Contains("Characters") == true) // try to only read required files
-                    {
-                        logger.LogEvent("Adding inibin " + name + ": " + e.FileName);
-                        inibins.Add(e);
-                    }
-                    else
-                    {
-                        logger.LogWarning("Excluding inibin " + name + ": " + e.FileName);
-                    }
-                }
-
-                // Read in animation lists
-                files = archive.SearchFileEntries("Animations.list");
-
-                foreach (IFileEntry e in files)
-                {
-                    String name = e.FileName;
-
-                    // Remove the file name.
-                    int pos = name.LastIndexOf("/");
-                    name = name.Remove(pos);
-
-                    // Remove proceeding directories.
-                    pos = name.LastIndexOf("/");
-                    name = name.Substring(pos + 1);
-                    name = name.ToLower();
-
-                    // Name is the parent directory.
-                    if (animationLists.ContainsKey(name) == false)
-                    {
-                        logger.LogEvent("Adding animation list " + name + ": " + e.FileName);
-                        animationLists.Add(name, e);
-                    }
-                    else
-                    {
-                        logger.LogWarning("Duplicate animation list " + name + ": " + e.FileName);
-                    }
-                }
-
-                // Read in animations
-                files = archive.SearchFileEntries(".anm");
-
-                foreach (IFileEntry e in files)
-                {
-                    String name = e.FileName;
-                    int pos = name.LastIndexOf("/");
-                    name = name.Substring(pos + 1);
-                    name = name.Remove(name.Length - 4);
-                    name = name.ToLower();
-
-                    if (animations.ContainsKey(name) == false)
-                    {
-                        logger.LogEvent("Adding anm " + name + ": " + e.FileName);
-                        animations.Add(name, e);
-                    }
-                    else
-                    {
-                        logger.LogWarning("Duplicate anm " + name + ": " + e.FileName);
-                    }
-                }
-            }
-            catch(Exception e)
-            {
-                logger.LogError("Unable to open RAF: " + f.FullName);
-                logger.LogError(e.Message);
-                result = false;
-            }
-
-            return result;
-        }
-
-        //
-        // Helper Functions
-        //
-        private bool ContainsDirectory(DirectoryInfo parent, String child)
-        {
-            bool result = false;
-
-            // Sanity.
-            if (parent.Exists == true)
-            {
-                try
-                {
-                    foreach (DirectoryInfo d in parent.GetDirectories())
-                    {
-                        if (d.Name.Contains(child) == true) // contains used for the LOL NA - LOL EU case
-                        {
-                            result = true;
-                            break;
-                        }
-                    }
-                }
-                catch { }
-            }
-
-            return result;
-        }
+        #endregion
     }
 }
 

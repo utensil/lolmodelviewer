@@ -1,7 +1,7 @@
 ﻿
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -36,28 +36,75 @@ using System.Text;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
-namespace LOLViewer
+using LOLFileReader;
+
+using LOLViewer.IO;
+
+using CSharpLogger;
+
+namespace LOLViewer.Graphics
 {
     class GLStaticModel
     {
-        public int numIndices;
-        public int vao, vBuffer, iBuffer, tBuffer, nBuffer;
-        public String textureName;
+        public String TextureName { get; set; }
+
+        private int numIndices;
+
+        // OpenGL objects.
+        private int vao, vertexPositionBuffer, indexBuffer, vertexTextureCoordinateBuffer, vertexNormalBuffer;
 
         public GLStaticModel() 
         {
-            vao = vBuffer = iBuffer = tBuffer = nBuffer = numIndices = 0;
-            textureName = String.Empty;
+            vao = vertexPositionBuffer = indexBuffer = vertexTextureCoordinateBuffer = vertexNormalBuffer = numIndices = 0;
+            TextureName = String.Empty;
         }
 
-        public bool Create(List<float> vertexData, List<float> normalData,
-            List<float> texData, List<uint> indexData, EventLogger logger)
+        public bool Create(SKNFile file, Logger logger)
+        {
+            // This function converts the handedness of the DirectX style input data
+            // into the handedness OpenGL expects.
+            // So, vector inputs have their Z value negated and quaternion inputs have their
+            // Z and W values negated.
+
+            List<float> vertexPositions = new List<float>();
+            List<float> vertexNormals = new List<float>();
+            List<float> vertexTextureCoordinates = new List<float>();
+
+            for (int i = 0; i < file.numVertices; ++i)
+            {
+                vertexPositions.Add(file.vertices[i].position[0]);
+                vertexPositions.Add(file.vertices[i].position[1]);
+                vertexPositions.Add(-file.vertices[i].position[2]);
+
+                vertexNormals.Add(file.vertices[i].normal[0]);
+                vertexNormals.Add(file.vertices[i].normal[1]);
+                vertexNormals.Add(-file.vertices[i].normal[2]);
+
+                vertexTextureCoordinates.Add(file.vertices[i].texCoords[0]);
+                vertexTextureCoordinates.Add(file.vertices[i].texCoords[1]);
+            }
+
+            List<uint> iData = new List<uint>();
+            for (int i = 0; i < numIndices; ++i)
+            {
+                iData.Add((uint)file.indices[i]);
+            }
+
+            return Create(vertexPositions, vertexNormals, vertexTextureCoordinates, iData, logger);
+        }
+
+        //
+        // Helper creation function.
+        //
+
+        private bool Create(List<float> vertexPositions, List<float> vertexNormals,
+            List<float> vertexTextureCoordinates, List<uint> indices, Logger logger)
         {
             bool result = true;
 
-            logger.LogEvent("Creating OpenGL static model.");
+            logger.Event("Creating OpenGL static model.");
 
-            numIndices = indexData.Count;
+            numIndices = indices.Count;
 
             // Create Vertex Array Object
             if (result == true)
@@ -94,12 +141,12 @@ namespace LOLViewer
             // Store data and bind vertex buffer.
             if (result == true)
             {
-                vBuffer = buffers[0];
-                nBuffer = buffers[1];
-                tBuffer = buffers[2];
-                iBuffer = buffers[3];
+                vertexPositionBuffer = buffers[0];
+                vertexNormalBuffer = buffers[1];
+                vertexTextureCoordinateBuffer = buffers[2];
+                indexBuffer = buffers[3];
 
-                GL.BindBuffer(BufferTarget.ArrayBuffer, vBuffer);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vertexPositionBuffer);
             }
 
             //
@@ -109,8 +156,8 @@ namespace LOLViewer
             //
             if (result == true)
             {
-                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(vertexData.Count * sizeof(float)),
-                    vertexData.ToArray(), BufferUsageHint.StaticDraw);
+                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(vertexPositions.Count * sizeof(float)),
+                    vertexPositions.ToArray(), BufferUsageHint.StaticDraw);
             }
 
             // Check for errors.
@@ -146,14 +193,14 @@ namespace LOLViewer
             //
             if (result == true)
             {
-                GL.BindBuffer(BufferTarget.ArrayBuffer, nBuffer);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vertexNormalBuffer);
             }
 
             // Set normal data.
             if (result == true)
             {
-                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(normalData.Count * sizeof(float)),
-                    normalData.ToArray(), BufferUsageHint.StaticDraw);
+                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(vertexNormals.Count * sizeof(float)),
+                    vertexNormals.ToArray(), BufferUsageHint.StaticDraw);
             }
 
             // Check for errors.
@@ -189,14 +236,14 @@ namespace LOLViewer
             //
             if (result == true)
             {
-                GL.BindBuffer(BufferTarget.ArrayBuffer, tBuffer);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, vertexTextureCoordinateBuffer);
             }
 
             // Set Texture Coordinate Data
             if (result == true)
             {
-                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(texData.Count * sizeof(float)),
-                    texData.ToArray(), BufferUsageHint.StaticDraw);
+                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(vertexTextureCoordinates.Count * sizeof(float)),
+                    vertexTextureCoordinates.ToArray(), BufferUsageHint.StaticDraw);
             }
 
             error = GL.GetError();
@@ -227,14 +274,14 @@ namespace LOLViewer
             // Bind index buffer.
             if (result == true)
             {
-                GL.BindBuffer(BufferTarget.ElementArrayBuffer, iBuffer);
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, indexBuffer);
             }
 
             // Set index data.
             if (result == true)
             {
-                GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(indexData.Count * sizeof(uint)),
-                    indexData.ToArray(), BufferUsageHint.StaticDraw);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(indices.Count * sizeof(uint)),
+                    indices.ToArray(), BufferUsageHint.StaticDraw);
             }
 
             error = GL.GetError();
@@ -250,7 +297,7 @@ namespace LOLViewer
             }
             else
             {
-                logger.LogError("Failed to create OpenGL static model.");
+                logger.Error("Failed to create OpenGL static model.");
             }
 
             return result;
@@ -264,11 +311,6 @@ namespace LOLViewer
                 DrawElementsType.UnsignedInt, 0);
         }
 
-        public void SetTexture(String name)
-        {
-            textureName = name;
-        }
-
         public void Destory()
         {
             if (vao != 0)
@@ -277,28 +319,28 @@ namespace LOLViewer
                 vao = 0;
             }
 
-            if (vBuffer != 0)
+            if (vertexPositionBuffer != 0)
             {
-                GL.DeleteBuffers(1, ref vBuffer);
-                vBuffer = 0;
+                GL.DeleteBuffers(1, ref vertexPositionBuffer);
+                vertexPositionBuffer = 0;
             }
 
-            if (tBuffer != 0)
+            if (vertexTextureCoordinateBuffer != 0)
             {
-                GL.DeleteBuffers(1, ref tBuffer);
-                tBuffer = 0;
+                GL.DeleteBuffers(1, ref vertexTextureCoordinateBuffer);
+                vertexTextureCoordinateBuffer = 0;
             }
 
-            if (nBuffer != 0)
+            if (vertexNormalBuffer != 0)
             {
-                GL.DeleteBuffers(1, ref nBuffer);
-                nBuffer = 0;
+                GL.DeleteBuffers(1, ref vertexNormalBuffer);
+                vertexNormalBuffer = 0;
             }
 
-            if (iBuffer != 0)
+            if (indexBuffer != 0)
             {
-                GL.DeleteBuffers(1, ref iBuffer);
-                iBuffer = 0;
+                GL.DeleteBuffers(1, ref indexBuffer);
+                indexBuffer = 0;
             }
 
             numIndices = 0;

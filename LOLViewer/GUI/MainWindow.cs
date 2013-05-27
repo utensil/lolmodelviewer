@@ -1,7 +1,7 @@
 ﻿
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -40,14 +40,20 @@ using System.Windows.Forms;
 using System.IO;
 
 using OpenTK;
-using LOLViewer.IO;
-using LOLViewer.GUI;
 
-namespace LOLViewer
+using LOLFileReader;
+
+using LOLViewer.IO;
+using LOLViewer.Graphics;
+
+using CSharpLogger;
+
+namespace LOLViewer.GUI
 {
     public partial class MainWindow : Form
     {
-        private const String DEFAULT_DIRECTORY_FILE = "lolviewer.dat";
+        private const String DEFAULT_SAMPLE_MODELS_DIRECTORY = "./SampleModels/filearchives/";
+        private const String DEFAULT_DATA_FILE = "lolviewer.dat";
         private const String DEFAULT_LOG_FILE = "lolviewer.log";
 
         // Windowing variables
@@ -59,36 +65,31 @@ namespace LOLViewer
 
         // Default Camera
         private const float FIELD_OF_VIEW = OpenTK.MathHelper.PiOver4;
-        private const float NEAR_PLANE = 0.1f;
-        private const float FAR_PLANE = 1000.0f;
+        private const float NEAR_PLANE = 1.0f;
+        private const float FAR_PLANE = 2000.0f;
         private GLCamera camera;
 
         // IO Variables
         private LOLDirectoryReader reader;
-        private EventLogger logger;
+        private Logger logger;
 
         // Model Name Search Variables
-        public String lastSearch;
-        public List<String> currentSearchSubset;
-
-        // GUI Variables
-        // converts from World Transform scale to trackbar units.
-        private const float DEFAULT_SCALE_TRACKBAR = 1000.0f;
+        private String lastSearch;
+        private List<String> currentSearchSubset;
 
         // Animation Control Handle
         private AnimationController animationController;
-       
+
         public MainWindow()
         {
-            logger = new EventLogger();
-            bool result = logger.Open(DEFAULT_LOG_FILE); // Not checking result.
-            logger.LogEvent("Program Start.");
+            logger = new Logger(DEFAULT_LOG_FILE); // Not checking result.
+            logger.Event("Program Start.");
 
             isGLLoaded = false;
             timer = new Stopwatch();
 
             camera = new GLCamera();
-            camera.SetViewParameters(new Vector3(0.0f, 0.0f, 300.0f), Vector3.Zero);
+            camera.SetViewParameters(new Vector3(0.0f, 0.0f, 2.0f), Vector3.Zero);
             renderer = new GLRenderer();
 
             // Set up the reader and initialize its root to the value in 'lolviewer.dat' if
@@ -100,7 +101,7 @@ namespace LOLViewer
                 FileStream file = null;
                 try
                 {
-                    FileInfo fileInfo = new FileInfo(DEFAULT_DIRECTORY_FILE);
+                    FileInfo fileInfo = new FileInfo(DEFAULT_DATA_FILE);
                     if (fileInfo.Exists == true)
                     {
                         file = new FileStream(fileInfo.FullName, FileMode.Open);
@@ -108,12 +109,12 @@ namespace LOLViewer
                     }
                     else
                     {
-                        logger.LogWarning("Failed to locate " + DEFAULT_DIRECTORY_FILE + ".");
+                        logger.Warning("Failed to locate " + DEFAULT_DATA_FILE + ".");
                     }
                 }
-                catch 
+                catch
                 {
-                    logger.LogWarning("Failed to open " + DEFAULT_DIRECTORY_FILE + ".");
+                    logger.Warning("Failed to open " + DEFAULT_DATA_FILE + ".");
                 }
 
                 if (isFileOpen == true)
@@ -123,15 +124,15 @@ namespace LOLViewer
                     {
                         try
                         {
-                            logger.LogEvent("Reading " + DEFAULT_DIRECTORY_FILE + ".");
+                            logger.Event("Reading " + DEFAULT_DATA_FILE + ".");
 
                             fileReader = new BinaryReader(file);
-                            reader.root = fileReader.ReadString();
+                            reader.Root = fileReader.ReadString();
                             fileReader.Close();
                         }
                         catch
                         {
-                            logger.LogWarning("Failed to read " + DEFAULT_DIRECTORY_FILE + ".");
+                            logger.Warning("Failed to read " + DEFAULT_DATA_FILE + ".");
                             file.Close();
                         }
                     }
@@ -140,8 +141,8 @@ namespace LOLViewer
 
             InitializeComponent();
 
-            modelScaleTrackbar.Value = (int)(GLRenderer.DEFAULT_MODEL_SCALE * DEFAULT_SCALE_TRACKBAR);
-            yOffsetTrackbar.Value = -GLRenderer.DEFAULT_MODEL_YOFFSET;
+            mainWindowProgressBar.Style = ProgressBarStyle.Marquee;
+            mainWindowProgressBar.Value = 100;
 
             lastSearch = String.Empty;
             currentSearchSubset = new List<String>();
@@ -175,10 +176,6 @@ namespace LOLViewer
             modelListBox.DoubleClick += new EventHandler(OnModelListDoubleClick);
             modelListBox.KeyPress += new KeyPressEventHandler(OnModelListKeyPress);
 
-            // Trackbars
-            yOffsetTrackbar.Scroll += new EventHandler(YOffsetTrackbarOnScroll);
-            modelScaleTrackbar.Scroll += new EventHandler(ModelScaleTrackbarOnScroll);
-
             // Buttons
             resetCameraButton.Click += new EventHandler(OnResetCameraButtonClick);
             backgroundColorButton.Click += new EventHandler(OnBackgroundColorButtonClick);
@@ -193,20 +190,17 @@ namespace LOLViewer
             animationController = new AnimationController();
 
             // Set references
-            animationController.enableAnimationCheckBox = enableAnimationCheckBox;
+            animationController.enableAnimationButton = enableAnimationButton;
             animationController.currentAnimationComboBox = currentAnimationComboBox;
-            animationController.nextKeyFrameButton = nextKeyFrameButton;
             animationController.playAnimationButton = playAnimationButton;
-            animationController.previousKeyFrameButton = previousKeyFrameButton;
             animationController.glControlMain = glControlMain;
             animationController.timelineTrackBar = timelineTrackBar;
+            animationController.mainWindowStatusLabel = mainWindowStatusLabel;
 
             animationController.renderer = renderer;
 
             // Set callbacks.
-            enableAnimationCheckBox.Click += new EventHandler(animationController.OnEnableCheckBoxClick);
-            previousKeyFrameButton.Click += new EventHandler(animationController.OnPreviousKeyFrameButtonClick);
-            nextKeyFrameButton.Click += new EventHandler(animationController.OnNextKeyFrameButtonClick);
+            enableAnimationButton.Click += new EventHandler(animationController.OnEnableAnimationButtonClick);
             playAnimationButton.Click += new EventHandler(animationController.OnPlayAnimationButtonClick);
             currentAnimationComboBox.SelectedIndexChanged += new EventHandler(animationController.OnCurrentAnimationComboBoxSelectedIndexChanged);
             timelineTrackBar.Scroll += new EventHandler(animationController.OnTimelineTrackBar);
@@ -229,8 +223,15 @@ namespace LOLViewer
 
         private void OnMainWindowShown(object sender, EventArgs e)
         {
-            // Read model files.
-            OnReadModels(sender, e);
+            if (isGLLoaded == true)
+            {
+                // Read model files.
+                OnReadModels(sender, e);
+            }
+            else
+            {
+                this.Close();
+            }
         }
 
         //
@@ -242,7 +243,7 @@ namespace LOLViewer
             if (isGLLoaded == false)
                 return;
 
-            renderer.OnRender(ref camera);
+            renderer.Render(camera);
 
             glControlMain.SwapBuffers();
         }
@@ -257,7 +258,7 @@ namespace LOLViewer
                 (float)(glControlMain.ClientRectangle.Height - glControlMain.ClientRectangle.Y),
                 NEAR_PLANE, FAR_PLANE);
 
-            renderer.OnResize(glControlMain.ClientRectangle.X, glControlMain.ClientRectangle.Y,
+            renderer.Resize(glControlMain.ClientRectangle.X, glControlMain.ClientRectangle.Y,
                 glControlMain.ClientRectangle.Width, glControlMain.ClientRectangle.Height);
 
             GLControlMainOnUpdateFrame(sender, e);
@@ -266,22 +267,23 @@ namespace LOLViewer
         public void GLControlMainOnLoad(object sender, EventArgs e)
         {
             // Set up renderer.
-            bool result = renderer.OnLoad(logger);
-            if (result == false)
+            bool result = renderer.Initialize(logger);
+            if (result == true)
             {
-                MessageBox.Show("OpenGL failed to load." +
-                    "  Please install the latest display drivers from your GPU manufacturer.", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                isGLLoaded = true;
 
-                this.Close();
-                return;
+                // Call an initial resize to get some camera and renderer parameters set up.
+                GLControlMainOnResize(sender, e);
+                timer.Start();
             }
+            else
+            {
+                isGLLoaded = false;
 
-            isGLLoaded = true;
-
-            // Call an initial resize to get some camera and renderer parameters set up.
-            GLControlMainOnResize(sender, e);
-            timer.Start();
+                MessageBox.Show(this, "OpenGL failed to load." +
+                    "  Please install the latest display drivers from your GPU manufacturer.", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1);
+            }            
         }
 
         public void GLControlMainOnUpdateFrame(object sender, EventArgs e)
@@ -299,10 +301,13 @@ namespace LOLViewer
 
         private void GLControlMainOnDispose(object sender, EventArgs e)
         {
-            renderer.ShutDown();
+            if (isGLLoaded == true)
+            {
+                renderer.Shutdown();
+            }
 
             // Close logger at this point.
-            logger.LogEvent("Program shutdown.");
+            logger.Event("Program shutdown.");
             logger.Close();
         }
 
@@ -313,6 +318,8 @@ namespace LOLViewer
         private void GLControlOnMouseMove(object sender, MouseEventArgs e)
         {
             camera.OnMouseMove(e);
+            renderer.MouseMove(e, camera);
+
             GLControlMainOnUpdateFrame(sender, e);
         }
 
@@ -325,12 +332,16 @@ namespace LOLViewer
         private void GLControlOnMouseUp(object sender, MouseEventArgs e)
         {
             camera.OnMouseButtonUp(e);
+            renderer.MouseButtonUp(e, camera);
+
             GLControlMainOnUpdateFrame(sender, e);
         }
 
         private void GLControlOnMouseDown(object sender, MouseEventArgs e)
         {
             camera.OnMouseButtonDown(e);
+            renderer.MouseButtonDown(e, camera);
+
             GLControlMainOnUpdateFrame(sender, e);
         }
 
@@ -384,7 +395,7 @@ namespace LOLViewer
             if (result == DialogResult.OK)
             {
                 // Lets not check and let the directory reader sort it out.
-                reader.SetRoot(dlg.SelectedPath);
+                reader.Root = dlg.SelectedPath;
 
                 // Reread the models.
                 OnReadModels(sender, e);
@@ -393,44 +404,78 @@ namespace LOLViewer
 
         private void OnReadModels(object sender, EventArgs e)
         {
+            // Update GUI.
+            mainWindowStatusLabel.Text = "Reading League of Legends' directory...";
+            mainWindowProgressBar.Visible = true;
+
             // Clear old data.
             modelListBox.Items.Clear();
-            renderer.DestroyCurrentModels();
+            renderer.DestroyModel();
             glControlMain.Invalidate();
 
-            LoadingModelsWindow loader = new LoadingModelsWindow();
-            loader.reader = reader;
-            loader.logger = logger;
-            loader.StartPosition = FormStartPosition.CenterParent;
-            loader.ShowDialog();
+            // Create a background worker to read in the models.
+            BackgroundWorker worker = new BackgroundWorker();
+            worker.DoWork += new DoWorkEventHandler(ReadModels);
+            worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(ReadModelsCallback);
+            worker.RunWorkerAsync();
+        }
 
-            DialogResult result = loader.result;
-            if (result == DialogResult.Abort)
+        #region Helper functions for the read models background worker
+
+        private void ReadModels(object sender, DoWorkEventArgs e)
+        {
+            logger.HoldFlushes();
+
+            // Read League of Legends' information.
+            bool result = reader.Read(logger);
+            if (result == true)
             {
-                MessageBox.Show(this,
-                    "Unable to read the League of Legends' installation directory. " +
-                    "If you installed League of Legends " +
-                    "in a non-default location, use 'File -> Read...' to manually " +
-                    "select the League of Legends' installation directory.",
-                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                logger.Event("Sorting models.");
+                reader.SortModelNames();
             }
-            else if (result == DialogResult.Cancel)
+            else
             {
+                // Bail if reading fails.
+                logger.Error("Failed to read models.");
+
+                // UI calls need to be executed on the main thread.
+                this.BeginInvoke((Action)(() =>
+                {
+                    MessageBox.Show(this,
+                        "Unable to read the League of Legends' installation directory. " +
+                        "If you installed League of Legends " +
+                        "in a non-default location, use 'File -> Read...' to manually " +
+                        "select the League of Legends' installation directory." +
+                        "\n\n" +
+                        "Loading some sample models.",
+                        "Error!", MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1);
+                }));
+
+                // Load some sample models.
+                logger.Event("Reading sample models.");
+                reader.Root = DEFAULT_SAMPLE_MODELS_DIRECTORY;
+                
+                result = reader.Read(logger);
+                if (result == true)
+                {
+                    logger.Event("Sorting sample models.");
+                    reader.SortModelNames();
+                }
+
                 return;
             }
 
             // On successful read, write the root directory to file.
-            logger.LogEvent("Storing League of Legends installation directory path.");
+            logger.Event("Storing League of Legends installation directory path.");
             FileStream file = null;
             try
             {
-                logger.LogEvent("Opening " + DEFAULT_DIRECTORY_FILE + ".");
-                file = new FileStream(DEFAULT_DIRECTORY_FILE, FileMode.OpenOrCreate);
+                logger.Event("Opening " + DEFAULT_DATA_FILE + ".");
+                file = new FileStream(DEFAULT_DATA_FILE, FileMode.OpenOrCreate);
             }
             catch
             {
-                logger.LogWarning("Failed to open " + DEFAULT_DIRECTORY_FILE + ".");
+                logger.Warning("Failed to open " + DEFAULT_DATA_FILE + ".");
             }
 
             BinaryWriter writer = null;
@@ -438,18 +483,21 @@ namespace LOLViewer
             {
                 try
                 {
-                    logger.LogEvent("Writing League of Legends directory path.");
+                    logger.Event("Writing League of Legends directory path.");
                     writer = new BinaryWriter(file);
-                    writer.Write(reader.root);
+                    writer.Write(reader.Root);
                     writer.Close();
                 }
                 catch
                 {
-                    logger.LogWarning("Failed to write League of Legends directory path.");
+                    logger.Warning("Failed to write League of Legends directory path.");
                     file.Close();
                 }
             }
+        }
 
+        private void ReadModelsCallback(object sender, RunWorkerCompletedEventArgs e)
+        {
             // Populate the model list box.
             modelListBox.BeginUpdate();
 
@@ -460,7 +508,16 @@ namespace LOLViewer
             }
 
             modelListBox.EndUpdate();
+
+            // Set Status text and progress bar
+            mainWindowStatusLabel.Text = "Ready.";
+            mainWindowProgressBar.Visible = false;
+
+            // Re-enable auto log flushing
+            logger.RestartFlushes();
         }
+
+        #endregion
 
         //
         // Model List Box Handlers
@@ -468,7 +525,7 @@ namespace LOLViewer
 
         private void OnModelListDoubleClick(object sender, EventArgs e)
         {
-            String modelName = (String) modelListBox.SelectedItem;
+            String modelName = (String)modelListBox.SelectedItem;
 
             // TODO: Not really sure how to handle errors
             // if either of these functions fail.
@@ -478,7 +535,7 @@ namespace LOLViewer
                 bool result = renderer.LoadModel(model, logger);
 
                 currentAnimationComboBox.Items.Clear();
-                foreach (String name in renderer.GetAnimationsInCurrentModel())
+                foreach (String name in renderer.GetAnimations())
                 {
                     currentAnimationComboBox.Items.Add(name);
                 }
@@ -489,8 +546,16 @@ namespace LOLViewer
                 {
                     currentAnimationComboBox.SelectedIndex = 0;
                 }
+
+                animationController.DisableAnimation();
+                animationController.EnableAnimation();
+                animationController.StartAnimation();
+
+                // Update status bar text.
+                mainWindowStatusLabel.Text = "Viewing " + modelName + ". Left mouse rotates, right mouse pans, and mouse wheel zooms.";
             }
 
+            OnResetCameraButtonClick(sender, e);
             GLControlMainOnUpdateFrame(sender, e);
         }
 
@@ -505,33 +570,11 @@ namespace LOLViewer
             }
         }
 
-        //
-        // Trackbar Handlers
-        //
-        private void YOffsetTrackbarOnScroll(object sender, EventArgs e)
-        {
-            Matrix4 world = Matrix4.Scale(modelScaleTrackbar.Value / DEFAULT_SCALE_TRACKBAR);
-            world.M42 = (float)-yOffsetTrackbar.Value;
-            renderer.world = world;
-
-            // Redraw.
-            GLControlMainOnPaint(sender, null);
-        }
-
-        private void ModelScaleTrackbarOnScroll(object sender, EventArgs e)
-        {
-            Matrix4 world = Matrix4.Scale(modelScaleTrackbar.Value / DEFAULT_SCALE_TRACKBAR);
-            world.M42 = (float)-yOffsetTrackbar.Value;
-            renderer.world = world;
-
-            // Redraw.
-            GLControlMainOnPaint(sender, null);
-        }
-
         // Button Handlers
         private void OnResetCameraButtonClick(object sender, EventArgs e)
         {
             camera.Reset();
+            renderer.Reset();
 
             // Redraw.
             glControlMain.Invalidate();
@@ -541,15 +584,15 @@ namespace LOLViewer
         {
             ColorDialog colorDlg = new ColorDialog();
 
-            Color iniColor = Color.FromArgb( (int) (renderer.clearColor.A * 255),
-                (int) (renderer.clearColor.R * 255), (int) (renderer.clearColor.G * 255),
-                (int) (renderer.clearColor.B * 255) );
+            Color iniColor = Color.FromArgb((int)(renderer.ClearColor.A * 255),
+                (int)(renderer.ClearColor.R * 255), (int)(renderer.ClearColor.G * 255),
+                (int)(renderer.ClearColor.B * 255));
 
             colorDlg.Color = iniColor;
 
             if (colorDlg.ShowDialog() == DialogResult.OK)
             {
-                renderer.SetClearColor(colorDlg.Color);
+                renderer.ClearColor = colorDlg.Color;
 
                 glControlMain.Invalidate();
             }
@@ -650,7 +693,7 @@ namespace LOLViewer
             // The default windows forms behavior will intercept the arrow key messages
             // and handle them in the background.  This is normally ideal.  However, here, it would
             // be nice if the search box could change the the selection of the list box.  That way, users
-            // can manipulate the list box while their typing in a search.
+            // can manipulate the list box while they're typing in a search.
             //
 
             // Handle the arrow keys at this point.

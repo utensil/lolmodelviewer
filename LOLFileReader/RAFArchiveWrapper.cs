@@ -4,21 +4,21 @@ using System.Linq;
 using System.Text;
 using RAFlibPlus;
 
-namespace LOLViewer.IO
+namespace LOLFileReader
 {
     public class RAFArchiveWrapper : IArchive
     {
-        public RAFArchiveWrapper(RAFArchive rafArch)
+        public RAFArchiveWrapper(RAFMasterFileList rafArch)
         {
             r = rafArch;
         }
 
-        public List<IFileEntry> SearchFileEntries(string endsWith)
+        public List<IFileEntry> SearchFileEntries(string[] endsWiths)
         {
-            List<RAFFileListEntry> rl = r.SearchFileEntries(endsWith, RAFArchive.RAFSearchType.All);
+            List<RAFMasterFileList.RAFSearchResult> rl = r.SearchFileEntries(endsWiths, RAFMasterFileList.RAFSearchType.All);
 
             List<IFileEntry> rw = new List<IFileEntry>();
-            foreach (RAFFileListEntry e in rl)
+            foreach (RAFMasterFileList.RAFSearchResult e in rl)
             {
                 rw.Add(new RAFFileListEntryWrapper(e));
             }
@@ -26,6 +26,6 @@ namespace LOLViewer.IO
             return rw;
         }
 
-        private RAFArchive r;
+        private RAFMasterFileList r;
     }
 }

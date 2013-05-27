@@ -1,7 +1,7 @@
 ﻿
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -36,7 +36,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
-namespace LOLViewer
+namespace LOLViewer.GUI
 {
     public partial class AboutWindow : Form
     {
@@ -48,7 +48,7 @@ namespace LOLViewer
             this.Shown += new EventHandler(OnAboutWindowShown);
         }
 
-        void OnAboutWindowShown(object sender, EventArgs e)
+        private void OnAboutWindowShown(object sender, EventArgs e)
         {
             descriptionTextBox.DeselectAll();
         }

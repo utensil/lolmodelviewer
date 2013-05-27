@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace LOLViewer.IO
+namespace LOLFileReader
 {
     public interface IFileEntry
     {
@@ -12,6 +12,8 @@ namespace LOLViewer.IO
         /// </summary>
         /// <returns></returns>
         String FileName { get; }
+
+        String SearchPhrase { get; }
 
         /// <summary>
         /// Get the content of the file entry as a byte array.

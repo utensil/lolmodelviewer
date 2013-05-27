@@ -1,7 +1,7 @@
 ﻿
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -34,7 +34,7 @@ using System.Text;
 using OpenTK.Graphics.OpenGL;
 using System.Diagnostics;
 
-namespace LOLViewer
+namespace LOLViewer.Graphics
 {
     class GLShader
     {
@@ -50,33 +50,6 @@ namespace LOLViewer
         }
 
         /// <summary>
-        /// Loads a text file containing the shader code.
-        /// </summary>
-        /// <param name="fileName">
-        /// The name of the file including its path relative to
-        /// the CWD.
-        /// </param>
-        /// <returns></returns>
-        public bool LoadFromFile(String fileName)
-        {
-            bool result = true;
-
-            try
-            {
-                System.IO.StreamReader myFile =
-                        new System.IO.StreamReader(fileName);
-                data = myFile.ReadToEnd();
-                myFile.Close();
-            }
-            catch
-            {
-                result = false;
-            }
-
-            return result;
-        }
-
-        /// <summary>
         /// Loads the shader from a string
         /// </summary>
         /// <param name="data">
@@ -86,7 +59,6 @@ namespace LOLViewer
         public bool LoadFromMemory(String data)
         {
             this.data = data;
-
             return true;
         }
 

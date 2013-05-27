@@ -33,19 +33,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using OpenTK;
-
-namespace LOLViewer
+namespace LOLFileReader
 {
-    class ANMFrame
+    public class ANMFrame
     {
-        public Quaternion orientation;
-        public Vector3 position;
+        public float[] orientation;
+        public float[] position;
 
         public ANMFrame()
         {
-            orientation = Quaternion.Identity;
-            position = Vector3.Zero;
+            orientation = new float[4];
+            position = new float[3];
         }
     }
 }

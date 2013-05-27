@@ -3,7 +3,7 @@
 
 /*
 LOLViewer
-Copyright 2011-2012 James Lammlein 
+Copyright 2011-2012 James Lammlein, Adrian Astley 
 
  
 
@@ -35,19 +35,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace LOLViewer
+namespace LOLFileReader
 {
-    class ANMBone
+    public class ANMBone
     {
         public const int BONE_NAME_LENGTH = 32;
         public String name;
-        public UInt32 flag;
+        public UInt32 id;
         public List<ANMFrame> frames;
 
         public ANMBone()
         {
             name = String.Empty;
-            flag = 0;
+            id = 0;
             frames = new List<ANMFrame>();
         }
     }

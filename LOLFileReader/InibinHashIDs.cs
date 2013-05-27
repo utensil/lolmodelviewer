@@ -34,11 +34,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace LOLViewer.IO
+namespace LOLFileReader
 {
-    public enum InibinHashID : long
+    internal enum InibinHashID : long
     {
-        SKIN_ONE_NAME = 0L, // Unknown.  Based off of directory name?
+        SKIN_ONE_NAME = 2142495409L,
         SKIN_ONE_SKN = 769344815L,
         SKIN_ONE_TEXTURE = -1654783749L,
         SKIN_ONE_SKL = 1895303501L,
